@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="url(#goldGrad)" stroke-width="8" opacity="0.4" />
+  
+  <!-- Wheat / Grain Sheaves -->
+  <g transform="translate(256, 175) scale(1.1)">
+    <!-- Wheat Ears -->
+    <path d="M-40 -40 C-20 -90, 20 -90, 40 -40 C20 10, -20 10, -40 -40 Z" fill="url(#goldGrad)" />
+    <path d="M-70 10 C-60 -30, -10 -20, -20 30 C-30 60, -70 50, -70 10 Z" fill="url(#goldGrad)" />
+    <path d="M70 10 C60 -30, 10 -20, 20 30 C30 60, 70 50, 70 10 Z" fill="url(#goldGrad)" />
+    <path d="M-60 80 C-40 40, 0 50, -10 100 C-20 130, -60 120, -60 80 Z" fill="url(#goldGrad)" />
+    <path d="M60 80 C40 40, 0 50, 10 100 C20 130, 60 120, 60 80 Z" fill="url(#goldGrad)" />
+  </g>
+
+  <!-- Large Bold Letter T -->
+  <text x="256" y="380" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="220" font-weight="900" fill="url(#goldGrad)" text-anchor="middle" letter-spacing="-2">T</text>
+  
+  <!-- Badge Tejstha -->
+  <rect x="116" y="415" width="280" height="44" rx="22" fill="#d97706" />
+  <text x="256" y="445" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="3">TEJSTHA</text>
+</svg>

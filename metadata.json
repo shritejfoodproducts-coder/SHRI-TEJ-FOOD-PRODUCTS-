@@ -1,0 +1,8 @@
+{
+  "name": "TEJ FOOD PRODUCTS - Factory & Atta ERP",
+  "description": "Shri Tej Food Products & Tejstha आटा - सम्पूर्ण फैक्ट्री ईआरपी, उत्पादन, स्टॉक, बिलिंग, डिलीवरी एवं एकाउंट्स सिस्टम",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
