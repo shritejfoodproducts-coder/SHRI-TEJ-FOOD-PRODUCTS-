@@ -335,6 +335,17 @@ export const INITIAL_STAFF: UserProfile[] = [
     assignedVehicle: 'महिंद्रा बोलेरो पिकअप (RJ-14-GA-4521)',
     joinedDate: '2024-04-05',
   },
+  {
+    id: 'staff-8',
+    name: 'सुरेश कुमार (सेल्समैन)',
+    phone: '9829088776',
+    role: 'salesman',
+    roleHindi: 'सेल्समैन (मार्केट बुकिंग व वसूली)',
+    password: 'suresh@sales',
+    active: true,
+    shift: 'मार्केट फील्ड (10 AM - 7 PM)',
+    joinedDate: '2024-05-15',
+  },
 ];
 
 export const INITIAL_ORDERS: Order[] = [

@@ -71,6 +71,8 @@ export const Header: React.FC<HeaderProps> = ({
         return { label: 'पैकिंग स्टाफ', color: 'bg-teal-600 text-white font-semibold border-teal-500' };
       case 'delivery_staff':
         return { label: 'डिलीवरी स्टाफ (ड्राइवर)', color: 'bg-indigo-600 text-white font-semibold border-indigo-500' };
+      case 'salesman':
+        return { label: 'सेल्समैन (मार्केट)', color: 'bg-amber-600 text-white font-semibold border-amber-500' };
       default:
         return { label: role, color: 'bg-slate-700 text-white' };
     }

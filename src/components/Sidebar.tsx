@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Production',
       icon: Factory,
       badge: null,
-      visible: currentRole !== 'delivery_staff',
+      visible: currentRole !== 'delivery_staff' && currentRole !== 'salesman',
     },
     {
       id: 'orders' as ActiveTab,

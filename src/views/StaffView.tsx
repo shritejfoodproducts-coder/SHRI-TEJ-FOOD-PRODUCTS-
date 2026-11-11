@@ -69,6 +69,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
       case 'production_head': return 'प्रोडक्शन इंचार्ज';
       case 'packing_staff': return 'पैकिंग स्टाफ';
       case 'delivery_staff': return 'डिलीवरी स्टाफ (ड्राइवर)';
+      case 'salesman': return 'सेल्समैन (मार्केट बुकिंग व वसूली)';
       default: return r;
     }
   };
@@ -205,6 +206,8 @@ export const StaffView: React.FC<StaffViewProps> = ({
                         ? 'bg-blue-600 text-white'
                         : member.role === 'accountant'
                         ? 'bg-emerald-600 text-white'
+                        : member.role === 'salesman'
+                        ? 'bg-amber-600 text-white'
                         : 'bg-slate-100 text-slate-700'
                     }`}>
                       {member.roleHindi}
@@ -370,6 +373,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     <option value="production_head">प्रोडक्शन इंचार्ज</option>
                     <option value="packing_staff">पैकिंग स्टाफ</option>
                     <option value="delivery_staff">डिलीवरी ड्राइवर</option>
+                    <option value="salesman">सेल्समैन (मार्केट बुकिंग व वसूली)</option>
                   </select>
                 </div>
               </div>
@@ -555,6 +559,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     <option value="production_head">प्रोडक्शन इंचार्ज</option>
                     <option value="packing_staff">पैकिंग स्टाफ</option>
                     <option value="delivery_staff">डिलीवरी ड्राइवर</option>
+                    <option value="salesman">सेल्समैन (मार्केट बुकिंग व वसूली)</option>
                   </select>
                 </div>
               </div>

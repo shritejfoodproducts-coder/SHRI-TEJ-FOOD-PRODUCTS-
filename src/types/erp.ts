@@ -7,7 +7,8 @@ export type UserRole =
   | 'store_keeper'      // स्टोर कीपर (Raw wheat, empty bags, inventory)
   | 'production_head'   // प्रोडक्शन इंचार्ज (Milling, batch log)
   | 'packing_staff'     // पैकिंग स्टाफ (Bagging, stitch count)
-  | 'delivery_staff';   // डिलीवरी स्टाफ (Dispatch, customer delivery, cash collection)
+  | 'delivery_staff'    // डिलीवरी स्टाफ (Dispatch, customer delivery, cash collection)
+  | 'salesman';         // सेल्समैन / फील्ड सेल्स (Market booking, customer orders)
 
 export interface UserProfile {
   id: string;

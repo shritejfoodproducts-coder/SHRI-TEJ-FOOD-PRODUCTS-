@@ -94,6 +94,17 @@ const ROLE_PERMISSIONS: Record<UserRole, {
       { name: 'फैक्ट्री का आंतरिक प्रोडक्शन व स्टॉक', allowed: false },
     ],
   },
+  salesman: {
+    titleHindi: 'सेल्समैन / फील्ड सेल्स - सुरेश कुमार',
+    badgeColor: 'bg-amber-600 text-white',
+    description: 'बाजार से नए ऑर्डर बुक करना, दुकानदारों से मिलना, उधारी बकाया वसूली व ग्राहक खाता देखना।',
+    permissions: [
+      { name: 'बाजार में दुकानदारों से नए ऑर्डर बुक करना', allowed: true },
+      { name: 'ग्राहक लिस्ट, पता, फोन व बकाया उधारी देखना', allowed: true },
+      { name: 'दुकानदार से नकद/UPI भुगतान प्राप्त करना', allowed: true },
+      { name: 'फैक्ट्री की आंतरिक पिसाई व खरीद दरें', allowed: false },
+    ],
+  },
 };
 
 export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
@@ -104,6 +115,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
   const roles: UserRole[] = [
     'admin',
     'manager',
+    'salesman',
     'accountant',
     'store_keeper',
     'production_head',

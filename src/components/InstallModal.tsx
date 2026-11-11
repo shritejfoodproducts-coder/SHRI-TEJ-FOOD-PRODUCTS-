@@ -21,7 +21,8 @@ import {
   QrCode,
   Layers,
   ArrowRight,
-  Info
+  Info,
+  Share2
 } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -265,6 +266,68 @@ export const InstallModal: React.FC<InstallModalProps> = ({
                   </span>
                 </div>
 
+              </div>
+
+              {/* Standalone .APK File Generation & Share Section */}
+              <div className="border-t border-slate-200 pt-4 mt-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900 text-xs flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    <span>व्हाट्सएप या अन्य फोन में भेजने हेतु .APK फाइल विकल्प</span>
+                  </h3>
+                  <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full">
+                    Direct Tools
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Option A: Generate .APK File with PWABuilder */}
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs mb-1">
+                        <Download className="w-4 h-4 text-amber-600" />
+                        <span>.APK पैकेज फाइल बनाएं (PWABuilder)</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed mb-3">
+                        Google और Microsoft के आधिकारिक PWABuilder टूल से आप इस ऐप की साइन्ड <strong>.apk फ़ाइल</strong> 1-क्लिक में डाउनलोड कर सकते हैं।
+                      </p>
+                    </div>
+                    <a
+                      href={`https://www.pwabuilder.com/reportcard?site=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : 'https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition"
+                    >
+                      <span>PWABuilder पर .APK बनाएं</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+
+                  {/* Option B: Copy Link to WhatsApp */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs mb-1">
+                        <Share2 className="w-4 h-4 text-emerald-600" />
+                        <span>स्टाफ / सेल्समैन को व्हाट्सएप पर भेजें</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
+                        इस लिंक को अपने कर्मचारियों को भेजें, वे अपने फोन में लिंक खोलते ही <strong>'Install app'</strong> दबाकर ऐप चला सकेंगे।
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = typeof window !== 'undefined' ? window.location.href : '';
+                        navigator.clipboard.writeText(url);
+                        alert('ऐप लिंक कॉपी हो गया है! अब आप इसे व्हाट्सएप पर पेस्ट करके भेज सकते हैं।');
+                      }}
+                      className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>ऐप लिंक कॉपी करें (Copy Link)</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

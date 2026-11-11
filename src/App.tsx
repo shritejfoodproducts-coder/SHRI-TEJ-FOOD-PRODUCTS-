@@ -274,6 +274,167 @@ export default function App() {
     }));
   };
 
+  // Handler: Update Order
+  const handleOrderUpdated = (updatedOrder: Order, originalOrder: Order) => {
+    setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+
+    // Update customer financials
+    const deltaTotal = updatedOrder.totalAmount - originalOrder.totalAmount;
+    const deltaPaid = updatedOrder.paidAmount - originalOrder.paidAmount;
+    const deltaDue = updatedOrder.dueAmount - originalOrder.dueAmount;
+
+    setCustomers(prev => prev.map(c => {
+      if (c.id === updatedOrder.customerId) {
+        return {
+          ...c,
+          totalPurchased: Math.max(0, c.totalPurchased + deltaTotal),
+          totalPaid: Math.max(0, c.totalPaid + deltaPaid),
+          currentDue: Math.max(0, c.currentDue + deltaDue),
+        };
+      }
+      return c;
+    }));
+
+    // Adjust reserved bag counts if order is still active
+    if (updatedOrder.status !== 'delivered' && updatedOrder.status !== 'cancelled') {
+      setBagStock(prev => prev.map(b => {
+        const oldItem = originalOrder.items.find(i => i.productId === b.productId && i.bagSize === b.bagSize);
+        const newItem = updatedOrder.items.find(i => i.productId === b.productId && i.bagSize === b.bagSize);
+        const oldQty = oldItem ? oldItem.quantity : 0;
+        const newQty = newItem ? newItem.quantity : 0;
+        const diff = newQty - oldQty;
+        if (diff !== 0) {
+          return {
+            ...b,
+            reservedCount: Math.max(0, b.reservedCount + diff),
+          };
+        }
+        return b;
+      }));
+    }
+  };
+
+  // Handler: Delete Order
+  const handleOrderDeleted = (orderId: string) => {
+    const orderToDelete = orders.find(o => o.id === orderId);
+    if (!orderToDelete) return;
+
+    // Deduct from customer
+    setCustomers(prev => prev.map(c => {
+      if (c.id === orderToDelete.customerId) {
+        return {
+          ...c,
+          totalOrders: Math.max(0, c.totalOrders - 1),
+          totalPurchased: Math.max(0, c.totalPurchased - orderToDelete.totalAmount),
+          totalPaid: Math.max(0, c.totalPaid - orderToDelete.paidAmount),
+          currentDue: Math.max(0, c.currentDue - orderToDelete.dueAmount),
+        };
+      }
+      return c;
+    }));
+
+    // Unreserve bags if not delivered yet
+    if (orderToDelete.status !== 'delivered' && orderToDelete.status !== 'cancelled') {
+      setBagStock(prev => prev.map(b => {
+        const item = orderToDelete.items.find(i => i.productId === b.productId && i.bagSize === b.bagSize);
+        if (item) {
+          return {
+            ...b,
+            reservedCount: Math.max(0, b.reservedCount - item.quantity),
+          };
+        }
+        return b;
+      }));
+    }
+
+    setOrders(prev => prev.filter(o => o.id !== orderId));
+  };
+
+  // Handler: Update Production Batch
+  const handleProductionUpdated = (updatedBatch: ProductionBatch, originalBatch: ProductionBatch) => {
+    setProduction(prev => prev.map(p => p.id === updatedBatch.id ? updatedBatch : p));
+
+    // 1. Adjust raw wheat stock (delta quintals)
+    const deltaWheatKg = updatedBatch.wheatInputKg - originalBatch.wheatInputKg;
+    const deltaWheatQuintals = deltaWheatKg / 100;
+    const newWheatStock = Math.max(0, rawStock.wheatQuintals - deltaWheatQuintals);
+
+    // 2. Adjust empty bags
+    const newEmptyBags = { ...rawStock.emptyBags };
+    const allSizes = Array.from(new Set([
+      ...Object.keys(updatedBatch.packedBags),
+      ...Object.keys(originalBatch.packedBags)
+    ])) as unknown as BagSize[];
+
+    allSizes.forEach(size => {
+      const origCount = originalBatch.packedBags[size] || 0;
+      const newCount = updatedBatch.packedBags[size] || 0;
+      const bagDiff = newCount - origCount;
+      newEmptyBags[size] = Math.max(0, (newEmptyBags[size] || 0) - bagDiff);
+    });
+
+    setRawStock({
+      ...rawStock,
+      wheatQuintals: newWheatStock,
+      emptyBags: newEmptyBags,
+      lastUpdated: new Date().toISOString(),
+    });
+
+    // 3. Adjust finished bag stock
+    setBagStock(prev => prev.map(item => {
+      if (item.productId === updatedBatch.productId) {
+        const origCount = originalBatch.packedBags[item.bagSize] || 0;
+        const newCount = updatedBatch.packedBags[item.bagSize] || 0;
+        const bagDiff = newCount - origCount;
+        if (bagDiff !== 0) {
+          return {
+            ...item,
+            packedCount: Math.max(0, item.packedCount + bagDiff),
+          };
+        }
+      }
+      return item;
+    }));
+  };
+
+  // Handler: Delete Production Batch
+  const handleProductionDeleted = (batchId: string) => {
+    const batchToDelete = production.find(p => p.id === batchId);
+    if (!batchToDelete) return;
+
+    // Restore wheat
+    const wheatRestoreQuintals = batchToDelete.wheatInputKg / 100;
+    const newWheatStock = rawStock.wheatQuintals + wheatRestoreQuintals;
+
+    // Restore empty bags
+    const newEmptyBags = { ...rawStock.emptyBags };
+    (Object.keys(batchToDelete.packedBags) as unknown as BagSize[]).forEach(size => {
+      const used = batchToDelete.packedBags[size] || 0;
+      newEmptyBags[size] = (newEmptyBags[size] || 0) + used;
+    });
+
+    setRawStock({
+      ...rawStock,
+      wheatQuintals: newWheatStock,
+      emptyBags: newEmptyBags,
+      lastUpdated: new Date().toISOString(),
+    });
+
+    // Deduct packed bags
+    setBagStock(prev => prev.map(item => {
+      if (item.productId === batchToDelete.productId && batchToDelete.packedBags[item.bagSize]) {
+        const added = batchToDelete.packedBags[item.bagSize] || 0;
+        return {
+          ...item,
+          packedCount: Math.max(0, item.packedCount - added),
+        };
+      }
+      return item;
+    }));
+
+    setProduction(prev => prev.filter(p => p.id !== batchId));
+  };
+
   // Handler: Raw Stock update
   const handleRawStockUpdate = (newRaw: RawMaterialStock) => {
     setRawStock(newRaw);
@@ -429,6 +590,8 @@ export default function App() {
               orders={orders}
               bagStock={bagStock}
               onOpenNewProduction={() => setShowNewProductionModal(true)}
+              onUpdateProduction={handleProductionUpdated}
+              onDeleteProduction={handleProductionDeleted}
             />
           )}
 
@@ -438,6 +601,8 @@ export default function App() {
               onOpenNewOrder={() => setShowNewOrderModal(true)}
               onSelectOrder={setSelectedOrderForInvoice}
               onUpdateOrderStatus={handleOrderStatusUpdate}
+              onUpdateOrder={handleOrderUpdated}
+              onDeleteOrder={handleOrderDeleted}
             />
           )}
 
