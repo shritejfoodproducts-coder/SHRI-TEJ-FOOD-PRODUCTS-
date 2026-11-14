@@ -5,7 +5,7 @@ import {
   countEnabledPermissions,
   getEffectivePermissions,
 } from '../utils/permissions';
-import { X, Smartphone, Check, ShieldCheck } from 'lucide-react';
+import { X, Smartphone, Check, ShieldCheck, LogOut } from 'lucide-react';
 
 interface RoleSwitcherModalProps {
   currentRole: UserRole;
@@ -13,6 +13,7 @@ interface RoleSwitcherModalProps {
   staffList: UserProfile[];
   onSelectRole: (role: UserRole) => void;
   onSelectUser?: (member: UserProfile) => void;
+  onLogout?: () => void;
   onClose: () => void;
 }
 
@@ -45,6 +46,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
   staffList,
   onSelectRole,
   onSelectUser,
+  onLogout,
   onClose,
 }) => {
   const allPermItems = PERMISSION_GROUPS.flatMap((g) => g.items);
@@ -147,6 +149,25 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
             );
           })}
         </div>
+
+        {onLogout && (
+          <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-600">
+              नए पासवर्ड से लॉगिन करने के लिए साइन आउट करें
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onLogout();
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>लॉगआउट करें (Login Screen)</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

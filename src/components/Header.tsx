@@ -12,7 +12,8 @@ import {
   Download,
   HardDrive,
   Radio,
-  Crown
+  Crown,
+  LogOut
 } from 'lucide-react';
 import { getDeviceStorageStats, LocalStorageStats } from '../utils/localStorageStats';
 import type { SyncConnectionStatus } from '../hooks/useRealtimeSync';
@@ -34,6 +35,7 @@ interface HeaderProps {
   onNavigateToInventory: () => void;
   onOpenInstallModal: () => void;
   onOpenLiveSync?: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -52,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToInventory,
   onOpenInstallModal,
   onOpenLiveSync,
+  onLogout,
 }) => {
   const perms = permissions || getDefaultPermissionsForRole(currentRole);
   const [timeStr, setTimeStr] = useState<string>('');
@@ -235,17 +238,37 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Role Simulator Switcher Button */}
+          {/* Role Simulator Switcher Button (Admin can switch; staff sees own badge) */}
           <button
-            onClick={onOpenRoleSwitcher}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition cursor-pointer hover:opacity-90 ${roleInfo.color}`}
-            title="क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें"
+            type="button"
+            onClick={currentRole === 'admin' ? onOpenRoleSwitcher : undefined}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition ${
+              currentRole === 'admin' ? 'cursor-pointer hover:opacity-90' : 'cursor-default'
+            } ${roleInfo.color}`}
+            title={
+              currentRole === 'admin'
+                ? 'क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें'
+                : 'वर्तमान लॉग-इन खाता'
+            }
           >
             <Smartphone className="w-3.5 h-3.5 shrink-0" />
             <span className="font-bold hidden sm:inline">
               {currentUserName ? `${currentUserName} (${roleInfo.label})` : roleInfo.label}
             </span>
           </button>
+
+          {/* Logout Button */}
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-500/40 text-xs font-bold transition cursor-pointer"
+              title="लॉगआउट करें (Login Screen पर जाएं)"
+            >
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden lg:inline">लॉगआउट</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

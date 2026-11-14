@@ -46,6 +46,7 @@ import { ReceivePaymentModal } from './components/ReceivePaymentModal';
 import { RoleSwitcherModal } from './components/RoleSwitcherModal';
 import { InstallModal } from './components/InstallModal';
 import { LiveSyncModal } from './components/LiveSyncModal';
+import { LoginScreen } from './components/LoginScreen';
 
 // Views
 import { DashboardView } from './views/DashboardView';
@@ -73,10 +74,11 @@ export default function App() {
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(INITIAL_EXPENSES);
   const [staff, setStaff] = useState<UserProfile[]>(INITIAL_STAFF);
 
-  // App UI State
+  // App UI State & Authentication (Always opens on Login Screen unless Remember Me was saved)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
-  const [currentRole, setCurrentRole] = useState<UserRole>('admin');
-  const [currentStaffId, setCurrentStaffId] = useState<string>('staff-1');
+  const [currentRole, setCurrentRole] = useState<UserRole>('salesman');
+  const [currentStaffId, setCurrentStaffId] = useState<string>('');
 
   const activeStaffMember =
     staff.find((s) => s.id === currentStaffId) ||
@@ -156,9 +158,35 @@ export default function App() {
     setShowInstallModal(true);
   };
 
+  const handleLoginSuccess = (member: UserProfile, rememberMe: boolean) => {
+    setCurrentStaffId(member.id);
+    setCurrentRole(member.role);
+    setActiveTab('dashboard');
+    setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      if (rememberMe) {
+        localStorage.setItem('tej_food_remembered_user_id', member.id);
+      } else {
+        localStorage.removeItem('tej_food_remembered_user_id');
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('tej_food_remembered_user_id');
+    }
+    setShowRoleSwitcherModal(false);
+    setIsAuthenticated(false);
+    setCurrentStaffId('');
+    setCurrentRole('salesman');
+    setActiveTab('dashboard');
+  };
+
   // Load on mount
   useEffect(() => {
     const saved = loadStateFromStorage();
+    let loadedStaff = INITIAL_STAFF;
     if (saved) {
       if (saved.settings) setSettings(saved.settings);
       if (saved.products) setProducts(saved.products);
@@ -168,7 +196,26 @@ export default function App() {
       if (saved.orders) setOrders(saved.orders);
       if (saved.production) setProduction(saved.production);
       if (saved.expenses) setExpenses(saved.expenses);
-      if (saved.staff) setStaff(saved.staff);
+      if (saved.staff) {
+        setStaff(saved.staff);
+        loadedStaff = saved.staff;
+      }
+    }
+    const rememberedId =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('tej_food_remembered_user_id')
+        : null;
+    if (rememberedId) {
+      const rememberedUser = loadedStaff.find(
+        (s) => s.id === rememberedId && s.active
+      );
+      if (rememberedUser) {
+        setCurrentStaffId(rememberedUser.id);
+        setCurrentRole(rememberedUser.role);
+        setIsAuthenticated(true);
+      } else if (typeof window !== 'undefined') {
+        localStorage.removeItem('tej_food_remembered_user_id');
+      }
     }
     setInitialLoaded(true);
   }, []);
@@ -227,7 +274,7 @@ export default function App() {
   }, []);
 
   const sync = useRealtimeSync({
-    currentUserRole: currentRole,
+    currentUserRole: isAuthenticated ? currentRole : 'salesman',
     getCurrentState: getCurrentSyncState,
     applyFullState: applySyncedFullState,
     isAppLoaded: initialLoaded,
@@ -373,6 +420,36 @@ export default function App() {
   const pendingOrdersCount = orders.filter(o => o.status === 'pending' || o.status === 'in_production').length;
   const lowStockCount = bagStock.filter(b => b.packedCount <= b.minThreshold).length;
 
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LoginScreen
+          settings={settings}
+          staffList={staff}
+          syncStatus={sync.status}
+          connectedDevicesCount={sync.connectedDevices.length}
+          onLoginSuccess={handleLoginSuccess}
+          onOpenLiveSync={() => setShowLiveSyncModal(true)}
+        />
+        {showLiveSyncModal && (
+          <LiveSyncModal
+            onClose={() => setShowLiveSyncModal(false)}
+            config={sync.config}
+            status={sync.status}
+            connectedDevices={sync.connectedDevices}
+            recentEvents={sync.recentEvents}
+            pendingCount={sync.pendingCount}
+            lastSyncedAt={sync.lastSyncedAt}
+            soundEnabled={sync.soundEnabled}
+            onToggleSound={() => sync.setSoundEnabled((prev) => !prev)}
+            onUpdateConfig={sync.updateSyncConfig}
+            onPushMasterStateNow={sync.pushMasterStateNow}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white">
       {/* Real-time Incoming Entry Toast Banner */}
@@ -424,6 +501,7 @@ export default function App() {
         onNavigateToInventory={() => setActiveTab('inventory')}
         onOpenInstallModal={() => handleOpenInstallModal('apk')}
         onOpenLiveSync={() => setShowLiveSyncModal(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Layout Area */}
@@ -657,6 +735,7 @@ export default function App() {
           staffList={staff}
           onSelectRole={handleSwitchRole}
           onSelectUser={handleSelectStaffMember}
+          onLogout={handleLogout}
           onClose={() => setShowRoleSwitcherModal(false)}
         />
       )}

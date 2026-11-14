@@ -13643,9 +13643,29 @@ var Check = createLucideIcon("check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ChevronDown = createLucideIcon("chevron-down", [["path", {
+	d: "m6 9 6 6 6-6",
+	key: "qrunsl"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var ChevronRight = createLucideIcon("chevron-right", [["path", {
 	d: "m9 18 6-6-6-6",
 	key: "mthhwq"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ChevronUp = createLucideIcon("chevron-up", [["path", {
+	d: "m18 15-6-6-6 6",
+	key: "153udz"
 }]]);
 /**
 * @license lucide-react v0.546.0 - ISC
@@ -13690,6 +13710,28 @@ var CircleCheck = createLucideIcon("circle-check", [["circle", {
 	d: "m9 12 2 2 4-4",
 	key: "dzmm74"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var CircleQuestionMark = createLucideIcon("circle-question-mark", [
+	["circle", {
+		cx: "12",
+		cy: "12",
+		r: "10",
+		key: "1mglay"
+	}],
+	["path", {
+		d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3",
+		key: "1u773s"
+	}],
+	["path", {
+		d: "M12 17h.01",
+		key: "p32p05"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -14380,6 +14422,46 @@ var Lock = createLucideIcon("lock", [["rect", {
 	d: "M7 11V7a5 5 0 0 1 10 0v4",
 	key: "fwvmzm"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var LogIn = createLucideIcon("log-in", [
+	["path", {
+		d: "m10 17 5-5-5-5",
+		key: "1bsop3"
+	}],
+	["path", {
+		d: "M15 12H3",
+		key: "6jk70r"
+	}],
+	["path", {
+		d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
+		key: "u53s6r"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var LogOut = createLucideIcon("log-out", [
+	["path", {
+		d: "m16 17 5-5-5-5",
+		key: "1bji2h"
+	}],
+	["path", {
+		d: "M21 12H9",
+		key: "dn1m92"
+	}],
+	["path", {
+		d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
+		key: "1uf3rs"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -15387,7 +15469,7 @@ var require_react_jsx_runtime_production = /* @__PURE__ */ __commonJSMin(((expor
 var import_jsx_runtime = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = require_react_jsx_runtime_production();
 })))();
-var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onOpenInstallModal, onOpenLiveSync }) => {
+var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onOpenInstallModal, onOpenLiveSync, onLogout }) => {
 	const perms = permissions || getDefaultPermissionsForRole(currentRole);
 	const [timeStr, setTimeStr] = (0, import_react.useState)("");
 	const [storageStats, setStorageStats] = (0, import_react.useState)(null);
@@ -15571,12 +15653,23 @@ var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCou
 						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: onOpenRoleSwitcher,
-						className: `flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition cursor-pointer hover:opacity-90 ${roleInfo.color}`,
-						title: "क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें",
+						type: "button",
+						onClick: currentRole === "admin" ? onOpenRoleSwitcher : void 0,
+						className: `flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition ${currentRole === "admin" ? "cursor-pointer hover:opacity-90" : "cursor-default"} ${roleInfo.color}`,
+						title: currentRole === "admin" ? "क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें" : "वर्तमान लॉग-इन खाता",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-3.5 h-3.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-bold hidden sm:inline",
 							children: currentUserName ? `${currentUserName} (${roleInfo.label})` : roleInfo.label
+						})]
+					}),
+					onLogout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: onLogout,
+						className: "flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-500/40 text-xs font-bold transition cursor-pointer",
+						title: "लॉगआउट करें (Login Screen पर जाएं)",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, { className: "w-3.5 h-3.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "hidden lg:inline",
+							children: "लॉगआउट"
 						})]
 					})
 				]
@@ -20882,100 +20975,118 @@ var getRoleBadgeColor = (role) => {
 		default: return "bg-slate-700 text-white";
 	}
 };
-var RoleSwitcherModal = ({ currentRole, currentStaffId, staffList, onSelectRole, onSelectUser, onClose }) => {
+var RoleSwitcherModal = ({ currentRole, currentStaffId, staffList, onSelectRole, onSelectUser, onLogout, onClose }) => {
 	const allPermItems = PERMISSION_GROUPS.flatMap((g) => g.items);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "bg-slate-900 text-white px-6 py-4 flex items-center justify-between",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-5 h-5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-						className: "font-bold text-base",
-						children: "मोबाइल अकाउंट एवं अनुमति स्विचर (Staff Simulator)"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "text-xs text-slate-300",
-						children: "Admin द्वारा दिए गए कस्टम अधिकारों के साथ किसी भी कर्मचारी के मोबाइल व्यू में जाएँ"
-					})] })]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					onClick: onClose,
-					className: "p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "p-6 max-h-[75vh] overflow-y-auto space-y-3",
-				children: staffList.map((member) => {
-					const effectivePerms = getEffectivePermissions(member, member.role);
-					const enabledCount = countEnabledPermissions(effectivePerms);
-					const isSelected = currentStaffId ? currentStaffId === member.id : currentRole === member.role;
-					const badgeColor = getRoleBadgeColor(member.role);
-					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						onClick: () => {
-							if (!member.active) return;
-							if (onSelectUser) onSelectUser(member);
-							else onSelectRole(member.role);
-							onClose();
-						},
-						className: `p-4 rounded-xl border-2 transition ${!member.active ? "border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed" : isSelected ? "border-amber-500 bg-amber-50/50 shadow-sm cursor-pointer" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 cursor-pointer"}`,
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-start justify-between gap-2 flex-wrap",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-slate-900 text-white px-6 py-4 flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-5 h-5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "font-bold text-base",
+							children: "मोबाइल अकाउंट एवं अनुमति स्विचर (Staff Simulator)"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs text-slate-300",
+							children: "Admin द्वारा दिए गए कस्टम अधिकारों के साथ किसी भी कर्मचारी के मोबाइल व्यू में जाएँ"
+						})] })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: onClose,
+						className: "p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "p-6 max-h-[75vh] overflow-y-auto space-y-3",
+					children: staffList.map((member) => {
+						const effectivePerms = getEffectivePermissions(member, member.role);
+						const enabledCount = countEnabledPermissions(effectivePerms);
+						const isSelected = currentStaffId ? currentStaffId === member.id : currentRole === member.role;
+						const badgeColor = getRoleBadgeColor(member.role);
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							onClick: () => {
+								if (!member.active) return;
+								if (onSelectUser) onSelectUser(member);
+								else onSelectRole(member.role);
+								onClose();
+							},
+							className: `p-4 rounded-xl border-2 transition ${!member.active ? "border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed" : isSelected ? "border-amber-500 bg-amber-50/50 shadow-sm cursor-pointer" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 cursor-pointer"}`,
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center gap-2 flex-wrap",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-										className: `px-2.5 py-1 rounded-md text-xs font-bold ${badgeColor}`,
-										children: [
-											member.roleHindi,
-											" — ",
-											member.name
-										]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-										className: "text-[11px] font-mono text-slate-500",
-										children: ["+91 ", member.phone]
-									}),
-									member.email && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-										className: "text-[11px] text-slate-600 font-medium",
-										children: ["• ", member.email]
-									}),
-									!member.active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full",
-										children: "निष्क्रिय खाता"
-									}),
-									isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-										className: "flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5" }), "वर्तमान एक्टिव अकाउंट"]
-									})
-								]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-								className: "inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-3.5 h-3.5 text-emerald-600" }),
-									enabledCount,
-									"/15 अधिकार"
-								]
+								className: "flex items-start justify-between gap-2 flex-wrap",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-2 flex-wrap",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: `px-2.5 py-1 rounded-md text-xs font-bold ${badgeColor}`,
+											children: [
+												member.roleHindi,
+												" — ",
+												member.name
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "text-[11px] font-mono text-slate-500",
+											children: ["+91 ", member.phone]
+										}),
+										member.email && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "text-[11px] text-slate-600 font-medium",
+											children: ["• ", member.email]
+										}),
+										!member.active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full",
+											children: "निष्क्रिय खाता"
+										}),
+										isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5" }), "वर्तमान एक्टिव अकाउंट"]
+										})
+									]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-3.5 h-3.5 text-emerald-600" }),
+										enabledCount,
+										"/15 अधिकार"
+									]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]",
+								children: allPermItems.map((item) => {
+									const allowed = Boolean(effectivePerms[item.key]);
+									return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-1.5",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: `w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${allowed ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-400"}`,
+											children: allowed ? "✓" : "✕"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: allowed ? "text-slate-800 font-medium" : "text-slate-400 line-through",
+											children: item.labelHindi
+										})]
+									}, item.key);
+								})
 							})]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]",
-							children: allPermItems.map((item) => {
-								const allowed = Boolean(effectivePerms[item.key]);
-								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-1.5",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: `w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${allowed ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-400"}`,
-										children: allowed ? "✓" : "✕"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: allowed ? "text-slate-800 font-medium" : "text-slate-400 line-through",
-										children: item.labelHindi
-									})]
-								}, item.key);
-							})
-						})]
-					}, member.id);
+						}, member.id);
+					})
+				}),
+				onLogout && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-xs text-slate-600",
+						children: "नए पासवर्ड से लॉगिन करने के लिए साइन आउट करें"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => {
+							onClose();
+							onLogout();
+						},
+						className: "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लॉगआउट करें (Login Screen)" })]
+					})]
 				})
-			})]
+			]
 		})
 	});
 };
@@ -21174,7 +21285,7 @@ function downloadOpenApiSpec(state) {
 // src/components/InstallModal.tsx
 var SHARED_APP_URL = "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app";
 var GITHUB_REPO_STORAGE_KEY = "tej_food_github_repo";
-var LOCAL_BUILD_COMMAND = "npm install && npm run android:sync && cd android && ./gradlew assembleDebug";
+var LOCAL_BUILD_COMMAND = "npm install --legacy-peer-deps && npm run android:sync && cd android && ./gradlew assembleDebug";
 function normalizeRepoSlug(raw) {
 	const parts = raw.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/i, "").replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
 	if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
@@ -22218,6 +22329,230 @@ var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, 
 				})
 			]
 		})
+	});
+};
+// src/components/LoginScreen.tsx
+function normalizePhone(value) {
+	const digits = value.replace(/\D/g, "");
+	if (digits.length > 10) return digits.slice(-10);
+	return digits;
+}
+var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, onLoginSuccess, onOpenLiveSync }) => {
+	const [identifier, setIdentifier] = (0, import_react.useState)("");
+	const [password, setPassword] = (0, import_react.useState)("");
+	const [showPassword, setShowPassword] = (0, import_react.useState)(false);
+	const [rememberMe, setRememberMe] = (0, import_react.useState)(false);
+	const [errorMsg, setErrorMsg] = (0, import_react.useState)(null);
+	const [showDemoHelp, setShowDemoHelp] = (0, import_react.useState)(false);
+	const isDefaultAdminPass = staffList.find((s) => s.id === "staff-1" && s.role === "admin")?.password === "admin@tej786";
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		setErrorMsg(null);
+		const rawId = identifier.trim();
+		const trimmedPass = password.trim();
+		if (!rawId) {
+			setErrorMsg("कृपया अपना मोबाइल नंबर या ईमेल दर्ज करें।");
+			return;
+		}
+		if (!trimmedPass) {
+			setErrorMsg("कृपया अपना पासवर्ड दर्ज करें।");
+			return;
+		}
+		const normalizedInputPhone = normalizePhone(rawId);
+		const lowerInput = rawId.toLowerCase();
+		const matchedMember = staffList.find((member) => {
+			const memberPhoneNorm = normalizePhone(member.phone || "");
+			const phoneMatches = normalizedInputPhone.length >= 6 && memberPhoneNorm === normalizedInputPhone;
+			const emailMatches = Boolean(member.email) && member.email.trim().toLowerCase() === lowerInput;
+			const nameMatches = member.name.trim().toLowerCase() === lowerInput;
+			return phoneMatches || emailMatches || nameMatches;
+		});
+		if (!matchedMember) {
+			setErrorMsg("यह मोबाइल नंबर या ईमेल किसी स्टाफ खाते से मेल नहीं खा रहा है।");
+			return;
+		}
+		if (!matchedMember.active) {
+			setErrorMsg("यह खाता अभी निष्क्रिय (Inactive) है। कृपया मालिक (Admin) से संपर्क करें।");
+			return;
+		}
+		if ((matchedMember.password || "") !== trimmedPass) {
+			setErrorMsg("गलत पासवर्ड! कृपया सही पासवर्ड दर्ज करें।");
+			return;
+		}
+		onLoginSuccess(matchedMember, rememberMe);
+	};
+	const handleQuickFillDemo = (member) => {
+		setIdentifier(member.phone || member.email || "");
+		setPassword(member.password || "");
+		setErrorMsg(null);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80 flex flex-col justify-between p-4 sm:p-6 font-sans selection:bg-amber-500 selection:text-white",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "max-w-md w-full mx-auto flex items-center justify-between text-[11px] text-slate-300 pt-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सुरक्षित ERP लॉगिन" })]
+				}), onOpenLiveSync && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					onClick: onOpenLiveSync,
+					className: `flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold transition cursor-pointer ${syncStatus === "connected" ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300" : "bg-amber-500/15 border-amber-500/40 text-amber-300"}`,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radio, { className: `w-3 h-3 ${syncStatus === "connected" ? "animate-pulse text-emerald-400" : ""}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: syncStatus === "connected" ? `सर्वर लाइव (${connectedDevicesCount})` : "सर्वर पेयर करें" })]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "max-w-md w-full mx-auto my-6",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-gradient-to-r from-slate-950 via-slate-900 to-amber-900 text-white px-6 py-6 text-center relative",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg ring-4 ring-amber-400/20",
+								children: "T"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-3 text-xl font-black tracking-tight text-white",
+								children: settings.companyName || "Shri Tej Food Products"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "w-3.5 h-3.5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [settings.brandName || "Tejstha", " आटा मिल ERP"] })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-xs text-slate-300",
+								children: "आगे बढ़ने के लिए अपने मोबाइल नंबर या ईमेल से लॉगिन करें"
+							})
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleSubmit,
+						className: "p-6 space-y-4",
+						children: [
+							errorMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold",
+									children: errorMsg
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block text-xs font-bold text-slate-700 mb-1.5",
+								children: "मोबाइल नंबर या ईमेल (Mobile / Email)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									autoComplete: "username",
+									value: identifier,
+									onChange: (e) => setIdentifier(e.target.value),
+									placeholder: "उदाहरण: 9829012345 या email@...",
+									className: "w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+								})]
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block text-xs font-bold text-slate-700 mb-1.5",
+								children: "पासवर्ड (Password)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: showPassword ? "text" : "password",
+										autoComplete: "current-password",
+										value: password,
+										onChange: (e) => setPassword(e.target.value),
+										placeholder: "अपना पासवर्ड लिखें",
+										className: "w-full pl-10 pr-11 py-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										onClick: () => setShowPassword((prev) => !prev),
+										className: "absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer",
+										"aria-label": showPassword ? "पासवर्ड छुपाएं" : "पासवर्ड देखें",
+										children: showPassword ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, { className: "w-4 h-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, { className: "w-4 h-4" })
+									})
+								]
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex items-center gap-2.5 cursor-pointer select-none pt-0.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									checked: rememberMe,
+									onChange: (e) => setRememberMe(e.target.checked),
+									className: "w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-xs text-slate-600 font-medium",
+									children: "इस फोन में लॉगिन सेव रखें (अगली बार बिना पासवर्ड खोलें)"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "submit",
+								className: "w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogIn, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लॉगिन करें (Sign In)" })]
+							}),
+							isDefaultAdminPass && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "pt-2 border-t border-slate-100",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: () => setShowDemoHelp((prev) => !prev),
+									className: "w-full flex items-center justify-between text-[11px] font-bold text-slate-500 hover:text-slate-800 py-1 cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "flex items-center gap-1.5",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleQuestionMark, { className: "w-3.5 h-3.5 text-amber-600" }), "पहली बार लॉगिन? डिफ़ॉल्ट Admin / स्टाफ आईडी देखें"]
+									}), showDemoHelp ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronUp, { className: "w-3.5 h-3.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "w-3.5 h-3.5" })]
+								}), showDemoHelp && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "mt-2 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-slate-600",
+										children: "नीचे किसी भी अकाउंट पर टैप करके विवरण भरें (बाद में स्टाफ सेक्शन से पासवर्ड बदल सकते हैं):"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto",
+										children: staffList.filter((m) => m.active).map((member) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											onClick: () => handleQuickFillDemo(member),
+											className: "w-full text-left px-2.5 py-1.5 rounded-lg bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 flex items-center justify-between gap-2 transition cursor-pointer",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "min-w-0",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "font-bold text-slate-900 truncate",
+													children: [
+														member.roleHindi,
+														" — ",
+														member.name
+													]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "text-[10px] text-slate-500 font-mono truncate",
+													children: [
+														"ID: ",
+														member.phone,
+														" ",
+														member.email ? `| ${member.email}` : ""
+													]
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded shrink-0",
+												children: "भरें"
+											})]
+										}, member.id))
+									})]
+								})]
+							})
+						]
+					})]
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "max-w-md w-full mx-auto text-center text-[11px] text-slate-400 pb-2",
+				children: [
+					"© ",
+					(/* @__PURE__ */ new Date()).getFullYear(),
+					" ",
+					settings.companyName,
+					" • 100% सुरक्षित व ऑफ़लाइन रेडी"
+				]
+			})
+		]
 	});
 };
 // src/views/DashboardView.tsx
@@ -46385,9 +46720,10 @@ function App() {
 	const [production, setProduction] = (0, import_react.useState)(INITIAL_PRODUCTION);
 	const [expenses, setExpenses] = (0, import_react.useState)(INITIAL_EXPENSES);
 	const [staff, setStaff] = (0, import_react.useState)(INITIAL_STAFF);
+	const [isAuthenticated, setIsAuthenticated] = (0, import_react.useState)(false);
 	const [activeTab, setActiveTab] = (0, import_react.useState)("dashboard");
-	const [currentRole, setCurrentRole] = (0, import_react.useState)("admin");
-	const [currentStaffId, setCurrentStaffId] = (0, import_react.useState)("staff-1");
+	const [currentRole, setCurrentRole] = (0, import_react.useState)("salesman");
+	const [currentStaffId, setCurrentStaffId] = (0, import_react.useState)("");
 	const activeStaffMember = staff.find((s) => s.id === currentStaffId) || staff.find((s) => s.role === currentRole) || staff[0];
 	const activePermissions = getEffectivePermissions(activeStaffMember, currentRole);
 	const canManageStaff = currentRole === "admin" || activePermissions.manageStaff;
@@ -46436,8 +46772,27 @@ function App() {
 		setInstallModalTab(tab);
 		setShowInstallModal(true);
 	};
+	const handleLoginSuccess = (member, rememberMe) => {
+		setCurrentStaffId(member.id);
+		setCurrentRole(member.role);
+		setActiveTab("dashboard");
+		setIsAuthenticated(true);
+		if (typeof window !== "undefined") {
+			if (rememberMe) localStorage.setItem("tej_food_remembered_user_id", member.id);
+			else localStorage.removeItem("tej_food_remembered_user_id");
+		}
+	};
+	const handleLogout = () => {
+		if (typeof window !== "undefined") localStorage.removeItem("tej_food_remembered_user_id");
+		setShowRoleSwitcherModal(false);
+		setIsAuthenticated(false);
+		setCurrentStaffId("");
+		setCurrentRole("salesman");
+		setActiveTab("dashboard");
+	};
 	(0, import_react.useEffect)(() => {
 		const saved = loadStateFromStorage();
+		let loadedStaff = INITIAL_STAFF;
 		if (saved) {
 			if (saved.settings) setSettings(saved.settings);
 			if (saved.products) setProducts(saved.products);
@@ -46447,7 +46802,19 @@ function App() {
 			if (saved.orders) setOrders(saved.orders);
 			if (saved.production) setProduction(saved.production);
 			if (saved.expenses) setExpenses(saved.expenses);
-			if (saved.staff) setStaff(saved.staff);
+			if (saved.staff) {
+				setStaff(saved.staff);
+				loadedStaff = saved.staff;
+			}
+		}
+		const rememberedId = typeof window !== "undefined" ? localStorage.getItem("tej_food_remembered_user_id") : null;
+		if (rememberedId) {
+			const rememberedUser = loadedStaff.find((s) => s.id === rememberedId && s.active);
+			if (rememberedUser) {
+				setCurrentStaffId(rememberedUser.id);
+				setCurrentRole(rememberedUser.role);
+				setIsAuthenticated(true);
+			} else if (typeof window !== "undefined") localStorage.removeItem("tej_food_remembered_user_id");
 		}
 		setInitialLoaded(true);
 	}, []);
@@ -46478,50 +46845,53 @@ function App() {
 		expenses,
 		staff
 	]);
+	const getCurrentSyncState = (0, import_react.useCallback)(() => ({
+		version: "2.4.0",
+		timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+		settings,
+		products,
+		rawStock,
+		bagStock,
+		customers,
+		orders,
+		production,
+		expenses,
+		staff
+	}), [
+		settings,
+		products,
+		rawStock,
+		bagStock,
+		customers,
+		orders,
+		production,
+		expenses,
+		staff
+	]);
+	const applySyncedFullState = (0, import_react.useCallback)((next) => {
+		if (next.settings) setSettings(next.settings);
+		if (next.products) setProducts(next.products);
+		if (next.rawStock) setRawStock(next.rawStock);
+		if (next.bagStock) setBagStock(next.bagStock);
+		if (next.customers) setCustomers(next.customers);
+		if (next.orders) setOrders(next.orders);
+		if (next.production) setProduction(next.production);
+		if (next.expenses) setExpenses(next.expenses);
+		if (next.staff) setStaff(next.staff);
+	}, []);
+	const handleRemoteActivity = (0, import_react.useCallback)((evt) => {
+		setLiveToast(evt);
+		if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+		toastTimerRef.current = window.setTimeout(() => {
+			setLiveToast(null);
+		}, 6500);
+	}, []);
 	const sync = useRealtimeSync({
-		currentUserRole: currentRole,
-		getCurrentState: (0, import_react.useCallback)(() => ({
-			version: "2.4.0",
-			timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-			settings,
-			products,
-			rawStock,
-			bagStock,
-			customers,
-			orders,
-			production,
-			expenses,
-			staff
-		}), [
-			settings,
-			products,
-			rawStock,
-			bagStock,
-			customers,
-			orders,
-			production,
-			expenses,
-			staff
-		]),
-		applyFullState: (0, import_react.useCallback)((next) => {
-			if (next.settings) setSettings(next.settings);
-			if (next.products) setProducts(next.products);
-			if (next.rawStock) setRawStock(next.rawStock);
-			if (next.bagStock) setBagStock(next.bagStock);
-			if (next.customers) setCustomers(next.customers);
-			if (next.orders) setOrders(next.orders);
-			if (next.production) setProduction(next.production);
-			if (next.expenses) setExpenses(next.expenses);
-			if (next.staff) setStaff(next.staff);
-		}, []),
+		currentUserRole: isAuthenticated ? currentRole : "salesman",
+		getCurrentState: getCurrentSyncState,
+		applyFullState: applySyncedFullState,
 		isAppLoaded: initialLoaded,
-		onRemoteActivity: (0, import_react.useCallback)((evt) => {
-			setLiveToast(evt);
-			if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-			toastTimerRef.current = window.setTimeout(() => {
-				setLiveToast(null);
-			}, 6500);
-		}, [])
+		onRemoteActivity: handleRemoteActivity
 	});
 	const handleOrderCreated = (newOrder) => {
 		sync.dispatchMutation({
@@ -46681,6 +47051,26 @@ function App() {
 	};
 	const pendingOrdersCount = orders.filter((o) => o.status === "pending" || o.status === "in_production").length;
 	const lowStockCount = bagStock.filter((b) => b.packedCount <= b.minThreshold).length;
+	if (!isAuthenticated) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoginScreen, {
+		settings,
+		staffList: staff,
+		syncStatus: sync.status,
+		connectedDevicesCount: sync.connectedDevices.length,
+		onLoginSuccess: handleLoginSuccess,
+		onOpenLiveSync: () => setShowLiveSyncModal(true)
+	}), showLiveSyncModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LiveSyncModal, {
+		onClose: () => setShowLiveSyncModal(false),
+		config: sync.config,
+		status: sync.status,
+		connectedDevices: sync.connectedDevices,
+		recentEvents: sync.recentEvents,
+		pendingCount: sync.pendingCount,
+		lastSyncedAt: sync.lastSyncedAt,
+		soundEnabled: sync.soundEnabled,
+		onToggleSound: () => sync.setSoundEnabled((prev) => !prev),
+		onUpdateConfig: sync.updateSyncConfig,
+		onPushMasterStateNow: sync.pushMasterStateNow
+	})] });
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white",
 		children: [
@@ -46750,7 +47140,8 @@ function App() {
 				},
 				onNavigateToInventory: () => setActiveTab("inventory"),
 				onOpenInstallModal: () => handleOpenInstallModal("apk"),
-				onOpenLiveSync: () => setShowLiveSyncModal(true)
+				onOpenLiveSync: () => setShowLiveSyncModal(true),
+				onLogout: handleLogout
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex-1 flex max-w-7xl w-full mx-auto",
@@ -46927,6 +47318,7 @@ function App() {
 				staffList: staff,
 				onSelectRole: handleSwitchRole,
 				onSelectUser: handleSelectStaffMember,
+				onLogout: handleLogout,
 				onClose: () => setShowRoleSwitcherModal(false)
 			}),
 			showInstallModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InstallModal, {
