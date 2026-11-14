@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TEJ FOOD PRODUCTS</string>
+    <string name="title_activity_main">TEJ FOOD PRODUCTS</string>
+    <string name="package_name">com.shritejfood.erp</string>
+    <string name="custom_url_scheme">com.shritejfood.erp</string>
+</resources>

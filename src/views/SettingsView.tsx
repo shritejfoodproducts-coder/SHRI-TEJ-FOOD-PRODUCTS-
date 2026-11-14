@@ -24,6 +24,7 @@ interface SettingsViewProps {
   onSaveSettings: (settings: CompanySettings) => void;
   onUpdateProductRate: (productId: string, bagSize: BagSize, rate: number) => void;
   onOpenInstallModal?: () => void;
+  onOpenLiveSync?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -32,6 +33,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSaveSettings,
   onUpdateProductRate,
   onOpenInstallModal,
+  onOpenLiveSync,
 }) => {
   const [formData, setFormData] = useState<CompanySettings>(settings);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -226,16 +228,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {onOpenInstallModal && (
-          <button
-            type="button"
-            onClick={onOpenInstallModal}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-black text-xs transition shadow-md shrink-0"
-          >
-            <Smartphone className="w-4 h-4" />
-            <span>फ़ोन में ऐप (APK) / API डाउनलोड</span>
-          </button>
-        )}
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {onOpenLiveSync && (
+            <button
+              type="button"
+              onClick={onOpenLiveSync}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black text-xs transition shadow-md cursor-pointer"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span>👑 मोबाइल सर्वर / लाइव सिंक</span>
+            </button>
+          )}
+          {onOpenInstallModal && (
+            <button
+              type="button"
+              onClick={onOpenInstallModal}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-black text-xs transition shadow-md cursor-pointer"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span>फ़ोन में ऐप / API डाउनलोड</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 text-xs text-slate-800">

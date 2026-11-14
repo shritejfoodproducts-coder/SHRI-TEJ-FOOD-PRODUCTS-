@@ -11,32 +11,44 @@ import {
   Clock,
   Sparkles,
   Download,
-  HardDrive
+  HardDrive,
+  Radio,
+  Crown
 } from 'lucide-react';
 import { getDeviceStorageStats, LocalStorageStats } from '../utils/localStorageStats';
+import type { SyncConnectionStatus } from '../hooks/useRealtimeSync';
+import type { SyncDeviceRole } from '../../shared/erpSyncTypes';
 
 interface HeaderProps {
   currentRole: UserRole;
   settings: CompanySettings;
   lowStockCount: number;
+  syncStatus?: SyncConnectionStatus;
+  connectedDevicesCount?: number;
+  syncDeviceRole?: SyncDeviceRole;
   onOpenRoleSwitcher: () => void;
   onOpenNewOrder: () => void;
   onOpenNewProduction: () => void;
   onOpenReceivePayment: () => void;
   onNavigateToInventory: () => void;
   onOpenInstallModal: () => void;
+  onOpenLiveSync?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   settings,
   lowStockCount,
+  syncStatus = 'connecting',
+  connectedDevicesCount = 1,
+  syncDeviceRole = 'master',
   onOpenRoleSwitcher,
   onOpenNewOrder,
   onOpenNewProduction,
   onOpenReceivePayment,
   onNavigateToInventory,
   onOpenInstallModal,
+  onOpenLiveSync,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
   const [storageStats, setStorageStats] = useState<LocalStorageStats | null>(null);
@@ -113,6 +125,37 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center / Right controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Live Mobile Server / Real-time Sync Button */}
+          {onOpenLiveSync && (
+            <button
+              onClick={onOpenLiveSync}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                syncStatus === 'connected'
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-emerald-500/40'
+                  : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/40'
+              }`}
+              title="मोबाइल सर्वर एवं रियल-टाइम स्टाफ सिंक खोलें"
+            >
+              {syncDeviceRole === 'master' ? (
+                <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              ) : (
+                <Radio
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    syncStatus === 'connected' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'
+                  }`}
+                />
+              )}
+              <span className="whitespace-nowrap hidden sm:inline">
+                {syncStatus === 'connected'
+                  ? `लाइव (${connectedDevicesCount})`
+                  : 'सिंक...'}
+              </span>
+              <span className="whitespace-nowrap sm:hidden">
+                {connectedDevicesCount}
+              </span>
+            </button>
+          )}
+
           {/* Free App Install Button */}
           <button
             onClick={onOpenInstallModal}
@@ -120,7 +163,8 @@ export const Header: React.FC<HeaderProps> = ({
             title="इस ऐप का फ्री वर्जन अपने फोन में इंस्टॉल करें"
           >
             <Download className="w-3.5 h-3.5 text-slate-950" />
-            <span className="whitespace-nowrap">ऐप / API डाउनलोड</span>
+            <span className="whitespace-nowrap hidden sm:inline">ऐप / API डाउनलोड</span>
+            <span className="whitespace-nowrap sm:hidden">ऐप</span>
           </button>
 
           {/* Local Storage Indicator (Desktop) */}

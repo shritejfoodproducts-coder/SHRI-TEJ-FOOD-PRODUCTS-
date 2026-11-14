@@ -42,6 +42,7 @@ export const InstallModal: React.FC<InstallModalProps> = ({
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
   const [copiedPayload, setCopiedPayload] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [previewEndpoint, setPreviewEndpoint] = useState<string>('/api/v1/orders');
 
   const handleInstallClick = async () => {
@@ -273,11 +274,19 @@ export const InstallModal: React.FC<InstallModalProps> = ({
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-slate-900 text-xs flex items-center gap-2">
                     <Smartphone className="w-4 h-4 text-emerald-600" />
-                    <span>व्हाट्सएप या अन्य फोन में भेजने हेतु .APK फाइल विकल्प</span>
+                    <span>Android मोबाइल ऐप (.APK / WebAPK) विकल्प</span>
                   </h3>
                   <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full">
-                    Direct Tools
+                    Android Ready
                   </span>
+                </div>
+
+                {/* Honest Technical Note */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2.5">
+                  <Info className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-blue-900 leading-relaxed">
+                    <strong>नोट:</strong> यह एक Web/PWA ऐप है। सीधे अपने फ़ोन के Chrome में <strong>'Install app'</strong> दबाने पर Google Chrome ऑटोमैटिक असली <strong>Android WebAPK</strong> इंस्टॉल कर देता है (जो बिना इंटरनेट भी चलता है)। अलग <strong>.apk फ़ाइल</strong> बनाने के लिए नीचे PWABuilder का उपयोग करें।
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -286,10 +295,10 @@ export const InstallModal: React.FC<InstallModalProps> = ({
                     <div>
                       <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs mb-1">
                         <Download className="w-4 h-4 text-amber-600" />
-                        <span>.APK पैकेज फाइल बनाएं (PWABuilder)</span>
+                        <span>Google / Microsoft Signed .APK</span>
                       </div>
                       <p className="text-[11px] text-amber-800 leading-relaxed mb-3">
-                        Google और Microsoft के आधिकारिक PWABuilder टूल से आप इस ऐप की साइन्ड <strong>.apk फ़ाइल</strong> 1-क्लिक में डाउनलोड कर सकते हैं।
+                        Microsoft के आधिकारिक PWABuilder टूल से पब्लिक URL डालकर आप इस ऐप की साइन्ड <strong>.apk फ़ाइल</strong> जनरेट कर सकते हैं।
                       </p>
                     </div>
                     <a
@@ -319,12 +328,22 @@ export const InstallModal: React.FC<InstallModalProps> = ({
                       onClick={() => {
                         const url = typeof window !== 'undefined' ? window.location.href : '';
                         navigator.clipboard.writeText(url);
-                        alert('ऐप लिंक कॉपी हो गया है! अब आप इसे व्हाट्सएप पर पेस्ट करके भेज सकते हैं।');
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 2500);
                       }}
                       className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition cursor-pointer"
                     >
-                      <Copy className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>ऐप लिंक कॉपी करें (Copy Link)</span>
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>लिंक कॉपी हो गया! (WhatsApp पर पेस्ट करें)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>ऐप लिंक कॉपी करें (Copy Link)</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
