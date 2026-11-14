@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActiveTab } from './Sidebar';
-import { UserRole } from '../types/erp';
+import { StaffPermissions, UserRole } from '../types/erp';
+import { getDefaultPermissionsForRole } from '../utils/permissions';
 import { 
   LayoutDashboard, 
   Users, 
@@ -9,6 +10,7 @@ import {
   ClipboardList, 
   Truck, 
   FileSpreadsheet,
+  UserCheck,
   Download
 } from 'lucide-react';
 
@@ -16,6 +18,7 @@ interface MobileNavProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
   currentRole: UserRole;
+  permissions?: StaffPermissions;
   pendingOrdersCount: number;
   onOpenInstallModal?: () => void;
 }
@@ -24,18 +27,22 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   activeTab,
   onTabChange,
   currentRole,
+  permissions,
   pendingOrdersCount,
   onOpenInstallModal,
 }) => {
+  const perms = permissions || getDefaultPermissionsForRole(currentRole);
+
   const tabs = [
-    { id: 'dashboard' as ActiveTab, label: 'डैशबोर्ड', icon: LayoutDashboard },
-    { id: 'orders' as ActiveTab, label: 'ऑर्डर', icon: ClipboardList, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
-    { id: 'inventory' as ActiveTab, label: 'स्टॉक', icon: Package },
-    { id: 'production' as ActiveTab, label: 'उत्पादन', icon: Factory },
-    { id: 'customers' as ActiveTab, label: 'ग्राहक', icon: Users },
-    { id: 'delivery' as ActiveTab, label: 'डिलीवरी', icon: Truck },
-    { id: 'reports' as ActiveTab, label: 'Excel', icon: FileSpreadsheet },
-  ];
+    { id: 'dashboard' as ActiveTab, label: 'डैशबोर्ड', icon: LayoutDashboard, visible: true },
+    { id: 'orders' as ActiveTab, label: 'ऑर्डर', icon: ClipboardList, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, visible: perms.viewOrders },
+    { id: 'inventory' as ActiveTab, label: 'स्टॉक', icon: Package, visible: perms.viewInventory },
+    { id: 'production' as ActiveTab, label: 'उत्पादन', icon: Factory, visible: perms.viewProduction },
+    { id: 'customers' as ActiveTab, label: 'ग्राहक', icon: Users, visible: perms.viewCustomers },
+    { id: 'delivery' as ActiveTab, label: 'डिलीवरी', icon: Truck, visible: perms.viewDelivery },
+    { id: 'staff' as ActiveTab, label: 'स्टाफ', icon: UserCheck, visible: currentRole === 'admin' || perms.manageStaff },
+    { id: 'reports' as ActiveTab, label: 'Excel', icon: FileSpreadsheet, visible: perms.viewReports },
+  ].filter((t) => t.visible);
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center select-none shadow-lg no-print">

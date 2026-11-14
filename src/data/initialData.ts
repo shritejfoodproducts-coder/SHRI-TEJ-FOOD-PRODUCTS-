@@ -263,6 +263,7 @@ export const INITIAL_STAFF: UserProfile[] = [
     id: 'staff-1',
     name: 'श्री तेज प्रकाश (मालिक)',
     phone: '9829012345',
+    email: 'shritejfoodproducts@gmail.com',
     role: 'admin',
     roleHindi: 'मालिक (Admin)',
     password: 'admin@tej786',

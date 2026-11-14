@@ -19,6 +19,7 @@ interface InventoryViewProps {
   rawStock: RawMaterialStock;
   bagStock: BagStockItem[];
   products: ProductMaster[];
+  canEdit?: boolean;
   onUpdateRawStock: (newRaw: RawMaterialStock) => void;
   onUpdateBagStock: (productId: string, bagSize: BagSize, newCount: number) => void;
 }
@@ -27,6 +28,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   rawStock,
   bagStock,
   products,
+  canEdit = true,
   onUpdateRawStock,
   onUpdateBagStock,
 }) => {
@@ -199,33 +201,35 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Master Edit Button */}
-          <button
-            onClick={openMasterEditModal}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
-            title="सभी स्टॉक को एक साथ एडिट करें"
-          >
-            <SlidersHorizontal className="w-4 h-4 text-amber-400" />
-            <span>⚡ संपूर्ण स्टॉक एडिट करें</span>
-          </button>
+        {canEdit && (
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Master Edit Button */}
+            <button
+              onClick={openMasterEditModal}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
+              title="सभी स्टॉक को एक साथ एडिट करें"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+              <span>⚡ संपूर्ण स्टॉक एडिट करें</span>
+            </button>
 
-          <button
-            onClick={() => setShowWheatModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
-          >
-            <Wheat className="w-4 h-4" />
-            <span>+ गेहूँ मंडी आवक</span>
-          </button>
-          
-          <button
-            onClick={() => setShowEmptyBagsModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition shadow-xs"
-          >
-            <Layers className="w-4 h-4" />
-            <span>+ खाली बैग जोड़ें</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setShowWheatModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <Wheat className="w-4 h-4" />
+              <span>+ गेहूँ मंडी आवक</span>
+            </button>
+            
+            <button
+              onClick={() => setShowEmptyBagsModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <Layers className="w-4 h-4" />
+              <span>+ खाली बैग जोड़ें</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Low Stock Alert Banner */}
@@ -268,26 +272,28 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => {
-                  setEditWheatQuintals(rawStock.wheatQuintals);
-                  setEditWheatRate(rawStock.avgPurchaseRateQuintal);
-                  setShowEditWheatModal(true);
-                }}
-                className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-400 rounded-lg text-xs font-bold transition flex items-center gap-1"
-                title="कच्चा गेहूं स्टॉक संख्या सीधे एडिट करें"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>एडिट</span>
-              </button>
-              <button
-                onClick={() => setShowWheatModal(true)}
-                className="px-2.5 py-1 bg-amber-700 text-white rounded-lg text-xs font-bold hover:bg-amber-800 transition"
-              >
-                + आवक
-              </button>
-            </div>
+            {canEdit && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setEditWheatQuintals(rawStock.wheatQuintals);
+                    setEditWheatRate(rawStock.avgPurchaseRateQuintal);
+                    setShowEditWheatModal(true);
+                  }}
+                  className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-400 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                  title="कच्चा गेहूं स्टॉक संख्या सीधे एडिट करें"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>एडिट</span>
+                </button>
+                <button
+                  onClick={() => setShowWheatModal(true)}
+                  className="px-2.5 py-1 bg-amber-700 text-white rounded-lg text-xs font-bold hover:bg-amber-800 transition"
+                >
+                  + आवक
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 space-y-2">
@@ -331,29 +337,31 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => {
-                  setEditBags5(rawStock.emptyBags[5] || 0);
-                  setEditBags10(rawStock.emptyBags[10] || 0);
-                  setEditBags25(rawStock.emptyBags[25] || 0);
-                  setEditBags50(rawStock.emptyBags[50] || 0);
-                  setEditThreadKg(rawStock.stitchingThreadKg || 0);
-                  setShowEditPackagingModal(true);
-                }}
-                className="px-2.5 py-1 bg-slate-100 hover:bg-amber-100 text-slate-800 hover:text-amber-900 rounded-lg text-xs font-bold transition flex items-center gap-1"
-                title="खाली बैग व धागे का स्टॉक सीधे एडिट करें"
-              >
-                <Edit3 className="w-3.5 h-3.5 text-amber-700" />
-                <span>एडिट स्टॉक</span>
-              </button>
-              <button
-                onClick={() => setShowEmptyBagsModal(true)}
-                className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition"
-              >
-                + बैग जोड़ें
-              </button>
-            </div>
+            {canEdit && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setEditBags5(rawStock.emptyBags[5] || 0);
+                    setEditBags10(rawStock.emptyBags[10] || 0);
+                    setEditBags25(rawStock.emptyBags[25] || 0);
+                    setEditBags50(rawStock.emptyBags[50] || 0);
+                    setEditThreadKg(rawStock.stitchingThreadKg || 0);
+                    setShowEditPackagingModal(true);
+                  }}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-amber-100 text-slate-800 hover:text-amber-900 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                  title="खाली बैग व धागे का स्टॉक सीधे एडिट करें"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                  <span>एडिट स्टॉक</span>
+                </button>
+                <button
+                  onClick={() => setShowEmptyBagsModal(true)}
+                  className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition"
+                >
+                  + बैग जोड़ें
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
@@ -449,7 +457,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <th className="py-3 px-3 text-right">रेट / बैग</th>
                 <th className="py-3 px-3 text-right">स्टॉक वैल्यू (₹)</th>
                 <th className="py-3 px-3 text-center">स्थिति</th>
-                <th className="py-3 px-4 text-center">एडिट स्टॉक</th>
+                {canEdit && <th className="py-3 px-4 text-center">एडिट स्टॉक</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -516,19 +524,21 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={() => {
-                          setEditingItem({ productId: item.productId, bagSize: item.bagSize, current: item.packedCount });
-                          setEditCount(item.packedCount);
-                        }}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 mx-auto"
-                        title="बैग स्टॉक संख्या बदलें"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-amber-700" />
-                        <span>एडिट</span>
-                      </button>
-                    </td>
+                    {canEdit && (
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {
+                            setEditingItem({ productId: item.productId, bagSize: item.bagSize, current: item.packedCount });
+                            setEditCount(item.packedCount);
+                          }}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 mx-auto"
+                          title="बैग स्टॉक संख्या बदलें"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                          <span>एडिट</span>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

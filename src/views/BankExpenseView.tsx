@@ -18,6 +18,8 @@ interface BankExpenseViewProps {
   expenses: ExpenseRecord[];
   orders: Order[];
   settings: CompanySettings;
+  canAddExpense?: boolean;
+  canViewBalances?: boolean;
   onOpenNewExpense: () => void;
 }
 
@@ -25,6 +27,8 @@ export const BankExpenseView: React.FC<BankExpenseViewProps> = ({
   expenses,
   orders,
   settings,
+  canAddExpense = true,
+  canViewBalances = true,
   onOpenNewExpense,
 }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -74,16 +78,19 @@ export const BankExpenseView: React.FC<BankExpenseViewProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenNewExpense}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
-        >
-          <Plus className="w-4 h-4 text-amber-400" />
-          <span>+ नया खर्च वाउचर दर्ज करें</span>
-        </button>
+        {canAddExpense && (
+          <button
+            onClick={onOpenNewExpense}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
+          >
+            <Plus className="w-4 h-4 text-amber-400" />
+            <span>+ नया खर्च वाउचर दर्ज करें</span>
+          </button>
+        )}
       </div>
 
       {/* 3 Live Accounts Balances */}
+      {canViewBalances && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Cash in Hand */}
         <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
@@ -145,6 +152,7 @@ export const BankExpenseView: React.FC<BankExpenseViewProps> = ({
           </p>
         </div>
       </div>
+      )}
 
       {/* Expense Vouchers Log Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">

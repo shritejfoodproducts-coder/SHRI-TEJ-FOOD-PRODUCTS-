@@ -11,6 +11,7 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
   const [name, setName] = useState('');
   const [firmName, setFirmName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('जयपुर');
   const [gstin, setGstin] = useState('');
@@ -25,6 +26,7 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
       name,
       firmName: firmName || name,
       phone,
+      email: email.trim() || undefined,
       address,
       city,
       gstin: gstin.toUpperCase(),
@@ -105,6 +107,17 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
                 <option value="direct">सीधा ग्राहक (Direct Consumer)</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">ईमेल पता (Email - वैकल्पिक)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="उदा. partyname@gmail.com"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+            />
           </div>
 
           <div>

@@ -1,4 +1,4 @@
-name: Build & Publish TEJ FOOD Android APK
+name: Build and Publish Debug APK
 
 on:
   push:
@@ -11,8 +11,8 @@ permissions:
   contents: write
 
 jobs:
-  build-android-apk:
-    name: Build Capacitor Debug APK
+  build-debug-apk:
+    name: Build Debug APK & Publish Release
     runs-on: ubuntu-latest
 
     steps:
@@ -23,12 +23,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
 
-      - name: Install npm dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Build web bundle & sync Capacitor Android
+      - name: Build web app and sync Capacitor Android
         run: |
           npm run build
           npx cap sync android
@@ -43,30 +42,61 @@ jobs:
         run: |
           java -version
           echo "JAVA_HOME=$JAVA_HOME"
-          JAVA_MAJOR=$(java -version 2>&1 | head -n 1 | sed -E 's/.*version "([0-9]+).*/\1/')
+          JAVA_VER_LINE=$(java -version 2>&1 | head -n 1)
+          if [ -z "$JAVA_VER_LINE" ]; then
+            echo "ERROR: Could not detect Java version."
+            exit 1
+          fi
+          JAVA_MAJOR=$(echo "$JAVA_VER_LINE" | sed -E 's/.*version "([0-9]+).*/\1/')
+          if ! [[ "$JAVA_MAJOR" =~ ^[0-9]+$ ]]; then
+            echo "ERROR: Failed to parse Java major version from: $JAVA_VER_LINE"
+            exit 1
+          fi
           echo "Detected Java major version: $JAVA_MAJOR"
-          if [ -z "$JAVA_MAJOR" ] || [ "$JAVA_MAJOR" -lt 21 ]; then
-            echo "Java 21 or newer is required for Capacitor Android 8. Detected: $JAVA_MAJOR"
+          if [ "$JAVA_MAJOR" -lt 21 ]; then
+            echo "ERROR: Java 21 or newer is required by Capacitor Android 8 (found Java $JAVA_MAJOR)."
             exit 1
           fi
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
-        working-directory: android
-        run: chmod +x gradlew
+      - name: Accept Android SDK licenses
+        run: |
+          if [ -n "$ANDROID_HOME" ] && [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          fi
+
+      - name: Create temporary debug keystore
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            echo "Generating temporary debug keystore..."
+            keytool -genkey -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          else
+            echo "Debug keystore already exists."
+          fi
 
       - name: Build Debug APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Prepare release APK file
+      - name: Collect Debug APK
         run: |
           mkdir -p release-apk
           APK_PATH=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
           if [ -z "$APK_PATH" ]; then
-            echo "Debug APK not found!"
+            echo "ERROR: Debug APK not found after assembleDebug."
             exit 1
           fi
           cp "$APK_PATH" release-apk/TejFoodProducts-ERP-debug.apk
@@ -77,16 +107,17 @@ jobs:
         with:
           name: TejFoodProducts-ERP-debug-apk
           path: release-apk/TejFoodProducts-ERP-debug.apk
+          retention-days: 30
 
-      - name: Publish APK to GitHub Releases
+      - name: Publish Debug APK to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ github.token }}
-          tag_name: v2.4.0-build-${{ github.run_number }}
+          tag_name: v2.4.0-debug-${{ github.run_number }}
           name: TEJ FOOD PRODUCTS ERP v2.4.0 (Build #${{ github.run_number }})
           body: |
-            **TEJ FOOD PRODUCTS - आटा ERP Android Debug APK**
-            - सीधे अपने Android फोन पर डाउनलोड करके इंस्टॉल करें।
-            - लाइव मोबाइल सर्वर सिंक + 100% ऑफ़लाइन लोकल स्टोरेज शामिल।
+            **TEJ FOOD PRODUCTS - Factory & Atta ERP (Android Debug APK)**
+            - Download `TejFoodProducts-ERP-debug.apk` directly on your Android phone and install.
+            - Includes offline localStorage persistence + real-time multi-mobile WebSocket sync.
           files: release-apk/TejFoodProducts-ERP-debug.apk
           prerelease: false

@@ -3,6 +3,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
   INITIAL_BAG_STOCK,
@@ -193,6 +194,114 @@ async function startServer() {
       hasMasterSeed: room.hasMasterSeed,
       devices: getRoomDevices(room.roomId),
       recentEventsCount: room.recentEvents.length,
+    });
+  });
+
+  const findBuiltApkPath = (): string | null => {
+    const candidates = [
+      path.join(__dirname, 'release-apk', 'TejFoodProducts-ERP-debug.apk'),
+      path.join(__dirname, 'public', 'downloads', 'TejFoodProducts-ERP-debug.apk'),
+      path.join(__dirname, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
+    ];
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        const stat = fs.statSync(candidate);
+        if (stat.isFile() && stat.size > 100_000) {
+          return candidate;
+        }
+      }
+    }
+    return null;
+  };
+
+  app.get('/api/apk-status', (_req, res) => {
+    const apkPath = findBuiltApkPath();
+    const fileSizeBytes = apkPath ? fs.statSync(apkPath).size : null;
+    res.json({
+      available: Boolean(apkPath),
+      downloadUrl: apkPath ? '/api/apk-download' : null,
+      fileName: 'TejFoodProducts-ERP-debug.apk',
+      fileSizeBytes,
+      packageId: 'com.shritejfood.erp',
+      versionName: '2.4.0',
+      hasAndroidProject: fs.existsSync(path.join(__dirname, 'android', 'gradlew')),
+      hasGithubWorkflow: fs.existsSync(path.join(__dirname, '.github', 'workflows', 'build-apk.yml')),
+      hasDistBuild: fs.existsSync(path.join(__dirname, 'dist', 'index.html')),
+      bundleUrl: '/api/download-android-bundle',
+    });
+  });
+
+  app.get('/api/apk-download', (_req, res) => {
+    const apkPath = findBuiltApkPath();
+    if (!apkPath) {
+      res.status(404).json({
+        error: 'APK binary not compiled on this container (Android SDK / Java 21 not installed). Use GitHub Actions or download the Android project bundle.',
+      });
+      return;
+    }
+    res.download(apkPath, 'TejFoodProducts-ERP-debug.apk');
+  });
+
+  app.get('/api/download-android-bundle', (req, res) => {
+    const bundleEntries = [
+      '.github',
+      'android',
+      'public',
+      'shared',
+      'src',
+      'capacitor.config.ts',
+      'index.html',
+      'package.json',
+      'package-lock.json',
+      'bun.lock',
+      'server.ts',
+      'tsconfig.json',
+      'vite.config.ts',
+    ].filter((entry) => fs.existsSync(path.join(__dirname, entry)));
+
+    if (fs.existsSync(path.join(__dirname, 'dist'))) {
+      bundleEntries.push('dist');
+    }
+
+    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="TejFoodProducts-Android-APK-Project-v2.4.0.tar.gz"'
+    );
+
+    const tarArgs = [
+      '-czf',
+      '-',
+      '--exclude=android/.gradle',
+      '--exclude=android/app/build',
+      '--exclude=android/build',
+      '--exclude=node_modules',
+      '--exclude=.git',
+      '--exclude=.erp-sync-data',
+      ...bundleEntries,
+    ];
+
+    const tarProc = spawn('tar', tarArgs, { cwd: __dirname });
+
+    tarProc.stdout.pipe(res);
+
+    tarProc.stderr.on('data', (chunk) => {
+      console.error('tar stderr:', chunk.toString());
+    });
+
+    tarProc.on('error', (err) => {
+      console.error('Failed to spawn tar for android bundle:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to archive Android project bundle' });
+      } else {
+        res.end();
+      }
+    });
+
+    req.on('close', () => {
+      if (!tarProc.killed) {
+        tarProc.kill('SIGTERM');
+      }
     });
   });
 

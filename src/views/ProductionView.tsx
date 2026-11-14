@@ -352,23 +352,27 @@ export const ProductionView: React.FC<ProductionViewProps> = ({
 
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => startEditBatch(batch)}
-                          className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition"
-                          title="पिसाई बैच एडिट करें"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-amber-700" />
-                        </button>
+                        {onUpdateProduction && (
+                          <button
+                            type="button"
+                            onClick={() => startEditBatch(batch)}
+                            className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition"
+                            title="पिसाई बैच एडिट करें"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirmBatch(batch)}
-                          className="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition"
-                          title="बैच हटाएँ"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        </button>
+                        {onDeleteProduction && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmBatch(batch)}
+                            className="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition"
+                            title="बैच हटाएँ"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

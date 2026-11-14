@@ -11812,6 +11812,7 @@ var INITIAL_STAFF = [
 		id: "staff-1",
 		name: "श्री तेज प्रकाश (मालिक)",
 		phone: "9829012345",
+		email: "shritejfoodproducts@gmail.com",
 		role: "admin",
 		roleHindi: "मालिक (Admin)",
 		password: "admin@tej786",
@@ -12268,6 +12269,270 @@ function importDatabaseBackup(file) {
 		reader.onerror = () => reject(/* @__PURE__ */ new Error("फ़ाइल पढ़ने में त्रुटि हुई (Failed to read file)"));
 		reader.readAsText(file);
 	});
+}
+// src/utils/permissions.ts
+var PERMISSION_GROUPS = [
+	{
+		groupTitle: "स्टाफ एवं मुख्य सिस्टम अधिकार (Admin Controls)",
+		items: [
+			{
+				key: "manageStaff",
+				labelHindi: "स्टाफ जोड़ना, एडिट करना व अधिकार देना",
+				description: "नया कर्मचारी बनाना, पासवर्ड बदलना व अनुमतियां देना"
+			},
+			{
+				key: "manageSettings",
+				labelHindi: "फैक्ट्री सेटिंग्स व रेट बदलना",
+				description: "कंपनी प्रोफाइल, GSTIN, QR कोड व आटा रेट बदलना"
+			},
+			{
+				key: "viewReports",
+				labelHindi: "Excel रिपोर्ट्स व बैकअप डाउनलोड",
+				description: "मास्टर रिपोर्ट्स, डेटा एक्सपोर्ट/रीस्टोर करना"
+			}
+		]
+	},
+	{
+		groupTitle: "ऑर्डर, ग्राहक, डिलीवरी व वसूली अधिकार",
+		items: [
+			{
+				key: "viewOrders",
+				labelHindi: "ऑर्डर देखना व नया ऑर्डर बनाना",
+				description: "नया ऑर्डर बुक करना व इनवॉइस प्रिंट/शेयर करना"
+			},
+			{
+				key: "editOrders",
+				labelHindi: "ऑर्डर एडिट व डिलीट करना",
+				description: "पुराने ऑर्डर की मात्रा, रेट, बिल टाइप या स्टेटस बदलना"
+			},
+			{
+				key: "viewCustomers",
+				labelHindi: "ग्राहक खाता देखना व नया ग्राहक जोड़ना",
+				description: "दुकानदार की लिस्ट, पता, फोन व बकाया देखना"
+			},
+			{
+				key: "editCustomers",
+				labelHindi: "ग्राहक एडिट व डिलीट करना",
+				description: "ग्राहक का नाम, नंबर, क्रेडिट लिमिट या बकाया बदलना"
+			},
+			{
+				key: "receivePayment",
+				labelHindi: "ग्राहक से पेमेंट / उधारी वसूली दर्ज करना",
+				description: "नकद, बैंक या UPI से भुगतान जमा एंट्री करना"
+			},
+			{
+				key: "viewDelivery",
+				labelHindi: "डिलीवरी ट्रैकिंग व गाड़ी डिस्पैच",
+				description: "गाड़ी लोड करना और ऑर्डर Delivered मार्क करना"
+			}
+		]
+	},
+	{
+		groupTitle: "स्टॉक, उत्पादन (पिसाई) व लेखा-जोखा अधिकार",
+		items: [
+			{
+				key: "viewInventory",
+				labelHindi: "स्टॉक व इन्वेंट्री देखना",
+				description: "कच्चा गेहूँ, खाली बैग व तैयार आटा स्टॉक देखना"
+			},
+			{
+				key: "editInventory",
+				labelHindi: "स्टॉक मात्रा एडिट व नया गेहूँ जोड़ना",
+				description: "गेहूँ खरीद जोड़ना व बैग स्टॉक में सीधा बदलाव करना"
+			},
+			{
+				key: "viewProduction",
+				labelHindi: "उत्पादन / पिसाई देखना व नया बैच जोड़ना",
+				description: "चक्की पिसाई बैच, आटा व चोकर आउटपुट दर्ज करना"
+			},
+			{
+				key: "editProduction",
+				labelHindi: "पिसाई बैच एडिट व डिलीट करना",
+				description: "पिसाई बैच का वजन, बैग गिनती या नोट्स बदलना"
+			},
+			{
+				key: "viewAccounting",
+				labelHindi: "लेखा-जोखा, मुनाफा (P&L) व बैंक देखना",
+				description: "शुद्ध मुनाफा, गल्ला व बैंक लेनदेन देखना"
+			},
+			{
+				key: "addExpense",
+				labelHindi: "नया खर्च वाउचर दर्ज करना",
+				description: "बिजली बिल, डीजल, मजदूरी व मिल खर्च जोड़ना"
+			}
+		]
+	}
+];
+var ALL_TRUE_PERMISSIONS = {
+	viewCustomers: true,
+	editCustomers: true,
+	viewOrders: true,
+	editOrders: true,
+	viewInventory: true,
+	editInventory: true,
+	viewProduction: true,
+	editProduction: true,
+	viewDelivery: true,
+	receivePayment: true,
+	viewAccounting: true,
+	addExpense: true,
+	viewReports: true,
+	manageStaff: true,
+	manageSettings: true
+};
+function getDefaultPermissionsForRole(role) {
+	switch (role) {
+		case "admin": return { ...ALL_TRUE_PERMISSIONS };
+		case "manager": return {
+			viewCustomers: true,
+			editCustomers: true,
+			viewOrders: true,
+			editOrders: true,
+			viewInventory: true,
+			editInventory: true,
+			viewProduction: true,
+			editProduction: true,
+			viewDelivery: true,
+			receivePayment: true,
+			viewAccounting: false,
+			addExpense: true,
+			viewReports: true,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "accountant": return {
+			viewCustomers: true,
+			editCustomers: true,
+			viewOrders: true,
+			editOrders: true,
+			viewInventory: true,
+			editInventory: false,
+			viewProduction: false,
+			editProduction: false,
+			viewDelivery: true,
+			receivePayment: true,
+			viewAccounting: true,
+			addExpense: true,
+			viewReports: true,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "store_keeper": return {
+			viewCustomers: false,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: true,
+			editInventory: true,
+			viewProduction: true,
+			editProduction: false,
+			viewDelivery: true,
+			receivePayment: false,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "production_head": return {
+			viewCustomers: false,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: true,
+			editInventory: false,
+			viewProduction: true,
+			editProduction: true,
+			viewDelivery: false,
+			receivePayment: false,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "packing_staff": return {
+			viewCustomers: false,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: true,
+			editInventory: false,
+			viewProduction: true,
+			editProduction: false,
+			viewDelivery: true,
+			receivePayment: false,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "delivery_staff": return {
+			viewCustomers: true,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: false,
+			editInventory: false,
+			viewProduction: false,
+			editProduction: false,
+			viewDelivery: true,
+			receivePayment: true,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+		case "salesman": return {
+			viewCustomers: true,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: true,
+			editInventory: false,
+			viewProduction: false,
+			editProduction: false,
+			viewDelivery: true,
+			receivePayment: true,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+		default: return {
+			viewCustomers: false,
+			editCustomers: false,
+			viewOrders: true,
+			editOrders: false,
+			viewInventory: true,
+			editInventory: false,
+			viewProduction: false,
+			editProduction: false,
+			viewDelivery: false,
+			receivePayment: false,
+			viewAccounting: false,
+			addExpense: false,
+			viewReports: false,
+			manageStaff: false,
+			manageSettings: false
+		};
+	}
+}
+function getEffectivePermissions(user, fallbackRole) {
+	const role = user?.role || fallbackRole;
+	if (role === "admin") return { ...ALL_TRUE_PERMISSIONS };
+	const defaults = getDefaultPermissionsForRole(role);
+	if (!user?.permissions) return defaults;
+	return {
+		...defaults,
+		...user.permissions
+	};
+}
+function countEnabledPermissions(perms) {
+	return Object.values(perms).filter(Boolean).length;
 }
 // shared/erpSyncReducer.ts
 function applyErpMutation(state, action, processedPaymentIds) {
@@ -13590,6 +13855,26 @@ var Download = createLucideIcon("download", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ExternalLink = createLucideIcon("external-link", [
+	["path", {
+		d: "M15 3h6v6",
+		key: "1q9fwt"
+	}],
+	["path", {
+		d: "M10 14 21 3",
+		key: "gplh6r"
+	}],
+	["path", {
+		d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+		key: "a6xqqp"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var EyeOff = createLucideIcon("eye-off", [
 	["path", {
 		d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
@@ -13757,6 +14042,32 @@ var FileText = createLucideIcon("file-text", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var FolderArchive = createLucideIcon("folder-archive", [
+	["circle", {
+		cx: "15",
+		cy: "19",
+		r: "2",
+		key: "u2pros"
+	}],
+	["path", {
+		d: "M20.9 19.8A2 2 0 0 0 22 18V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h5.1",
+		key: "1jj40k"
+	}],
+	["path", {
+		d: "M15 11v-1",
+		key: "cntcp"
+	}],
+	["path", {
+		d: "M15 17v-2",
+		key: "1279jj"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Gauge = createLucideIcon("gauge", [["path", {
 	d: "m12 14 4-4",
 	key: "9kzdfg"
@@ -13764,6 +14075,37 @@ var Gauge = createLucideIcon("gauge", [["path", {
 	d: "M3.34 19a10 10 0 1 1 17.32 0",
 	key: "19p75a"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var GitBranch = createLucideIcon("git-branch", [
+	["line", {
+		x1: "6",
+		x2: "6",
+		y1: "3",
+		y2: "15",
+		key: "17qcm7"
+	}],
+	["circle", {
+		cx: "18",
+		cy: "6",
+		r: "3",
+		key: "1h7g24"
+	}],
+	["circle", {
+		cx: "6",
+		cy: "18",
+		r: "3",
+		key: "fqmcym"
+	}],
+	["path", {
+		d: "M18 9a9 9 0 0 1-9 9",
+		key: "n2h4wq"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -14020,6 +14362,41 @@ var LayoutDashboard = createLucideIcon("layout-dashboard", [
 		key: "ldoo1y"
 	}]
 ]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Lock = createLucideIcon("lock", [["rect", {
+	width: "18",
+	height: "11",
+	x: "3",
+	y: "11",
+	rx: "2",
+	ry: "2",
+	key: "1w4ew1"
+}], ["path", {
+	d: "M7 11V7a5 5 0 0 1 10 0v4",
+	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Mail = createLucideIcon("mail", [["path", {
+	d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7",
+	key: "132q7q"
+}], ["rect", {
+	x: "2",
+	y: "4",
+	width: "20",
+	height: "16",
+	rx: "2",
+	key: "izxlao"
+}]]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -14543,6 +14920,32 @@ var Sparkles = createLucideIcon("sparkles", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var SquareCheckBig = createLucideIcon("square-check-big", [["path", {
+	d: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344",
+	key: "2acyp4"
+}], ["path", {
+	d: "m9 11 3 3L22 4",
+	key: "1pflzl"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Terminal = createLucideIcon("terminal", [["path", {
+	d: "M12 19h8",
+	key: "baeox8"
+}], ["path", {
+	d: "m4 17 6-6-6-6",
+	key: "1yngyt"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Trash2 = createLucideIcon("trash-2", [
 	["path", {
 		d: "M10 11v6",
@@ -14984,7 +15387,8 @@ var require_react_jsx_runtime_production = /* @__PURE__ */ __commonJSMin(((expor
 var import_jsx_runtime = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = require_react_jsx_runtime_production();
 })))();
-var Header = ({ currentRole, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onOpenInstallModal, onOpenLiveSync }) => {
+var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onOpenInstallModal, onOpenLiveSync }) => {
+	const perms = permissions || getDefaultPermissionsForRole(currentRole);
 	const [timeStr, setTimeStr] = (0, import_react.useState)("");
 	const [storageStats, setStorageStats] = (0, import_react.useState)(null);
 	(0, import_react.useEffect)(() => {
@@ -15130,7 +15534,7 @@ var Header = ({ currentRole, settings, lowStockCount, syncStatus = "connecting",
 							children: timeStr
 						})]
 					}),
-					lowStockCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					lowStockCount > 0 && perms.viewInventory && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						onClick: onNavigateToInventory,
 						title: `${lowStockCount} आइटम्स का स्टॉक कम है`,
 						className: "flex items-center gap-1 px-2 sm:px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition animate-pulse",
@@ -15149,17 +15553,17 @@ var Header = ({ currentRole, settings, lowStockCount, syncStatus = "connecting",
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "hidden md:flex items-center gap-1.5",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							perms.viewOrders && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: onOpenNewOrder,
 								className: "flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition border border-slate-700",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShoppingCart, { className: "w-3.5 h-3.5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ ऑर्डर" })]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							perms.viewProduction && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: onOpenNewProduction,
 								className: "flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-semibold text-xs rounded-lg transition",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Factory, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ पिसाई" })]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							perms.receivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: onOpenReceivePayment,
 								className: "flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ भुगतान" })]
@@ -15169,10 +15573,10 @@ var Header = ({ currentRole, settings, lowStockCount, syncStatus = "connecting",
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						onClick: onOpenRoleSwitcher,
 						className: `flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition cursor-pointer hover:opacity-90 ${roleInfo.color}`,
-						title: "क्लिक करके किसी भी कर्मचारी का मोबाइल रोल बदलें",
+						title: "क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-3.5 h-3.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-bold hidden sm:inline",
-							children: roleInfo.label
+							children: currentUserName ? `${currentUserName} (${roleInfo.label})` : roleInfo.label
 						})]
 					})
 				]
@@ -15181,7 +15585,8 @@ var Header = ({ currentRole, settings, lowStockCount, syncStatus = "connecting",
 	});
 };
 // src/components/Sidebar.tsx
-var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowStockCount, onOpenInstallModal }) => {
+var Sidebar = ({ activeTab, onTabChange, currentRole, permissions, pendingOrdersCount, lowStockCount, onOpenInstallModal }) => {
+	const perms = permissions || getDefaultPermissionsForRole(currentRole);
 	const menuItems = [
 		{
 			id: "dashboard",
@@ -15197,7 +15602,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Customers",
 			icon: Users,
 			badge: null,
-			visible: currentRole !== "production_head" && currentRole !== "packing_staff"
+			visible: perms.viewCustomers
 		},
 		{
 			id: "inventory",
@@ -15206,7 +15611,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			icon: Package,
 			badge: lowStockCount > 0 ? `${lowStockCount} अलर्ट` : null,
 			badgeColor: "bg-rose-500 text-white",
-			visible: true
+			visible: perms.viewInventory
 		},
 		{
 			id: "production",
@@ -15214,7 +15619,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Production",
 			icon: Factory,
 			badge: null,
-			visible: currentRole !== "delivery_staff" && currentRole !== "salesman"
+			visible: perms.viewProduction
 		},
 		{
 			id: "orders",
@@ -15223,7 +15628,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			icon: ClipboardList,
 			badge: pendingOrdersCount > 0 ? `${pendingOrdersCount}` : null,
 			badgeColor: "bg-amber-500 text-slate-950 font-bold",
-			visible: true
+			visible: perms.viewOrders
 		},
 		{
 			id: "delivery",
@@ -15231,7 +15636,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Delivery",
 			icon: Truck,
 			badge: null,
-			visible: true
+			visible: perms.viewDelivery
 		},
 		{
 			id: "staff",
@@ -15239,7 +15644,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Staff",
 			icon: UserCheck,
 			badge: null,
-			visible: currentRole === "admin" || currentRole === "manager"
+			visible: currentRole === "admin" || perms.manageStaff
 		},
 		{
 			id: "accounting",
@@ -15247,7 +15652,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Accounting",
 			icon: TrendingUp,
 			badge: null,
-			visible: currentRole === "admin" || currentRole === "accountant"
+			visible: perms.viewAccounting
 		},
 		{
 			id: "bank_expenses",
@@ -15255,7 +15660,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Bank & Expenses",
 			icon: Landmark,
 			badge: null,
-			visible: currentRole === "admin" || currentRole === "accountant"
+			visible: perms.viewAccounting || perms.addExpense
 		},
 		{
 			id: "reports",
@@ -15264,7 +15669,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			icon: FileSpreadsheet,
 			badge: "Excel",
 			badgeColor: "bg-emerald-600 text-white",
-			visible: currentRole === "admin" || currentRole === "manager" || currentRole === "accountant"
+			visible: perms.viewReports
 		},
 		{
 			id: "settings",
@@ -15272,7 +15677,7 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 			labelEn: "Settings",
 			icon: Settings,
 			badge: null,
-			visible: currentRole === "admin"
+			visible: currentRole === "admin" || perms.manageSettings
 		}
 	];
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
@@ -15355,47 +15760,62 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, lowSto
 	});
 };
 // src/components/MobileNav.tsx
-var MobileNav = ({ activeTab, onTabChange, currentRole, pendingOrdersCount, onOpenInstallModal }) => {
+var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrdersCount, onOpenInstallModal }) => {
+	const perms = permissions || getDefaultPermissionsForRole(currentRole);
+	const tabs = [
+		{
+			id: "dashboard",
+			label: "डैशबोर्ड",
+			icon: LayoutDashboard,
+			visible: true
+		},
+		{
+			id: "orders",
+			label: "ऑर्डर",
+			icon: ClipboardList,
+			badge: pendingOrdersCount > 0 ? pendingOrdersCount : null,
+			visible: perms.viewOrders
+		},
+		{
+			id: "inventory",
+			label: "स्टॉक",
+			icon: Package,
+			visible: perms.viewInventory
+		},
+		{
+			id: "production",
+			label: "उत्पादन",
+			icon: Factory,
+			visible: perms.viewProduction
+		},
+		{
+			id: "customers",
+			label: "ग्राहक",
+			icon: Users,
+			visible: perms.viewCustomers
+		},
+		{
+			id: "delivery",
+			label: "डिलीवरी",
+			icon: Truck,
+			visible: perms.viewDelivery
+		},
+		{
+			id: "staff",
+			label: "स्टाफ",
+			icon: UserCheck,
+			visible: currentRole === "admin" || perms.manageStaff
+		},
+		{
+			id: "reports",
+			label: "Excel",
+			icon: FileSpreadsheet,
+			visible: perms.viewReports
+		}
+	].filter((t) => t.visible);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 		className: "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center select-none shadow-lg no-print",
-		children: [[
-			{
-				id: "dashboard",
-				label: "डैशबोर्ड",
-				icon: LayoutDashboard
-			},
-			{
-				id: "orders",
-				label: "ऑर्डर",
-				icon: ClipboardList,
-				badge: pendingOrdersCount > 0 ? pendingOrdersCount : null
-			},
-			{
-				id: "inventory",
-				label: "स्टॉक",
-				icon: Package
-			},
-			{
-				id: "production",
-				label: "उत्पादन",
-				icon: Factory
-			},
-			{
-				id: "customers",
-				label: "ग्राहक",
-				icon: Users
-			},
-			{
-				id: "delivery",
-				label: "डिलीवरी",
-				icon: Truck
-			},
-			{
-				id: "reports",
-				label: "Excel",
-				icon: FileSpreadsheet
-			}
-		].map((tab) => {
+		children: [tabs.map((tab) => {
 			const Icon = tab.icon;
 			const isActive = activeTab === tab.id;
 			return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -19459,6 +19879,7 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 	const [name, setName] = (0, import_react.useState)("");
 	const [firmName, setFirmName] = (0, import_react.useState)("");
 	const [phone, setPhone] = (0, import_react.useState)("");
+	const [email, setEmail] = (0, import_react.useState)("");
 	const [address, setAddress] = (0, import_react.useState)("");
 	const [city, setCity] = (0, import_react.useState)("जयपुर");
 	const [gstin, setGstin] = (0, import_react.useState)("");
@@ -19472,6 +19893,7 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 			name,
 			firmName: firmName || name,
 			phone,
+			email: email.trim() || void 0,
 			address,
 			city,
 			gstin: gstin.toUpperCase(),
@@ -19569,6 +19991,16 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 							]
 						})] })]
 					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "block font-bold text-slate-700 mb-1",
+						children: "ईमेल पता (Email - वैकल्पिक)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						type: "email",
+						value: email,
+						onChange: (e) => setEmail(e.target.value),
+						placeholder: "उदा. partyname@gmail.com",
+						className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+					})] }),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 						className: "block font-bold text-slate-700 mb-1",
 						children: "दुकान का पूरा पता *"
@@ -20437,201 +20869,21 @@ var ReceivePaymentModal = ({ customers, selectedCustomerId, onClose, onSubmit })
 	});
 };
 // src/components/RoleSwitcherModal.tsx
-var ROLE_PERMISSIONS = {
-	admin: {
-		titleHindi: "मालिक (Admin) - श्री तेज प्रकाश",
-		badgeColor: "bg-amber-500 text-slate-950",
-		description: "पूर्ण अधिकार: बिक्री, शुद्ध मुनाफा, बैंक गल्ला, सभी सेटिंग्स, डिलीट अधिकार, संपूर्ण बिज़नेस कंट्रोल।",
-		permissions: [
-			{
-				name: "पूरा बिज़नेस डैशबोर्ड व शुद्ध मुनाफा",
-				allowed: true
-			},
-			{
-				name: "नया कर्मचारी जोड़ना व पासवर्ड बदलना",
-				allowed: true
-			},
-			{
-				name: "बैंक व कैश गल्ला बैलेंस देखना व बदलना",
-				allowed: true
-			},
-			{
-				name: "मास्टर Excel रिपोर्ट व बैकअप डाउनलोड",
-				allowed: true
-			},
-			{
-				name: "फैक्ट्री सेटिंग्स व बिलिंग दरें बदलना",
-				allowed: true
-			}
-		]
-	},
-	manager: {
-		titleHindi: "फैक्ट्री मैनेजर (Manager) - मनोज कुमावत",
-		badgeColor: "bg-blue-600 text-white",
-		description: "स्टाफ प्रबंधन, कर्मचारी जोड़ना/आईडी बनाना, स्टॉक व प्रोडक्शन निगरानी, डिलीवरी ट्रैकिंग। (मुनाफा व बैंक बैलेंस छिपा रहेगा)",
-		permissions: [
-			{
-				name: "स्टॉक व प्रोडक्शन रिकॉर्ड दर्ज व मॉनिटर करना",
-				allowed: true
-			},
-			{
-				name: "नए कर्मचारी जोड़ना व काम की रिपोर्ट देखना",
-				allowed: true
-			},
-			{
-				name: "ऑर्डर बनाना व डिलीवरी स्थिति ट्रैक करना",
-				allowed: true
-			},
-			{
-				name: "शुद्ध मुनाफा व बैंक खाता बैलेंस देखना",
-				allowed: false
-			},
-			{
-				name: "फैक्ट्री मुख्य सेटिंग्स व GSTIN बदलना",
-				allowed: false
-			}
-		]
-	},
-	accountant: {
-		titleHindi: "अकाउंटेंट / मुनीम (Accountant) - दिनेश गुप्ता",
-		badgeColor: "bg-emerald-600 text-white",
-		description: "GST इनवॉइस, चालान बिलिंग, खर्च वाउचर एंट्री, ग्राहक बकाया वसूली व लेजर प्रबंधन।",
-		permissions: [
-			{
-				name: "GST टैक्स इनवॉइस व चालान बनाना",
-				allowed: true
-			},
-			{
-				name: "खर्च वाउचर व पेमेंट रिकॉर्ड दर्ज करना",
-				allowed: true
-			},
-			{
-				name: "ग्राहक उधारी व बकाया तगादा सूची",
-				allowed: true
-			},
-			{
-				name: "फैक्ट्री उत्पादन बैच व चक्की सेटिंग",
-				allowed: false
-			}
-		]
-	},
-	store_keeper: {
-		titleHindi: "स्टोर कीपर / गोदाम इंचार्ज - रामलाल गुर्जर",
-		badgeColor: "bg-purple-600 text-white",
-		description: "कच्चा गेहूं आवक (क्विंटल), खाली 5/10/25/50 KG बैग गिनती, सिलाई धागा, स्टॉक अलर्ट।",
-		permissions: [
-			{
-				name: "गेहूं मंडी आवक व स्टॉक एंट्री",
-				allowed: true
-			},
-			{
-				name: "खाली बैग्स व सिलाई धागा स्टॉक देखना",
-				allowed: true
-			},
-			{
-				name: "तैयार आटा बोरियों का गोदाम स्टॉक",
-				allowed: true
-			},
-			{
-				name: "बिलिंग व अकाउंट्स का विवरण",
-				allowed: false
-			}
-		]
-	},
-	production_head: {
-		titleHindi: "प्रोडक्शन इंचार्ज / चक्की हेड - ओमप्रकाश जांगिड़",
-		badgeColor: "bg-orange-600 text-white",
-		description: "गेहूं पिसाई, चक्की मिलिंग, आटा यील्ड, चोकर आउटपुट, छीजन % और शिफ्ट रिपोर्ट।",
-		permissions: [
-			{
-				name: "दैनिक पिसाई बैच व आटा आउटपुट दर्ज करना",
-				allowed: true
-			},
-			{
-				name: "चोकर व छीजन प्रतिशत की मॉनिटरिंग",
-				allowed: true
-			},
-			{
-				name: "मशीन बिजली यूनिट व मेंटेनेंस रिकॉर्ड",
-				allowed: true
-			},
-			{
-				name: "फाइनेंशियल रिपोर्ट्स व बिलिंग",
-				allowed: false
-			}
-		]
-	},
-	packing_staff: {
-		titleHindi: "पैकिंग व सिलाई स्टाफ - कन्हैया लाल",
-		badgeColor: "bg-teal-600 text-white",
-		description: "तैयार आटे की बोरियों में भराई, 5k/10k/25k/50k बैग गिनती व डिस्पैच लोडिंग।",
-		permissions: [
-			{
-				name: "दैनिक बैग पैकिंग गिनती दर्ज करना",
-				allowed: true
-			},
-			{
-				name: "खाली प्रिंटेड बैग स्टॉक देखना",
-				allowed: true
-			},
-			{
-				name: "डिस्पैच गाड़ी में लोडिंग चेकलिस्ट",
-				allowed: true
-			},
-			{
-				name: "अकाउंट्स व बिक्री के आंकड़े",
-				allowed: false
-			}
-		]
-	},
-	delivery_staff: {
-		titleHindi: "डिलीवरी स्टाफ / ड्राइवर - सोनू सैनी",
-		badgeColor: "bg-indigo-600 text-white",
-		description: "पिकअप गाड़ी में माल लोड, दुकानों पर डिलीवरी, डिलीवरी स्थल पर नकद/UPI कलेक्शन।",
-		permissions: [
-			{
-				name: "दुकानदार का पता व सीधे फोन कॉल करना",
-				allowed: true
-			},
-			{
-				name: "डिलीवरी स्थिति (रवाना ➔ Delivered) अपडेट",
-				allowed: true
-			},
-			{
-				name: "दुकान पर पेमेंट प्राप्त कर रसीद दर्ज करना",
-				allowed: true
-			},
-			{
-				name: "फैक्ट्री का आंतरिक प्रोडक्शन व स्टॉक",
-				allowed: false
-			}
-		]
-	},
-	salesman: {
-		titleHindi: "सेल्समैन / फील्ड सेल्स - सुरेश कुमार",
-		badgeColor: "bg-amber-600 text-white",
-		description: "बाजार से नए ऑर्डर बुक करना, दुकानदारों से मिलना, उधारी बकाया वसूली व ग्राहक खाता देखना।",
-		permissions: [
-			{
-				name: "बाजार में दुकानदारों से नए ऑर्डर बुक करना",
-				allowed: true
-			},
-			{
-				name: "ग्राहक लिस्ट, पता, फोन व बकाया उधारी देखना",
-				allowed: true
-			},
-			{
-				name: "दुकानदार से नकद/UPI भुगतान प्राप्त करना",
-				allowed: true
-			},
-			{
-				name: "फैक्ट्री की आंतरिक पिसाई व खरीद दरें",
-				allowed: false
-			}
-		]
+var getRoleBadgeColor = (role) => {
+	switch (role) {
+		case "admin": return "bg-amber-500 text-slate-950";
+		case "manager": return "bg-blue-600 text-white";
+		case "accountant": return "bg-emerald-600 text-white";
+		case "store_keeper": return "bg-purple-600 text-white";
+		case "production_head": return "bg-orange-600 text-white";
+		case "packing_staff": return "bg-teal-600 text-white";
+		case "delivery_staff": return "bg-indigo-600 text-white";
+		case "salesman": return "bg-amber-600 text-white";
+		default: return "bg-slate-700 text-white";
 	}
 };
-var RoleSwitcherModal = ({ currentRole, onSelectRole, onClose }) => {
+var RoleSwitcherModal = ({ currentRole, currentStaffId, staffList, onSelectRole, onSelectUser, onClose }) => {
+	const allPermItems = PERMISSION_GROUPS.flatMap((g) => g.items);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -20642,10 +20894,10 @@ var RoleSwitcherModal = ({ currentRole, onSelectRole, onClose }) => {
 					className: "flex items-center gap-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-5 h-5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 						className: "font-bold text-base",
-						children: "Multi-Mobile रोल सिम्युलेटर (Role Simulator)"
+						children: "मोबाइल अकाउंट एवं अनुमति स्विचर (Staff Simulator)"
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "text-xs text-slate-300",
-						children: "देखें कि किस कर्मचारी के Android मोबाइल पर कौन-सा इंटरफ़ेस दिखेगा"
+						children: "Admin द्वारा दिए गए कस्टम अधिकारों के साथ किसी भी कर्मचारी के मोबाइल व्यू में जाएँ"
 					})] })]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 					onClick: onClose,
@@ -20654,57 +20906,74 @@ var RoleSwitcherModal = ({ currentRole, onSelectRole, onClose }) => {
 				})]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "p-6 max-h-[75vh] overflow-y-auto space-y-3",
-				children: [
-					"admin",
-					"manager",
-					"salesman",
-					"accountant",
-					"store_keeper",
-					"production_head",
-					"packing_staff",
-					"delivery_staff"
-				].map((role) => {
-					const config = ROLE_PERMISSIONS[role];
-					const isSelected = currentRole === role;
+				children: staffList.map((member) => {
+					const effectivePerms = getEffectivePermissions(member, member.role);
+					const enabledCount = countEnabledPermissions(effectivePerms);
+					const isSelected = currentStaffId ? currentStaffId === member.id : currentRole === member.role;
+					const badgeColor = getRoleBadgeColor(member.role);
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						onClick: () => {
-							onSelectRole(role);
+							if (!member.active) return;
+							if (onSelectUser) onSelectUser(member);
+							else onSelectRole(member.role);
 							onClose();
 						},
-						className: `p-4 rounded-xl border-2 transition cursor-pointer ${isSelected ? "border-amber-500 bg-amber-50/50 shadow-sm" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`,
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex items-start justify-between",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: `px-2.5 py-1 rounded-md text-xs font-bold ${config.badgeColor}`,
-										children: config.titleHindi
-									}), isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: `p-4 rounded-xl border-2 transition ${!member.active ? "border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed" : isSelected ? "border-amber-500 bg-amber-50/50 shadow-sm cursor-pointer" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 cursor-pointer"}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start justify-between gap-2 flex-wrap",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2 flex-wrap",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: `px-2.5 py-1 rounded-md text-xs font-bold ${badgeColor}`,
+										children: [
+											member.roleHindi,
+											" — ",
+											member.name
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[11px] font-mono text-slate-500",
+										children: ["+91 ", member.phone]
+									}),
+									member.email && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[11px] text-slate-600 font-medium",
+										children: ["• ", member.email]
+									}),
+									!member.active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full",
+										children: "निष्क्रिय खाता"
+									}),
+									isSelected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 										className: "flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5" }), "वर्तमान एक्टिव रोल"]
-									})]
-								})
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-xs text-slate-600 mt-2 font-medium",
-								children: config.description
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]",
-								children: config.permissions.map((p, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5" }), "वर्तमान एक्टिव अकाउंट"]
+									})
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-3.5 h-3.5 text-emerald-600" }),
+									enabledCount,
+									"/15 अधिकार"
+								]
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]",
+							children: allPermItems.map((item) => {
+								const allowed = Boolean(effectivePerms[item.key]);
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "flex items-center gap-1.5",
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: `w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold ${p.allowed ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-400"}`,
-										children: p.allowed ? "✓" : "✕"
+										className: `w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${allowed ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-400"}`,
+										children: allowed ? "✓" : "✕"
 									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: p.allowed ? "text-slate-800 font-medium" : "text-slate-400 line-through",
-										children: p.name
+										className: allowed ? "text-slate-800 font-medium" : "text-slate-400 line-through",
+										children: item.labelHindi
 									})]
-								}, idx))
+								}, item.key);
 							})
-						]
-					}, role);
+						})]
+					}, member.id);
 				})
 			})]
 		})
@@ -20903,43 +21172,79 @@ function downloadOpenApiSpec(state) {
 	downloadAnchor.remove();
 }
 // src/components/InstallModal.tsx
+var SHARED_APP_URL = "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app";
+var GITHUB_REPO_STORAGE_KEY = "tej_food_github_repo";
+var LOCAL_BUILD_COMMAND = "npm install && npm run android:sync && cd android && ./gradlew assembleDebug";
+function normalizeRepoSlug(raw) {
+	const parts = raw.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/i, "").replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+	if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+	return "";
+}
+function formatBytes(bytes) {
+	if (!bytes || bytes <= 0) return "";
+	if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+	return `${(bytes / 1048576).toFixed(2)} MB`;
+}
 var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
-	const { isInstallable, isInstalled, isIOS, isAndroid, install } = usePWAInstall();
+	const { isInstallable, isInstalled, install } = usePWAInstall();
 	const [activeTab, setActiveTab] = (0, import_react.useState)(initialTab);
 	const [qrCodeUrl, setQrCodeUrl] = (0, import_react.useState)("");
 	const [copiedEndpoint, setCopiedEndpoint] = (0, import_react.useState)(null);
 	const [copiedPayload, setCopiedPayload] = (0, import_react.useState)(false);
 	const [copiedLink, setCopiedLink] = (0, import_react.useState)(false);
+	const [copiedCmd, setCopiedCmd] = (0, import_react.useState)(false);
 	const [previewEndpoint, setPreviewEndpoint] = (0, import_react.useState)("/api/v1/orders");
+	const [actionError, setActionError] = (0, import_react.useState)(null);
+	const [apkStatus, setApkStatus] = (0, import_react.useState)(null);
+	const [githubRepoInput, setGithubRepoInput] = (0, import_react.useState)(() => {
+		if (typeof window === "undefined") return "";
+		return localStorage.getItem(GITHUB_REPO_STORAGE_KEY) || "";
+	});
+	const normalizedRepo = normalizeRepoSlug(githubRepoInput);
+	const shareableAppUrl = typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.startsWith("127.") && !window.location.hostname.includes("ais-dev-") ? window.location.href : SHARED_APP_URL;
 	const handleInstallClick = async () => {
 		if (await install()) onClose();
 	};
 	(0, import_react.useEffect)(() => {
+		let active = true;
+		fetch("/api/apk-status").then((res) => res.ok ? res.json() : null).then((data) => {
+			if (active && data) setApkStatus(data);
+		}).catch(() => {});
+		return () => {
+			active = false;
+		};
+	}, []);
+	(0, import_react.useEffect)(() => {
 		const generateQr = async () => {
 			try {
-				const currentUrl = typeof window !== "undefined" ? window.location.href : "";
-				if (currentUrl) {
-					const qr = await import_browser.toDataURL(currentUrl, {
-						width: 220,
-						margin: 1,
-						color: {
-							dark: "#0f172a",
-							light: "#ffffff"
-						}
-					});
-					setQrCodeUrl(qr);
-				}
+				const targetUrl = typeof window !== "undefined" ? window.location.href : SHARED_APP_URL;
+				const qr = await import_browser.toDataURL(targetUrl, {
+					width: 220,
+					margin: 1,
+					color: {
+						dark: "#0f172a",
+						light: "#ffffff"
+					}
+				});
+				setQrCodeUrl(qr);
 			} catch (err) {
 				console.error("Failed to generate install QR:", err);
 			}
 		};
 		generateQr();
 	}, []);
+	const handleRepoInputChange = (value) => {
+		setGithubRepoInput(value);
+		if (typeof window !== "undefined") localStorage.setItem(GITHUB_REPO_STORAGE_KEY, value);
+	};
 	const handleCopy = (text, type, endpointKey) => {
 		navigator.clipboard.writeText(text);
 		if (type === "payload") {
 			setCopiedPayload(true);
 			setTimeout(() => setCopiedPayload(false), 2e3);
+		} else if (type === "cmd") {
+			setCopiedCmd(true);
+			setTimeout(() => setCopiedCmd(false), 2e3);
 		} else if (endpointKey) {
 			setCopiedEndpoint(endpointKey);
 			setTimeout(() => setCopiedEndpoint(null), 2e3);
@@ -20947,16 +21252,18 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 	};
 	const handleDownloadApi = () => {
 		if (!currentState) {
-			alert("डेटा लोड हो रहा है, कृपया पुनः प्रयास करें।");
+			setActionError("डेटा लोड हो रहा है, कृपया कुछ सेकंड बाद पुनः प्रयास करें।");
 			return;
 		}
+		setActionError(null);
 		downloadApiVersionJson(currentState);
 	};
 	const handleDownloadOpenApi = () => {
 		if (!currentState) {
-			alert("डेटा लोड हो रहा है, कृपया पुनः प्रयास करें।");
+			setActionError("डेटा लोड हो रहा है, कृपया कुछ सेकंड बाद पुनः प्रयास करें।");
 			return;
 		}
+		setActionError(null);
 		downloadOpenApiSpec(currentState);
 	};
 	const apiPayload = currentState ? generateApiPayload(currentState) : null;
@@ -20964,7 +21271,7 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 text-slate-800 flex flex-col max-h-[90vh]",
+			className: "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 text-slate-800 flex flex-col max-h-[92vh]",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "bg-gradient-to-r from-amber-600 via-amber-700 to-slate-950 text-white p-5 flex items-center justify-between shrink-0",
@@ -20978,15 +21285,16 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
 								children: "डाउनलोड केंद्र (Download Center)"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-[10px] bg-emerald-500/80 text-slate-950 font-bold px-2 py-0.5 rounded-full",
-								children: "v2.4.0"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[10px] bg-emerald-500/90 text-slate-950 font-bold px-2 py-0.5 rounded-full",
+								children: ["v", apkStatus?.versionName || "2.4.0"]
 							})]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 							className: "text-lg font-bold text-white mt-0.5",
-							children: "TEJ FOOD - ऐप (APK) एवं API वर्जन डाउनलोड"
+							children: "TEJ FOOD - Android .APK एवं API डाउनलोड"
 						})] })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						onClick: onClose,
 						className: "p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
@@ -20998,7 +21306,7 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 						type: "button",
 						onClick: () => setActiveTab("apk"),
 						className: `flex-1 py-3 px-4 flex items-center justify-center gap-2 border-b-2 transition ${activeTab === "apk" ? "border-amber-600 text-amber-900 bg-white shadow-xs" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100"}`,
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "📱 एंड्रॉयड APK / मोबाइल ऐप इंस्टॉल" })]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "📱 Android .APK / मोबाइल ऐप डाउनलोड" })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						onClick: () => setActiveTab("api"),
@@ -21008,352 +21316,491 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "p-5 sm:p-6 overflow-y-auto space-y-4 text-xs",
-					children: [activeTab === "apk" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "space-y-4",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center justify-between",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-2 text-emerald-900 font-bold text-sm",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDrive, { className: "w-4 h-4 text-emerald-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "100% फ्री लोकल फोन स्टोरेज (₹0 क्लाउड चार्ज)" })]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "text-[10px] bg-emerald-200 text-emerald-950 font-bold px-2 py-0.5 rounded-full",
-										children: "No Server Bills"
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "text-emerald-800 text-[11px] leading-relaxed",
-									children: "यह ऐप पूरी तरह से फ्री है। आपकी मिल का संपूर्ण डेटा (गेहूं स्टॉक, आटा बैग, ग्राहक उधारी, पिसाई बैच व खर्चे) सीधे आपके फोन के इंटरनल स्टोरेज (LocalStorage) में सुरक्षित रहता है।"
+					children: [
+						actionError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "bg-red-50 border border-red-200 text-red-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-red-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold text-[11px]",
+									children: actionError
 								})]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "grid grid-cols-1 md:grid-cols-12 gap-4 items-center",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "md:col-span-7 space-y-3",
-									children: [isInstalled ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "bg-blue-50 border border-blue-200 p-4 rounded-xl text-center space-y-1",
-										children: [
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-8 h-8 text-blue-600 mx-auto" }),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-												className: "font-bold text-blue-900 text-sm",
-												children: "ऐप आपके फोन में पहले से इंस्टॉल है!"
-											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-												className: "text-blue-700 text-xs",
-												children: "आप सीधे अपने फोन की होम स्क्रीन से TEJ FOOD ऐप चला सकते हैं।"
-											})
-										]
-									}) : isInstallable ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "space-y-2",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: handleInstallClick,
-											className: "w-full py-3.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 group cursor-pointer",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-5 h-5 text-amber-200 group-hover:scale-110 transition" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "अभी Android मोबाइल में इंस्टॉल करें (Install App)" })]
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-											className: "text-[10px] text-slate-500 text-center",
-											children: [
-												"बटन दबाते ही Google Chrome द्वारा असली ",
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Android WebAPK" }),
-												" आपके फोन में इंस्टॉल हो जाएगा।"
-											]
-										})]
-									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "bg-slate-50 border border-slate-300 p-4 rounded-xl space-y-2",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "font-bold text-slate-900 block text-xs",
-											children: "Android फ़ोन पर सीधे इंस्टॉल करने का तरीका:"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ol", {
-											className: "list-decimal list-inside space-y-1.5 text-[11px] text-slate-700",
-											children: [
-												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
-													"अपने Android Chrome में ऊपर दाईं ओर ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "3 डॉट्स (⋮)" }),
-													" दबाएं।"
-												] }),
-												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
-													"मेनू में ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install app'" }),
-													" या ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Add to Home screen'" }),
-													" चुनें।"
-												] }),
-												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install'" }), " पर टैप करें। Tejstha आटा ऐप आपके फोन में आ जाएगा।"] })
-											]
-										})]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-[11px] text-slate-700",
-										children: [
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-2",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "ऑफ़लाइन सपोर्ट:" }), " बिना इंटरनेट के भी बिलिंग व पिसाई दर्ज होगी।"] })]
-											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-2",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "अलग-अलग लॉगिन:" }), " स्टाफ व मुनीम अपने-अपने फोन से चला सकेंगे।"] })]
-											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-2",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "फुल स्क्रीन:" }), " बिना ब्राउज़र बार के असली Android ऐप अनुभव।"] })]
-											})
-										]
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "md:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center",
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: () => setActionError(null),
+								className: "text-red-500 hover:text-red-700",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-4 h-4" })
+							})]
+						}),
+						activeTab === "apk" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-4",
+							children: [
+								apkStatus?.available && apkStatus.downloadUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-emerald-50 border-2 border-emerald-400 rounded-xl p-4 space-y-3",
 									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1",
-											children: "मोबाइल से स्कैन करके ऐप खोलें"
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2 text-emerald-950 font-black text-sm",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-5 h-5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "असली Android .APK डाउनलोड के लिए तैयार है!" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] bg-emerald-200 text-emerald-950 font-bold px-2 py-0.5 rounded-full font-mono",
+												children: formatBytes(apkStatus.fileSizeBytes) || "APK Ready"
+											})]
 										}),
-										qrCodeUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "bg-white p-2 rounded-xl border-2 border-amber-300 shadow-xs",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-												src: qrCodeUrl,
-												alt: "Scan to install",
-												className: "w-32 h-32 object-contain"
-											})
-										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "w-32 h-32 flex items-center justify-center bg-white rounded-xl border border-slate-200",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QrCode, { className: "w-8 h-8 text-slate-400" })
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "text-[11px] text-emerald-800",
+											children: [
+												"पैकेज ID: ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+													className: "font-mono",
+													children: apkStatus.packageId
+												}),
+												" • वर्जन",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: ["v", apkStatus.versionName] }),
+												" • सीधा फोन में डाउनलोड कर इंस्टॉल करें।"
+											]
 										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "text-[10px] text-slate-500 mt-2",
-											children: "फोन कैमरा या Google Lens से स्कैन करें"
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+											href: apkStatus.downloadUrl,
+											download: apkStatus.fileName,
+											className: "w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-sm shadow-md flex items-center justify-center gap-2 transition",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-5 h-5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["सीधे डाउनलोड करें: ", apkStatus.fileName] })]
 										})
 									]
-								})]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "border-t border-slate-200 pt-4 mt-2 space-y-3",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center justify-between",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
-											className: "font-bold text-slate-900 text-xs flex items-center gap-2",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Android मोबाइल ऐप (.APK / WebAPK) विकल्प" })]
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full",
-											children: "Android Ready"
-										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2.5",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-blue-700 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-											className: "text-[11px] text-blue-900 leading-relaxed",
-											children: [
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "नोट:" }),
-												" यह एक Web/PWA ऐप है। सीधे अपने फ़ोन के Chrome में ",
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install app'" }),
-												" दबाने पर Google Chrome ऑटोमैटिक असली ",
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Android WebAPK" }),
-												" इंस्टॉल कर देता है (जो बिना इंटरनेट भी चलता है)। अलग ",
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: ".apk फ़ाइल" }),
-												" बनाने के लिए नीचे PWABuilder का उपयोग करें।"
-											]
-										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-amber-50 border border-amber-300 rounded-xl p-3.5 space-y-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3.5 flex flex-col justify-between",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-1.5 font-bold text-amber-950 text-xs mb-1",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google / Microsoft Signed .APK" })]
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-												className: "text-[11px] text-amber-800 leading-relaxed mb-3",
-												children: [
-													"Microsoft के आधिकारिक PWABuilder टूल से पब्लिक URL डालकर आप इस ऐप की साइन्ड ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: ".apk फ़ाइल" }),
-													" जनरेट कर सकते हैं।"
-												]
-											})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
-												href: `https://www.pwabuilder.com/reportcard?site=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app")}`,
+											className: "flex items-center gap-2 text-amber-950 font-bold text-xs",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-amber-700 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+												"Capacitor Android प्रोजेक्ट (",
+												apkStatus?.packageId || "com.shritejfood.erp",
+												") सिंक है"
+											] })]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[10px] bg-amber-200 text-amber-950 font-bold px-2 py-0.5 rounded-full",
+											children: "Cloud Server Notice"
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: "text-amber-900 text-[11px] leading-relaxed",
+										children: [
+											"इस क्लाउड Node.js सर्वर में Android SDK / Java 21 कंपाइलर मौजूद नहीं होने के कारण बाइनरी ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: ".apk" }),
+											" सीधे यहाँ कंपाइल नहीं हो सकती। असली ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "TejFoodProducts-ERP-debug.apk" }),
+											" पाने के लिए नीचे दिए ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "GitHub Auto-APK Release" }),
+											", ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Android Bundle डाउनलोड" }),
+											" या ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "1-Tap Chrome Install" }),
+											" का उपयोग करें।"
+										]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-slate-950 text-white rounded-xl p-4 border border-slate-800 space-y-3",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GitBranch, { className: "w-4 h-4 text-emerald-400 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+													className: "font-bold text-sm text-white",
+													children: "1. GitHub Actions से ऑटो असली .APK जनरेट व डाउनलोड करें"
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold px-2 py-0.5 rounded-full",
+												children: "Recommended"
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "text-[11px] text-slate-300 leading-relaxed",
+											children: [
+												"प्रोजेक्ट में ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+													className: "text-amber-300 font-mono",
+													children: ".github/workflows/build-apk.yml"
+												}),
+												" (Java 21 + Capacitor Android) पहले से सेट है। GitHub पर कोड पुश करते ही यह अपनेआप",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+													className: "text-white",
+													children: "TejFoodProducts-ERP-debug.apk"
+												}),
+												" बनाकर",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+													className: "text-emerald-300",
+													children: "GitHub Releases"
+												}),
+												" में डाल देता है।"
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "space-y-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block text-[10px] font-bold uppercase tracking-wider text-slate-400",
+												children: "अपना GitHub Repo दर्ज करें (ताकि सीधा Release APK लिंक खुल सके):"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "text",
+												value: githubRepoInput,
+												onChange: (e) => handleRepoInputChange(e.target.value),
+												placeholder: "उदाहरण: username/tejstha-erp या पूरा GitHub URL",
+												className: "w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-amber-400 font-mono"
+											})]
+										}),
+										normalizedRepo ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: `https://github.com/${normalizedRepo}/actions/workflows/build-apk.yml`,
 												target: "_blank",
 												rel: "noopener noreferrer",
-												className: "w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "PWABuilder पर .APK बनाएं" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-3.5 h-3.5" })]
+												className: "py-2.5 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "APK Build चलाएं (Actions)" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3.5 h-3.5" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: `https://github.com/${normalizedRepo}/releases/latest`,
+												target: "_blank",
+												rel: "noopener noreferrer",
+												className: "py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Releases से .APK डाउनलोड करें" })]
+											})]
+										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "text-[11px] text-amber-300/90 bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-2",
+											children: [
+												"ऊपर ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "font-mono text-white",
+													children: "owner/repo"
+												}),
+												" लिखते ही",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Actions (Run Build)" }),
+												" और ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Releases (Download .APK)" }),
+												" बटन सक्रिय हो जाएंगे।"
+											]
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2 font-bold text-slate-900 text-xs",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FolderArchive, { className: "w-4 h-4 text-blue-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "2. पूरा Android + Capacitor प्रोजेक्ट डाउनलोड करें (.tar.gz)" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full",
+												children: "Synced v2.4.0"
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "text-[11px] text-slate-600 leading-relaxed",
+											children: [
+												"इस बंडल में अपडेटेड ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+													className: "font-mono",
+													children: "android/"
+												}),
+												" प्रोजेक्ट,",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+													className: "font-mono",
+													children: "dist/"
+												}),
+												" वेब बिल्ड और",
+												" ",
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+													className: "font-mono",
+													children: "build-apk.yml"
+												}),
+												" शामिल हैं। इसे PC/Android Studio में खोलकर या GitHub पर अपलोड करके 1 क्लिक में APK बनाएं।"
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "grid grid-cols-1 sm:grid-cols-2 gap-2.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: apkStatus?.bundleUrl || "/api/download-android-bundle",
+												download: "TejFoodProducts-Android-APK-Project-v2.4.0.tar.gz",
+												className: "py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Android बंडल डाउनलोड करें (.tar.gz)" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => handleCopy(LOCAL_BUILD_COMMAND, "cmd"),
+												className: "py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer",
+												children: copiedCmd ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-4 h-4 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "APK Build कमांड कॉपी हो गई!" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal, { className: "w-4 h-4 text-amber-300" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Gradle APK कमांड कॉपी करें" })] })
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "bg-slate-900 text-emerald-300 font-mono text-[10px] px-3 py-2 rounded-lg overflow-x-auto whitespace-nowrap",
+											children: LOCAL_BUILD_COMMAND
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid grid-cols-1 md:grid-cols-12 gap-4 items-center border-t border-slate-200 pt-4",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "md:col-span-7 space-y-3",
+										children: [isInstalled ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "bg-blue-50 border border-blue-200 p-4 rounded-xl text-center space-y-1",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-8 h-8 text-blue-600 mx-auto" }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "font-bold text-blue-900 text-sm",
+													children: "ऐप आपके फोन में पहले से इंस्टॉल है!"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "text-blue-700 text-xs",
+													children: "आप सीधे अपने फोन की होम स्क्रीन से TEJ FOOD ऐप चला सकते हैं।"
+												})
+											]
+										}) : isInstallable ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "space-y-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: handleInstallClick,
+												className: "w-full py-3.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 group cursor-pointer",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-5 h-5 text-amber-200 group-hover:scale-110 transition" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "अभी फोन में इंस्टॉल करें (1-Tap WebAPK)" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+												className: "text-[10px] text-slate-500 text-center",
+												children: [
+													"Google Chrome द्वारा तुरंत असली ",
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Android WebAPK" }),
+													" फोन में इंस्टॉल हो जाएगा।"
+												]
+											})]
+										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "bg-slate-50 border border-slate-300 p-3.5 rounded-xl space-y-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-bold text-slate-900 block text-xs",
+												children: "3. मोबाइल ब्राउज़र से 10 सेकंड में ऐप इंस्टॉल करें:"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ol", {
+												className: "list-decimal list-inside space-y-1 text-[11px] text-slate-700",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+														"अपने Android Chrome में ऊपर दाईं ओर ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "3 डॉट्स (⋮)" }),
+														" दबाएं।"
+													] }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+														"मेनू में ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install app'" }),
+														" या",
+														" ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Add to Home screen'" }),
+														" चुनें।"
+													] }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install'" }), " टैप करें — बिना ब्राउज़र बार के ऐप चलेगा।"] })
+												]
 											})]
 										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-1.5 font-bold text-slate-900 text-xs mb-1",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-4 h-4 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "स्टाफ / सेल्समैन को व्हाट्सएप पर भेजें" })]
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-												className: "text-[11px] text-slate-600 leading-relaxed mb-3",
-												children: [
-													"इस लिंक को अपने कर्मचारियों को भेजें, वे अपने फोन में लिंक खोलते ही ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "'Install app'" }),
-													" दबाकर ऐप चला सकेंगे।"
-												]
-											})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											className: "grid grid-cols-1 sm:grid-cols-2 gap-2.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: `https://www.pwabuilder.com/reportcard?site=${encodeURIComponent(shareableAppUrl)}`,
+												target: "_blank",
+												rel: "noopener noreferrer",
+												className: "py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "PWABuilder .APK" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-3.5 h-3.5" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 												type: "button",
 												onClick: () => {
-													const url = typeof window !== "undefined" ? window.location.href : "";
-													navigator.clipboard.writeText(url);
+													navigator.clipboard.writeText(shareableAppUrl);
 													setCopiedLink(true);
 													setTimeout(() => setCopiedLink(false), 2500);
 												},
-												className: "w-full py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition cursor-pointer",
-												children: copiedLink ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लिंक कॉपी हो गया! (WhatsApp पर पेस्ट करें)" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ऐप लिंक कॉपी करें (Copy Link)" })] })
+												className: "py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs shadow-xs text-center flex items-center justify-center gap-1.5 transition cursor-pointer",
+												children: copiedLink ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लिंक कॉपी हुआ!" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "स्टाफ को लिंक भेजें" })] })
 											})]
 										})]
-									})
-								]
-							})
-						]
-					}), activeTab === "api" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "space-y-4",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-purple-50 border border-purple-200 rounded-xl p-3.5 space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center justify-between",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-2 text-purple-950 font-bold text-sm",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileJson, { className: "w-4 h-4 text-purple-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "REST API v2.4.0 डेटा एक्सपोर्ट (Tally, Vyapar & Software Integration)" })]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded-full font-mono",
-										children: "JSON / REST"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "md:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1",
+												children: "मोबाइल से स्कैन करके ऐप खोलें"
+											}),
+											qrCodeUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "bg-white p-2 rounded-xl border-2 border-amber-300 shadow-xs",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+													src: qrCodeUrl,
+													alt: "Scan to install",
+													className: "w-32 h-32 object-contain"
+												})
+											}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "w-32 h-32 flex items-center justify-center bg-white rounded-xl border border-slate-200",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QrCode, { className: "w-8 h-8 text-slate-400" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] text-slate-500 mt-2",
+												children: "फोन कैमरा या Google Lens से स्कैन करें"
+											})
+										]
 									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-									className: "text-purple-800 text-[11px] leading-relaxed",
-									children: [
-										"इस विकल्प से आप अपनी पूरी फैक्ट्री का डेटा ",
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "REST API JSON" }),
-										" प्रारूप में डाउनलोड कर सकते हैं। इसे आप Tally Prime, Vyapar, Marg ERP या किसी भी कस्टम सॉफ्टवेयर में आसानी से जोड़ सकते हैं।"
-									]
-								})]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									onClick: handleDownloadApi,
-									className: "p-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center justify-between shadow-md transition group",
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2.5 text-[11px] text-emerald-900",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDrive, { className: "w-4 h-4 text-emerald-700 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "100% फ्री लोकल + रियल-टाइम सिंक:" }), " ऑफ़लाइन लोकल स्टोरेज (₹0 क्लाउड बिल) व मल्टी-मोबाइल लाइव सिंक सपोर्ट।"] })]
+								})
+							]
+						}),
+						activeTab === "api" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-4",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-purple-50 border border-purple-200 rounded-xl p-3.5 space-y-2",
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-2.5",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "p-2 bg-white/20 rounded-lg group-hover:scale-105 transition",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-4 h-4 text-white" })
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "text-left",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "block text-xs",
-												children: "API वर्जन डाउनलोड करें (.JSON)"
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "block text-[10px] text-purple-200",
-												children: "पूर्ण डेटाबेस + एंडपॉइंट्स"
-											})]
-										})]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-purple-200 group-hover:translate-x-1 transition" })]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									onClick: handleDownloadOpenApi,
-									className: "p-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-between shadow-md transition group border border-slate-700",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-2.5",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "p-2 bg-white/10 rounded-lg group-hover:scale-105 transition",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Code, { className: "w-4 h-4 text-amber-400" })
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "text-left",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "block text-xs",
-												children: "OpenAPI (Swagger) Spec डाउनलोड"
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "block text-[10px] text-slate-400",
-												children: "डेवलपर्स व थर्ड पार्टी API"
-											})]
-										})]
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 group-hover:translate-x-1 transition" })]
-								})]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "bg-slate-100 px-3.5 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2",
+										className: "flex items-center justify-between",
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "flex items-center gap-2",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "w-4 h-4 text-slate-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "font-bold text-slate-800 text-xs",
-												children: "उपलब्ध REST API एंडपॉइंट्स (Available Endpoints):"
+											className: "flex items-center gap-2 text-purple-950 font-bold text-sm",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileJson, { className: "w-4 h-4 text-purple-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "REST API v2.4.0 डेटा एक्सपोर्ट (Tally, Vyapar & Software Integration)" })]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded-full font-mono",
+											children: "JSON / REST"
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: "text-purple-800 text-[11px] leading-relaxed",
+										children: [
+											"इस विकल्प से आप अपनी पूरी फैक्ट्री का डेटा ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "REST API JSON" }),
+											" प्रारूप में डाउनलोड कर सकते हैं। इसे आप Tally Prime, Vyapar, Marg ERP या किसी भी कस्टम सॉफ्टवेयर में आसानी से जोड़ सकते हैं।"
+										]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										type: "button",
+										onClick: handleDownloadApi,
+										className: "p-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center justify-between shadow-md transition group cursor-pointer",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-2.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "p-2 bg-white/20 rounded-lg group-hover:scale-105 transition",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-4 h-4 text-white" })
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "text-left",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "block text-xs",
+													children: "API वर्जन डाउनलोड करें (.JSON)"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "block text-[10px] text-purple-200",
+													children: "पूर्ण डेटाबेस + एंडपॉइंट्स"
+												})]
 											})]
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-											type: "button",
-											onClick: () => handleCopy(JSON.stringify(currentPreviewData, null, 2), "payload"),
-											className: "inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-300 font-bold text-[10px] transition",
-											children: copiedPayload ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-												className: "text-emerald-700",
-												children: "कॉपी हो गया!"
-											})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3.5 h-3.5 text-slate-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "JSON कॉपी करें" })] })
-										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-1.5",
-										children: apiPayload && Object.keys(apiPayload.endpoints).map((ep) => {
-											const info = apiPayload.endpoints[ep];
-											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-purple-200 group-hover:translate-x-1 transition" })]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										type: "button",
+										onClick: handleDownloadOpenApi,
+										className: "p-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-between shadow-md transition group border border-slate-700 cursor-pointer",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-2.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "p-2 bg-white/10 rounded-lg group-hover:scale-105 transition",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Code, { className: "w-4 h-4 text-amber-400" })
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "text-left",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "block text-xs",
+													children: "OpenAPI (Swagger) Spec डाउनलोड"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "block text-[10px] text-slate-400",
+													children: "डेवलपर्स व थर्ड पार्टी API"
+												})]
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 group-hover:translate-x-1 transition" })]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "bg-slate-100 px-3.5 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "w-4 h-4 text-slate-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "font-bold text-slate-800 text-xs",
+													children: "उपलब्ध REST API एंडपॉइंट्स (Available Endpoints):"
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 												type: "button",
-												onClick: () => setPreviewEndpoint(ep),
-												className: `px-2.5 py-1 rounded-lg font-mono text-[11px] transition flex items-center gap-1.5 ${previewEndpoint === ep ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"}`,
+												onClick: () => handleCopy(JSON.stringify(currentPreviewData, null, 2), "payload"),
+												className: "inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-300 font-bold text-[10px] transition cursor-pointer",
+												children: copiedPayload ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "text-emerald-700",
+													children: "कॉपी हो गया!"
+												})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3.5 h-3.5 text-slate-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "JSON कॉपी करें" })] })
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-1.5",
+											children: apiPayload && Object.keys(apiPayload.endpoints).map((ep) => {
+												const info = apiPayload.endpoints[ep];
+												return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+													type: "button",
+													onClick: () => setPreviewEndpoint(ep),
+													className: `px-2.5 py-1 rounded-lg font-mono text-[11px] transition flex items-center gap-1.5 cursor-pointer ${previewEndpoint === ep ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"}`,
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+															className: "text-[9px] px-1 bg-black/20 rounded font-bold",
+															children: "GET"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: ep }),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+															className: "text-[10px] opacity-75 font-sans",
+															children: [
+																"(",
+																info.record_count,
+																")"
+															]
+														})
+													]
+												}, ep);
+											})
+										}),
+										apiPayload && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "px-3.5 py-2 bg-slate-100/60 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-600",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+												className: "text-slate-900",
+												children: apiPayload.endpoints[previewEndpoint]?.descriptionHindi
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "text-slate-500 text-[10px] ml-1.5",
 												children: [
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-														className: "text-[9px] px-1 bg-black/20 rounded font-bold",
-														children: "GET"
-													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: ep }),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-														className: "text-[10px] opacity-75 font-sans",
-														children: [
-															"(",
-															info.record_count,
-															")"
-														]
-													})
+													"(",
+													apiPayload.endpoints[previewEndpoint]?.description,
+													")"
 												]
-											}, ep);
+											})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => handleCopy(previewEndpoint, "endpoint", previewEndpoint),
+												className: "text-purple-700 hover:underline font-mono text-[10px] font-bold flex items-center gap-1 cursor-pointer",
+												children: copiedEndpoint === previewEndpoint ? "URL कॉपी हुआ!" : "रूट कॉपी करें"
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "p-3 bg-slate-950 font-mono text-[11px] text-emerald-400 max-h-48 overflow-y-auto rounded-b-xl",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", {
+												className: "whitespace-pre-wrap break-all",
+												children: JSON.stringify(currentPreviewData, null, 2)
+											})
 										})
-									}),
-									apiPayload && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "px-3.5 py-2 bg-slate-100/60 border-b border-slate-200 flex items-center justify-between text-[11px] text-slate-600",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
-											className: "text-slate-900",
-											children: apiPayload.endpoints[previewEndpoint]?.descriptionHindi
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-											className: "text-slate-500 text-[10px] ml-1.5",
-											children: [
-												"(",
-												apiPayload.endpoints[previewEndpoint]?.description,
-												")"
-											]
-										})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-											type: "button",
-											onClick: () => handleCopy(previewEndpoint, "endpoint", previewEndpoint),
-											className: "text-purple-700 hover:underline font-mono text-[10px] font-bold flex items-center gap-1",
-											children: copiedEndpoint === previewEndpoint ? "URL कॉपी हुआ!" : "रूट कॉपी करें"
-										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "p-3 bg-slate-950 font-mono text-[11px] text-emerald-400 max-h-48 overflow-y-auto rounded-b-xl",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", {
-											className: "whitespace-pre-wrap break-all",
-											children: JSON.stringify(currentPreviewData, null, 2)
-										})
-									})
-								]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-start gap-2 bg-slate-50 border border-slate-200 p-3 rounded-xl text-[11px] text-slate-600",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-purple-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-									"इस API JSON फ़ाइल में ",
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "orders, inventory, wheatStock, customers, production, expenses" }),
-									" सभी का स्ट्रक्चर्ड डेटा मौजूद है जिसे आप अपने अकाउंटिंग सॉफ्टवेयर में डायरेक्ट इम्पोर्ट कर सकते हैं।"
-								] })]
-							})
-						]
-					})]
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-start gap-2 bg-slate-50 border border-slate-200 p-3 rounded-xl text-[11px] text-slate-600",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-purple-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+										"इस API JSON फ़ाइल में ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "orders, inventory, wheatStock, customers, production, expenses" }),
+										" सभी का स्ट्रक्चर्ड डेटा मौजूद है जिसे आप अपने अकाउंटिंग सॉफ्टवेयर में डायरेक्ट इम्पोर्ट कर सकते हैं।"
+									] })]
+								})
+							]
+						})
+					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs shrink-0",
@@ -21365,17 +21812,17 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 						children: [activeTab === "apk" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: () => setActiveTab("api"),
-							className: "px-3 py-1.5 text-purple-700 font-bold hover:bg-purple-50 rounded-lg transition",
+							className: "px-3 py-1.5 text-purple-700 font-bold hover:bg-purple-50 rounded-lg transition cursor-pointer",
 							children: "API वर्जन देखें →"
 						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: () => setActiveTab("apk"),
-							className: "px-3 py-1.5 text-amber-700 font-bold hover:bg-amber-50 rounded-lg transition",
+							className: "px-3 py-1.5 text-amber-700 font-bold hover:bg-amber-50 rounded-lg transition cursor-pointer",
 							children: "← APK वर्जन देखें"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: onClose,
-							className: "px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition",
+							className: "px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition cursor-pointer",
 							children: "बंद करें"
 						})]
 					})]
@@ -21774,7 +22221,9 @@ var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, 
 	});
 };
 // src/views/DashboardView.tsx
-var DashboardView = ({ orders, customers, rawStock, bagStock, products, production, expenses, staff, settings, currentRole, onNavigate, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onSelectOrder }) => {
+var DashboardView = ({ orders, customers, rawStock, bagStock, products, production, expenses, staff: _staff, settings, currentRole, permissions, onNavigate, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onSelectOrder }) => {
+	const perms = permissions || getDefaultPermissionsForRole(currentRole);
+	const canSeeProfit = currentRole === "admin" || perms.viewAccounting;
 	const todayStr = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 	const todayOrders = orders.filter((o) => o.date === todayStr);
 	const todaySales = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -21850,7 +22299,7 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 							onClick: handleShareDailyReport,
 							className: "flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "WhatsApp दैनिक समरी" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						}), perms.viewReports && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							onClick: () => onNavigate("reports"),
 							className: "flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Excel डाउनलोड" })]
@@ -21890,8 +22339,8 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						onClick: () => currentRole === "admin" ? onNavigate("accounting") : null,
-						className: `bg-white p-4 rounded-2xl border border-slate-200 shadow-xs transition ${currentRole === "admin" ? "hover:border-emerald-400 hover:shadow-md cursor-pointer" : ""}`,
+						onClick: () => canSeeProfit ? onNavigate("accounting") : null,
+						className: `bg-white p-4 rounded-2xl border border-slate-200 shadow-xs transition ${canSeeProfit ? "hover:border-emerald-400 hover:shadow-md cursor-pointer" : ""}`,
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex justify-between items-start",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -21903,7 +22352,7 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 							})]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "mt-2",
-							children: currentRole === "admin" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							children: canSeeProfit ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "font-mono font-black text-xl sm:text-2xl text-emerald-700 block",
 								children: ["₹", estimatedNetProfit.toLocaleString("en-IN")]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -21911,10 +22360,10 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 								children: "गेहूँ, बिजली, बैग व मजदूरी काटकर"
 							})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-sm font-semibold text-slate-400 block pt-1",
-								children: "केवल Admin अधिकार"
+								children: "केवल अधिकृत अकाउंट"
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-[11px] text-slate-400",
-								children: "मालिक का पर्सनल मोबाइल"
+								children: "Admin अनुमति आवश्यक"
 							})] })
 						})]
 					}),
@@ -22166,7 +22615,7 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 										className: "py-2 px-3 text-right font-mono font-bold text-rose-600",
 										children: ["₹", todayExpensesTotal.toLocaleString("en-IN")]
 									})] }),
-									currentRole === "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+									canSeeProfit && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
 										className: "bg-emerald-50/70 font-bold",
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 											className: "py-2.5 px-3 text-emerald-900",
@@ -22507,22 +22956,22 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "grid grid-cols-2 gap-2 text-xs",
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								perms.viewOrders && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									onClick: onOpenNewOrder,
 									className: "p-2.5 bg-white text-slate-900 rounded-xl font-bold hover:bg-amber-50 transition text-center",
 									children: "+ नया ऑर्डर"
 								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								perms.viewProduction && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									onClick: onOpenNewProduction,
 									className: "p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition text-center",
 									children: "+ पिसाई बैच"
 								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								perms.receivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									onClick: onOpenReceivePayment,
 									className: "p-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold transition text-center",
 									children: "+ भुगतान वसूली"
 								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								perms.viewInventory && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									onClick: () => onNavigate("inventory"),
 									className: "p-2.5 bg-amber-900/60 hover:bg-amber-900 text-white rounded-xl font-bold transition text-center",
 									children: "गोदाम स्टॉक देखें"
@@ -22536,7 +22985,7 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 	});
 };
 // src/views/CustomerView.tsx
-var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenReceivePayment, onSelectOrder, onUpdateCustomer, onDeleteCustomer }) => {
+var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onOpenNewCustomer, onOpenReceivePayment, onSelectOrder, onUpdateCustomer, onDeleteCustomer }) => {
 	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 	const [filterType, setFilterType] = (0, import_react.useState)("all");
 	const [selectedCustomerId, setSelectedCustomerId] = (0, import_react.useState)(null);
@@ -22544,6 +22993,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 	const [editFirmName, setEditFirmName] = (0, import_react.useState)("");
 	const [editName, setEditName] = (0, import_react.useState)("");
 	const [editPhone, setEditPhone] = (0, import_react.useState)("");
+	const [editEmail, setEditEmail] = (0, import_react.useState)("");
 	const [editAddress, setEditAddress] = (0, import_react.useState)("");
 	const [editCity, setEditCity] = (0, import_react.useState)("");
 	const [editType, setEditType] = (0, import_react.useState)("retailer");
@@ -22574,6 +23024,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 		setEditFirmName(cust.firmName);
 		setEditName(cust.name);
 		setEditPhone(cust.phone);
+		setEditEmail(cust.email || "");
 		setEditAddress(cust.address);
 		setEditCity(cust.city);
 		setEditType(cust.type);
@@ -22589,6 +23040,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 			firmName: editFirmName.trim(),
 			name: editName.trim(),
 			phone: editPhone.trim(),
+			email: editEmail.trim() || void 0,
 			address: editAddress.trim(),
 			city: editCity.trim(),
 			type: editType,
@@ -22617,7 +23069,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 					children: "किराना दुकानदार, होलसेल मंडी आढ़तिया, कैटरर्स खाता, ग्राहक एडिट, डिलीट एवं बकाया उधारी नियंत्रण"
 				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					children: [canReceivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						onClick: () => onOpenReceivePayment(),
 						className: "flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "भुगतान प्राप्त करें" })]
@@ -22799,17 +23251,24 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 											className: "py-3 px-3",
 											children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 												className: "text-slate-600 space-y-0.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-													className: "flex items-center gap-1 font-mono font-medium text-slate-900",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["+91 ", cust.phone] })]
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-													className: "flex items-center gap-1 text-[11px] text-slate-500",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-														cust.address,
-														", ",
-														cust.city
-													] })]
-												})]
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+														className: "flex items-center gap-1 font-mono font-medium text-slate-900",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["+91 ", cust.phone] })]
+													}),
+													cust.email && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+														className: "flex items-center gap-1 text-[11px] text-slate-600",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: cust.email })]
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+														className: "flex items-center gap-1 text-[11px] text-slate-500",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+															cust.address,
+															", ",
+															cust.city
+														] })]
+													})
+												]
 											})
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
@@ -22848,7 +23307,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 														className: "p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg transition",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-3.5 h-3.5" })
 													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													canReceivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														onClick: () => onOpenReceivePayment(cust.id),
 														title: "भुगतान दर्ज करें",
 														className: "px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-[11px] font-bold transition",
@@ -22860,14 +23319,14 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 														className: "px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition",
 														children: "लेजर"
 													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onUpdateCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														type: "button",
 														onClick: () => startEditCustomer(cust),
 														title: "ग्राहक विवरण एडिट करें",
 														className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-900 rounded-lg transition",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
 													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onDeleteCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														type: "button",
 														onClick: () => setDeleteConfirmCustomer(cust),
 														title: "ग्राहक को खाता सूची से हटाएं",
@@ -22963,6 +23422,16 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 									]
 								})] })]
 							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "ईमेल पता (Email - वैकल्पिक)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "email",
+								value: editEmail,
+								onChange: (e) => setEditEmail(e.target.value),
+								placeholder: "उदा. partyname@gmail.com",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+							})] }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -23118,6 +23587,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 								selectedCustomer.name,
 								" | फोन: +91 ",
 								selectedCustomer.phone,
+								selectedCustomer.email ? ` | ईमेल: ${selectedCustomer.email}` : "",
 								" | पता: ",
 								selectedCustomer.address,
 								", ",
@@ -23127,12 +23597,12 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center gap-2",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onUpdateCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: () => startEditCustomer(selectedCustomer),
 								className: "px-3 py-1.5 bg-slate-100 hover:bg-amber-100 text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1 border border-slate-300",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "एडिट करें" })]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onDeleteCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: () => setDeleteConfirmCustomer(selectedCustomer),
 								className: "px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-1 border border-rose-200",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5 text-rose-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "डिलीट" })]
@@ -23246,7 +23716,7 @@ var CustomerView = ({ customers, orders, settings, onOpenNewCustomer, onOpenRece
 	});
 };
 // src/views/InventoryView.tsx
-var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateBagStock }) => {
+var InventoryView = ({ rawStock, bagStock, products, canEdit = true, onUpdateRawStock, onUpdateBagStock }) => {
 	const [selectedProductId, setSelectedProductId] = (0, import_react.useState)("all");
 	const [showWheatModal, setShowWheatModal] = (0, import_react.useState)(false);
 	const [wheatQuintalsInput, setWheatQuintalsInput] = (0, import_react.useState)(40);
@@ -23381,7 +23851,7 @@ var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateB
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-xs text-slate-500 mt-0.5",
 					children: "कच्चा गेहूँ, 5-10-25-50 KG तैयार आटा बोरियां एवं खाली प्रिंटेड बैग्स स्टॉक संशोधन व संपादन"
-				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				})] }), canEdit && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex flex-wrap items-center gap-2",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -23458,7 +23928,7 @@ var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateB
 								className: "font-bold text-slate-900 text-base",
 								children: "गोदाम कुल आवक"
 							})] })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						}), canEdit && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center gap-1.5",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: () => {
@@ -23532,7 +24002,7 @@ var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateB
 								className: "text-[11px] text-slate-500",
 								children: "Tejstha ब्रांड 5, 10, 25 एवं 50 KG खाली बोरियों की गिनती"
 							})] })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						}), canEdit && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center gap-1.5",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								onClick: () => {
@@ -23730,7 +24200,7 @@ var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateB
 									className: "py-3 px-3 text-center",
 									children: "स्थिति"
 								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								canEdit && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-3 px-4 text-center",
 									children: "एडिट स्टॉक"
 								})
@@ -23802,7 +24272,7 @@ var InventoryView = ({ rawStock, bagStock, products, onUpdateRawStock, onUpdateB
 												children: "पर्याप्त ✓"
 											})
 										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+										canEdit && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 											className: "py-3 px-4 text-center",
 											children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 												onClick: () => {
@@ -24766,13 +25236,13 @@ var ProductionView = ({ production, products, orders, bagStock, onOpenNewProduct
 											className: "py-3 px-4 text-center",
 											children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 												className: "flex items-center justify-center gap-1.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												children: [onUpdateProduction && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 													type: "button",
 													onClick: () => startEditBatch(batch),
 													className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition",
 													title: "पिसाई बैच एडिट करें",
 													children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												}), onDeleteProduction && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 													type: "button",
 													onClick: () => setDeleteConfirmBatch(batch),
 													className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition",
@@ -25449,13 +25919,13 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 														title: "इनवॉइस देखें / प्रिंट करें",
 														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileText, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "बिल" })]
 													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onUpdateOrder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														onClick: () => startEditOrder(order),
 														className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition",
 														title: "ऑर्डर में मात्रा, दर या राशि बदलें (Edit Order)",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
 													}),
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													onDeleteOrder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														onClick: () => setDeleteConfirmOrder(order),
 														className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition",
 														title: "ऑर्डर हटाएँ (Delete Order)",
@@ -26040,25 +26510,31 @@ var DeliveryView = ({ orders, onUpdateOrderStatus, onSelectOrder }) => {
 	});
 };
 // src/views/StaffView.tsx
-var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteStaff, onSwitchRole }) => {
+var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAddStaff, onUpdateStaff, onDeleteStaff, onSwitchRole, onSelectStaffMember }) => {
 	const [showAddModal, setShowAddModal] = (0, import_react.useState)(false);
 	const [editingStaff, setEditingStaff] = (0, import_react.useState)(null);
+	const [permissionsModalStaff, setPermissionsModalStaff] = (0, import_react.useState)(null);
 	const [deleteConfirmStaff, setDeleteConfirmStaff] = (0, import_react.useState)(null);
 	const [showPasswordId, setShowPasswordId] = (0, import_react.useState)(null);
 	const [name, setName] = (0, import_react.useState)("");
 	const [phone, setPhone] = (0, import_react.useState)("");
+	const [email, setEmail] = (0, import_react.useState)("");
 	const [role, setRole] = (0, import_react.useState)("packing_staff");
 	const [password, setPassword] = (0, import_react.useState)("");
 	const [shift, setShift] = (0, import_react.useState)("सुबह शिफ्ट (8 AM - 5 PM)");
 	const [assignedVehicle, setAssignedVehicle] = (0, import_react.useState)("");
+	const [newPermissions, setNewPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
 	const [editName, setEditName] = (0, import_react.useState)("");
 	const [editPhone, setEditPhone] = (0, import_react.useState)("");
+	const [editEmail, setEditEmail] = (0, import_react.useState)("");
 	const [editRole, setEditRole] = (0, import_react.useState)("packing_staff");
 	const [editPassword, setEditPassword] = (0, import_react.useState)("");
 	const [editShift, setEditShift] = (0, import_react.useState)("");
 	const [editVehicle, setEditVehicle] = (0, import_react.useState)("");
 	const [editActive, setEditActive] = (0, import_react.useState)(true);
 	const [showEditPass, setShowEditPass] = (0, import_react.useState)(false);
+	const [editPermissions, setEditPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
+	const [quickPermissions, setQuickPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
 	const getRoleTitle = (r) => {
 		switch (r) {
 			case "admin": return "मालिक (Admin)";
@@ -26072,56 +26548,169 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 			default: return r;
 		}
 	};
-	const handleCreateStaff = (e) => {
-		e.preventDefault();
-		onAddStaff({
-			id: `staff-${Date.now()}`,
-			name,
-			phone,
-			role,
-			roleHindi: getRoleTitle(role),
-			password: password || `${name.toLowerCase()}@tej123`,
-			active: true,
-			shift,
-			assignedVehicle: role === "delivery_staff" ? assignedVehicle || "महिंद्रा बोलेरो पिकअप RJ-14-GA-4521" : void 0,
-			joinedDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
-		});
-		setShowAddModal(false);
+	const handleOpenAddModal = () => {
+		if (!canManageStaff) return;
 		setName("");
 		setPhone("");
+		setEmail("");
+		setRole("packing_staff");
 		setPassword("");
+		setShift("सुबह शिफ्ट (8 AM - 5 PM)");
+		setAssignedVehicle("");
+		setNewPermissions(getDefaultPermissionsForRole("packing_staff"));
+		setShowAddModal(true);
+	};
+	const handleCreateStaff = (e) => {
+		e.preventDefault();
+		if (!canManageStaff) return;
+		const cleanName = name.trim();
+		const cleanEmail = email.trim();
+		onAddStaff({
+			id: `staff-${Date.now()}`,
+			name: cleanName,
+			phone: phone.trim(),
+			email: cleanEmail ? cleanEmail : void 0,
+			role,
+			roleHindi: getRoleTitle(role),
+			password: password.trim() || `${cleanName.toLowerCase().replace(/\s+/g, "")}@tej123`,
+			active: true,
+			shift: shift.trim(),
+			assignedVehicle: role === "delivery_staff" ? assignedVehicle.trim() || "महिंद्रा बोलेरो पिकअप RJ-14-GA-4521" : void 0,
+			joinedDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+			permissions: role === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...newPermissions }
+		});
+		setShowAddModal(false);
 	};
 	const startEditStaff = (staff) => {
+		if (!canManageStaff) return;
 		setEditingStaff(staff);
 		setEditName(staff.name);
 		setEditPhone(staff.phone);
+		setEditEmail(staff.email || "");
 		setEditRole(staff.role);
 		setEditPassword(staff.password || "");
 		setEditShift(staff.shift || "सुबह शिफ्ट (8 AM - 5 PM)");
 		setEditVehicle(staff.assignedVehicle || "");
 		setEditActive(staff.active);
 		setShowEditPass(false);
+		setEditPermissions(getEffectivePermissions(staff, staff.role));
 	};
 	const handleSaveEditStaff = (e) => {
 		e.preventDefault();
-		if (!editingStaff || !onUpdateStaff) return;
+		if (!editingStaff || !onUpdateStaff || !canManageStaff) return;
+		const cleanEditEmail = editEmail.trim();
 		onUpdateStaff({
 			...editingStaff,
 			name: editName.trim(),
 			phone: editPhone.trim(),
+			email: cleanEditEmail ? cleanEditEmail : void 0,
 			role: editRole,
 			roleHindi: getRoleTitle(editRole),
 			password: editPassword.trim(),
 			shift: editShift.trim(),
 			assignedVehicle: editRole === "delivery_staff" ? editVehicle.trim() || "महिंद्रा बोलेरो पिकअप RJ-14-GA-4521" : void 0,
-			active: editActive
+			active: editActive,
+			permissions: editRole === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...editPermissions }
 		});
 		setEditingStaff(null);
 	};
+	const openPermissionsModal = (staff) => {
+		if (!canManageStaff) return;
+		setPermissionsModalStaff(staff);
+		setQuickPermissions(getEffectivePermissions(staff, staff.role));
+	};
+	const handleSaveQuickPermissions = (e) => {
+		e.preventDefault();
+		if (!permissionsModalStaff || !onUpdateStaff || !canManageStaff) return;
+		onUpdateStaff({
+			...permissionsModalStaff,
+			permissions: permissionsModalStaff.role === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...quickPermissions }
+		});
+		setPermissionsModalStaff(null);
+	};
 	const handleConfirmDelete = () => {
-		if (!deleteConfirmStaff || !onDeleteStaff) return;
+		if (!deleteConfirmStaff || !onDeleteStaff || !canManageStaff) return;
 		onDeleteStaff(deleteConfirmStaff.id);
 		setDeleteConfirmStaff(null);
+	};
+	const renderPermissionMatrix = (perms, setPerms, targetRole) => {
+		const isTargetAdmin = targetRole === "admin";
+		const enabledCount = countEnabledPermissions(perms);
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", {
+					className: "font-bold text-slate-900 flex items-center gap-1.5 text-xs",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "मॉड्यूल एवं कार्य अनुमतियां (Admin Permissions)" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[10px] text-slate-500",
+					children: [
+						"चुनें कि यह कर्मचारी अपने मोबाइल पर क्या-क्या देख और एडिट कर सकेगा (",
+						enabledCount,
+						"/15 सक्रिय)"
+					]
+				})] }), !isTargetAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						onClick: () => setPerms(getDefaultPermissionsForRole(targetRole)),
+						className: "px-2 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-[10px] font-bold text-slate-700",
+						children: "रोल डिफ़ॉल्ट"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => setPerms({ ...ALL_TRUE_PERMISSIONS }),
+						className: "px-2 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg text-[10px] font-bold text-amber-900 flex items-center gap-1",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SquareCheckBig, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सभी चुनें" })]
+					})]
+				})]
+			}), isTargetAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-[11px] text-amber-900 font-semibold",
+				children: "मालिक (Admin) के पास हमेशा सभी 15/15 मॉड्यूल और सुरक्षा अधिकार सक्रिय रहते हैं।"
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "space-y-3 max-h-60 overflow-y-auto pr-1",
+				children: PERMISSION_GROUPS.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "space-y-1.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[10px] font-black uppercase tracking-wider text-slate-500 block",
+						children: group.groupTitle
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "grid grid-cols-1 gap-1.5",
+						children: group.items.map((item) => {
+							const checked = Boolean(perms[item.key]);
+							const isCritical = item.key === "manageStaff" || item.key === "manageSettings";
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: `flex items-start gap-2.5 p-2 rounded-xl border cursor-pointer transition ${checked ? isCritical ? "bg-amber-50 border-amber-400" : "bg-white border-emerald-300 shadow-2xs" : "bg-slate-100/60 border-slate-200 opacity-80 hover:opacity-100"}`,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									checked,
+									onChange: (e) => setPerms({
+										...perms,
+										[item.key]: e.target.checked
+									}),
+									className: "mt-0.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4 shrink-0"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-1.5 flex-wrap",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "font-bold text-slate-900 text-[11px]",
+											children: item.labelHindi
+										}), isCritical && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[9px] px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black rounded",
+											children: "ADMIN LEVEL"
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: item.description
+									})]
+								})]
+							}, item.key);
+						})
+					})]
+				}, group.groupTitle))
+			})]
+		});
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-6 pb-12",
@@ -26130,15 +26719,28 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 				className: "flex flex-col sm:flex-row sm:items-center justify-between gap-4",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
 					className: "text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "स्टाफ एवं मल्टी-मोबाइल लॉगिन मैनेजमेंट (Staff Management)" })]
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "स्टाफ एवं अधिकार मैनेजमेंट (Staff & Permissions)" })]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-xs text-slate-500 mt-0.5",
-					children: "Admin व मैनेजर अधिकार, कर्मचारियों का नाम, मोबाइल नंबर, पासवर्ड एडिट व शिफ्ट रोस्टर"
-				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-					onClick: () => setShowAddModal(true),
+					children: "केवल मालिक (Admin) या अधिकृत यूज़र ही नया स्टाफ जोड़, एडिट और किसको क्या अनुमति (Permissions) देनी है तय कर सकते हैं"
+				})] }), canManageStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					onClick: handleOpenAddModal,
 					className: "flex items-center gap-1.5 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ नया कर्मचारी जोड़ें" })]
 				})]
+			}),
+			!canManageStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex items-center gap-3 text-xs text-amber-950",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "p-2 bg-amber-500 text-slate-950 rounded-xl shrink-0",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "w-5 h-5" })
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+					className: "font-bold text-sm",
+					children: "केवल Admin / अधिकृत अधिकार (View Only)"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-amber-800 mt-0.5",
+					children: "नया स्टाफ जोड़ने, विवरण/पासवर्ड एडिट करने या किसी कर्मचारी को मॉड्यूल अधिकार (Permissions) देने का कंट्रोल केवल मालिक (Admin) के पास सुरक्षित है।"
+				})] })]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 shadow-md",
@@ -26151,10 +26753,10 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-6 h-6" })
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 							className: "font-bold text-base text-amber-300",
-							children: "Multi-Mobile Android ERP सिस्टम सक्रिय है"
+							children: "Admin कस्टम स्टाफ अधिकार नियंत्रण सक्रिय है"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "text-xs text-slate-300 mt-0.5",
-							children: "मालिक के मोबाइल पर पूरा बिज़नेस कंट्रोल रहेगा। यहाँ से आप किसी भी कर्मचारी का नाम, नंबर व पासवर्ड बदल सकते हैं।"
+							children: "मालिक जिसे चाहें उसे स्टाफ एडिट, ऑर्डर एडिट, पिसाई एडिट, बकाया वसूली या रिपोर्ट की अनुमति दे सकते हैं।"
 						})] })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "text-xs text-slate-300 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700",
@@ -26163,7 +26765,7 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 							children: ["कुल एक्टिव कर्मचारी: ", staffList.length]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "text-[11px] text-slate-400",
-							children: "सभी के अलग-अलग लॉगिन क्रेडेंशियल्स सुरक्षित हैं"
+							children: "प्रत्येक स्टाफ की अपनी कस्टम अनुमतियां सुरक्षित हैं"
 						})]
 					})]
 				})
@@ -26171,15 +26773,17 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
 				children: staffList.map((member) => {
-					const isCurrent = currentRole === member.role;
+					const isCurrent = currentStaffId ? currentStaffId === member.id : currentRole === member.role;
 					const showPass = showPasswordId === member.id;
+					const effectivePerms = getEffectivePermissions(member, member.role);
+					const enabledPermCount = countEnabledPermissions(effectivePerms);
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: `bg-white rounded-2xl p-5 border-2 shadow-xs transition space-y-4 ${member.role === "admin" ? "border-amber-400 bg-gradient-to-b from-amber-50/30 to-white" : "border-slate-200"}`,
+						className: `bg-white rounded-2xl p-5 border-2 shadow-xs transition space-y-4 ${member.role === "admin" ? "border-amber-400 bg-gradient-to-b from-amber-50/30 to-white" : isCurrent ? "border-emerald-400" : "border-slate-200"}`,
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex justify-between items-start",
+								className: "flex justify-between items-start gap-2",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-2",
+									className: "flex items-center gap-1.5 flex-wrap",
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 										className: `px-2.5 py-0.5 rounded-full text-[10px] font-bold ${member.role === "admin" ? "bg-amber-500 text-slate-950 font-black" : member.role === "manager" ? "bg-blue-600 text-white" : member.role === "accountant" ? "bg-emerald-600 text-white" : member.role === "salesman" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-700"}`,
 										children: member.roleHindi
@@ -26190,21 +26794,31 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 									className: "font-bold text-base text-slate-900 mt-1.5",
 									children: member.name
-								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-1.5",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-										type: "button",
-										onClick: () => startEditStaff(member),
-										className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg transition",
-										title: "नाम, नंबर व पासवर्ड एडिट करें",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
-									}), member.role !== "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-										type: "button",
-										onClick: () => setDeleteConfirmStaff(member),
-										className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg transition",
-										title: "कर्मचारी को हटाएं",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5 text-rose-600" })
-									})]
+								})] }), canManageStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1 shrink-0",
+									children: [
+										member.role !== "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => openPermissionsModal(member),
+											className: "p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg transition",
+											title: "इस कर्मचारी के अधिकार (Permissions) बदलें",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlidersVertical, { className: "w-3.5 h-3.5" })
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => startEditStaff(member),
+											className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg transition",
+											title: "नाम, नंबर, पासवर्ड व अधिकार एडिट करें",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
+										}),
+										member.role !== "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setDeleteConfirmStaff(member),
+											className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-lg transition",
+											title: "कर्मचारी को हटाएं",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5 text-rose-600" })
+										})
+									]
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -26215,6 +26829,13 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3.5 h-3.5 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 											className: "font-mono font-medium",
 											children: ["+91 ", member.phone]
+										})]
+									}),
+									member.email && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: "flex items-center gap-2 break-all",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "w-3.5 h-3.5 text-slate-400 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "font-medium text-slate-800",
+											children: member.email
 										})]
 									}),
 									member.shift && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
@@ -26231,6 +26852,27 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 								]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-[11px]",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-4 h-4 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "min-w-0",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "font-bold text-slate-800 block",
+											children: [enabledPermCount, "/15 अधिकार सक्रिय"]
+										}), effectivePerms.manageStaff && member.role !== "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[10px] text-amber-700 font-bold block",
+											children: "★ स्टाफ एडिट व अधिकार प्राप्त"
+										})]
+									})]
+								}), canManageStaff && member.role !== "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => openPermissionsModal(member),
+									className: "px-2.5 py-1 bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-[10px] font-bold shrink-0",
+									children: "अधिकार बदलें"
+								})]
+							}),
+							canManageStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "bg-slate-100/70 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "flex items-center gap-2",
@@ -26260,24 +26902,24 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "pt-2 border-t border-slate-200",
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									onClick: () => onSwitchRole(member.role),
+									onClick: () => onSelectStaffMember ? onSelectStaffMember(member) : onSwitchRole(member.role),
 									className: `w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${isCurrent ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-slate-900 hover:bg-slate-800 text-white"}`,
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isCurrent ? "वर्तमान में यह मोबाइल रोल सक्रिय है" : "इस कर्मचारी के मोबाइल में स्विच करें" })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isCurrent ? "वर्तमान में यह अकाउंट सक्रिय है" : "इस कर्मचारी के मोबाइल में स्विच करें" })]
 								})
 							})
 						]
 					}, member.id);
 				})
 			}),
-			editingStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			canManageStaff && editingStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-xs text-slate-800",
+					className: "bg-white rounded-2xl p-6 max-w-xl w-full shadow-2xl border border-slate-200 text-xs text-slate-800 max-h-[92vh] overflow-y-auto",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex justify-between items-center mb-4",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
 							className: "text-base font-bold text-slate-900 flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कर्मचारी विवरण व पासवर्ड बदलें (Edit Staff)" })]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कर्मचारी विवरण, पासवर्ड व अधिकार बदलें (Edit Staff)" })]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							onClick: () => setEditingStaff(null),
 							className: "p-1 text-slate-400 hover:text-slate-800",
@@ -26315,7 +26957,11 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
 									value: editRole,
 									disabled: editingStaff.role === "admin",
-									onChange: (e) => setEditRole(e.target.value),
+									onChange: (e) => {
+										const nextRole = e.target.value;
+										setEditRole(nextRole);
+										setEditPermissions(getDefaultPermissionsForRole(nextRole));
+									},
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium",
 									children: [
 										editingStaff.role === "admin" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
@@ -26353,6 +26999,16 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 									]
 								})] })]
 							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "ईमेल पता (Email - वैकल्पिक)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "email",
+								value: editEmail,
+								onChange: (e) => setEditEmail(e.target.value),
+								placeholder: "उदा. staff@shritejfood.com",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+							})] }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "flex justify-between items-center mb-1",
@@ -26421,6 +27077,7 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 									children: "कर्मचारी खाता सक्रिय (Active) रखें"
 								})]
 							}),
+							renderPermissionMatrix(editPermissions, setEditPermissions, editRole),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-3 flex justify-end gap-2 border-t border-slate-200",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
@@ -26438,7 +27095,48 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 					})]
 				})
 			}),
-			deleteConfirmStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			canManageStaff && permissionsModalStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-white rounded-2xl p-6 max-w-xl w-full shadow-2xl border border-slate-200 text-xs text-slate-800 max-h-[92vh] overflow-y-auto",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex justify-between items-center mb-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+							className: "text-base font-bold text-slate-900 flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlidersVertical, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["अनुमतियां सेट करें: ", permissionsModalStaff.name] })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-[11px] text-slate-500",
+							children: [
+								"पद: ",
+								permissionsModalStaff.roleHindi,
+								" • +91 ",
+								permissionsModalStaff.phone
+							]
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: () => setPermissionsModalStaff(null),
+							className: "p-1 text-slate-400 hover:text-slate-800",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleSaveQuickPermissions,
+						className: "space-y-4",
+						children: [renderPermissionMatrix(quickPermissions, setQuickPermissions, permissionsModalStaff.role), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "pt-3 flex justify-end gap-2 border-t border-slate-200",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: () => setPermissionsModalStaff(null),
+								className: "px-4 py-2 border rounded-xl font-semibold hover:bg-slate-100",
+								children: "रद्द करें"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "submit",
+								className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs flex items-center gap-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "अधिकार सेव करें" })]
+							})]
+						})]
+					})]
+				})
+			}),
+			canManageStaff && deleteConfirmStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-xs text-slate-800",
@@ -26478,15 +27176,15 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 					]
 				})
 			}),
-			showAddModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			canManageStaff && showAddModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-xs text-slate-800",
+					className: "bg-white rounded-2xl p-6 max-w-xl w-full shadow-2xl border border-slate-200 text-xs text-slate-800 max-h-[92vh] overflow-y-auto",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex justify-between items-center mb-4",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
 							className: "text-base font-bold text-slate-900 flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "नया कर्मचारी जोड़ें व ID बनाएँ" })]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "नया कर्मचारी जोड़ें, ID व अधिकार सेट करें" })]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							onClick: () => setShowAddModal(false),
 							className: "p-1 text-slate-400 hover:text-slate-800",
@@ -26525,7 +27223,11 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 									children: "पद (Role) *"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
 									value: role,
-									onChange: (e) => setRole(e.target.value),
+									onChange: (e) => {
+										const nextRole = e.target.value;
+										setRole(nextRole);
+										setNewPermissions(getDefaultPermissionsForRole(nextRole));
+									},
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium",
 									children: [
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
@@ -26561,6 +27263,16 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 								className: "block font-bold text-slate-700 mb-1",
+								children: "ईमेल पता (Email - वैकल्पिक)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "email",
+								value: email,
+								onChange: (e) => setEmail(e.target.value),
+								placeholder: "उदा. gopal@gmail.com",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
 								children: "लॉगिन पासवर्ड *"
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 								type: "text",
@@ -26591,6 +27303,7 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase"
 								})] })]
 							}),
+							renderPermissionMatrix(newPermissions, setNewPermissions, role),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-2 flex justify-end gap-2 border-t border-slate-200",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
@@ -26601,7 +27314,7 @@ var StaffView = ({ staffList, currentRole, onAddStaff, onUpdateStaff, onDeleteSt
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									type: "submit",
 									className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs",
-									children: "कर्मचारी ID सेव करें"
+									children: "कर्मचारी ID व अधिकार सेव करें"
 								})]
 							})
 						]
@@ -26990,7 +27703,7 @@ var AccountingView = ({ orders, expenses, customers, products }) => {
 	});
 };
 // src/views/BankExpenseView.tsx
-var BankExpenseView = ({ expenses, orders, settings, onOpenNewExpense }) => {
+var BankExpenseView = ({ expenses, orders, settings, canAddExpense = true, canViewBalances = true, onOpenNewExpense }) => {
 	const [categoryFilter, setCategoryFilter] = (0, import_react.useState)("all");
 	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 	const cashIn = orders.filter((o) => o.paymentMode === "cash").reduce((s, o) => s + o.paidAmount, 0);
@@ -27019,13 +27732,13 @@ var BankExpenseView = ({ expenses, orders, settings, onOpenNewExpense }) => {
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-xs text-slate-500 mt-0.5",
 					children: "SBI चालू खाता, नकद गल्ला, UPI मर्चेंट एवं फैक्ट्री खर्च वाउचर्स"
-				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				})] }), canAddExpense && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 					onClick: onOpenNewExpense,
 					className: "flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ नया खर्च वाउचर दर्ज करें" })]
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			canViewBalances && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "grid grid-cols-1 md:grid-cols-3 gap-4",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -45674,6 +46387,38 @@ function App() {
 	const [staff, setStaff] = (0, import_react.useState)(INITIAL_STAFF);
 	const [activeTab, setActiveTab] = (0, import_react.useState)("dashboard");
 	const [currentRole, setCurrentRole] = (0, import_react.useState)("admin");
+	const [currentStaffId, setCurrentStaffId] = (0, import_react.useState)("staff-1");
+	const activeStaffMember = staff.find((s) => s.id === currentStaffId) || staff.find((s) => s.role === currentRole) || staff[0];
+	const activePermissions = getEffectivePermissions(activeStaffMember, currentRole);
+	const canManageStaff = currentRole === "admin" || activePermissions.manageStaff;
+	const isTabAllowed = (0, import_react.useCallback)((tab) => {
+		switch (tab) {
+			case "dashboard": return true;
+			case "customers": return activePermissions.viewCustomers;
+			case "inventory": return activePermissions.viewInventory;
+			case "production": return activePermissions.viewProduction;
+			case "orders": return activePermissions.viewOrders;
+			case "delivery": return activePermissions.viewDelivery;
+			case "staff": return currentRole === "admin" || activePermissions.manageStaff;
+			case "accounting": return activePermissions.viewAccounting;
+			case "bank_expenses": return activePermissions.viewAccounting || activePermissions.addExpense;
+			case "reports": return activePermissions.viewReports;
+			case "settings": return currentRole === "admin" || activePermissions.manageSettings;
+			default: return true;
+		}
+	}, [activePermissions, currentRole]);
+	(0, import_react.useEffect)(() => {
+		if (!isTabAllowed(activeTab)) setActiveTab("dashboard");
+	}, [activeTab, isTabAllowed]);
+	const handleSelectStaffMember = (member) => {
+		setCurrentStaffId(member.id);
+		setCurrentRole(member.role);
+	};
+	const handleSwitchRole = (nextRole) => {
+		setCurrentRole(nextRole);
+		const matched = staff.find((s) => s.role === nextRole);
+		if (matched) setCurrentStaffId(matched.id);
+	};
 	const [selectedOrderForInvoice, setSelectedOrderForInvoice] = (0, import_react.useState)(null);
 	const [showNewOrderModal, setShowNewOrderModal] = (0, import_react.useState)(false);
 	const [showNewProductionModal, setShowNewProductionModal] = (0, import_react.useState)(false);
@@ -45820,18 +46565,21 @@ function App() {
 		});
 	};
 	const handleStaffAdded = (newStaff) => {
+		if (!canManageStaff) return;
 		sync.dispatchMutation({
 			type: "staff:create",
 			staffMember: newStaff
 		});
 	};
 	const handleStaffUpdated = (updatedStaff) => {
+		if (!canManageStaff) return;
 		sync.dispatchMutation({
 			type: "staff:update",
 			staffMember: updatedStaff
 		});
 	};
 	const handleStaffDeleted = (staffId) => {
+		if (!canManageStaff) return;
 		sync.dispatchMutation({
 			type: "staff:delete",
 			staffId
@@ -45986,6 +46734,8 @@ function App() {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Header, {
 				currentRole,
+				currentUserName: activeStaffMember?.name,
+				permissions: activePermissions,
 				settings,
 				lowStockCount,
 				syncStatus: sync.status,
@@ -46008,6 +46758,7 @@ function App() {
 					activeTab,
 					onTabChange: setActiveTab,
 					currentRole,
+					permissions: activePermissions,
 					pendingOrdersCount,
 					lowStockCount,
 					onOpenInstallModal: () => handleOpenInstallModal("apk")
@@ -46025,6 +46776,7 @@ function App() {
 							staff,
 							settings,
 							currentRole,
+							permissions: activePermissions,
 							onNavigate: setActiveTab,
 							onOpenNewOrder: () => setShowNewOrderModal(true),
 							onOpenNewProduction: () => setShowNewProductionModal(true),
@@ -46038,19 +46790,21 @@ function App() {
 							customers,
 							orders,
 							settings,
+							canReceivePayment: activePermissions.receivePayment,
 							onOpenNewCustomer: () => setShowNewCustomerModal(true),
 							onOpenReceivePayment: (custId) => {
 								setReceivePaymentCustId(custId);
 								setShowReceivePaymentModal(true);
 							},
 							onSelectOrder: setSelectedOrderForInvoice,
-							onUpdateCustomer: handleCustomerUpdated,
-							onDeleteCustomer: handleCustomerDeleted
+							onUpdateCustomer: activePermissions.editCustomers ? handleCustomerUpdated : void 0,
+							onDeleteCustomer: activePermissions.editCustomers ? handleCustomerDeleted : void 0
 						}),
 						activeTab === "inventory" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InventoryView, {
 							rawStock,
 							bagStock,
 							products,
+							canEdit: activePermissions.editInventory,
 							onUpdateRawStock: handleRawStockUpdate,
 							onUpdateBagStock: handleBagStockUpdate
 						}),
@@ -46060,16 +46814,16 @@ function App() {
 							orders,
 							bagStock,
 							onOpenNewProduction: () => setShowNewProductionModal(true),
-							onUpdateProduction: handleProductionUpdated,
-							onDeleteProduction: handleProductionDeleted
+							onUpdateProduction: activePermissions.editProduction ? handleProductionUpdated : void 0,
+							onDeleteProduction: activePermissions.editProduction ? handleProductionDeleted : void 0
 						}),
 						activeTab === "orders" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OrderView, {
 							orders,
 							onOpenNewOrder: () => setShowNewOrderModal(true),
 							onSelectOrder: setSelectedOrderForInvoice,
 							onUpdateOrderStatus: handleOrderStatusUpdate,
-							onUpdateOrder: handleOrderUpdated,
-							onDeleteOrder: handleOrderDeleted
+							onUpdateOrder: activePermissions.editOrders ? handleOrderUpdated : void 0,
+							onDeleteOrder: activePermissions.editOrders ? handleOrderDeleted : void 0
 						}),
 						activeTab === "delivery" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DeliveryView, {
 							orders,
@@ -46079,10 +46833,13 @@ function App() {
 						activeTab === "staff" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StaffView, {
 							staffList: staff,
 							currentRole,
+							currentStaffId: activeStaffMember?.id,
+							canManageStaff,
 							onAddStaff: handleStaffAdded,
-							onUpdateStaff: handleStaffUpdated,
-							onDeleteStaff: handleStaffDeleted,
-							onSwitchRole: setCurrentRole
+							onUpdateStaff: canManageStaff ? handleStaffUpdated : void 0,
+							onDeleteStaff: canManageStaff ? handleStaffDeleted : void 0,
+							onSwitchRole: handleSwitchRole,
+							onSelectStaffMember: handleSelectStaffMember
 						}),
 						activeTab === "accounting" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AccountingView, {
 							orders,
@@ -46094,6 +46851,8 @@ function App() {
 							expenses,
 							orders,
 							settings,
+							canAddExpense: activePermissions.addExpense,
+							canViewBalances: activePermissions.viewAccounting,
 							onOpenNewExpense: () => setShowNewExpenseModal(true)
 						}),
 						activeTab === "reports" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReportsView, {
@@ -46125,6 +46884,7 @@ function App() {
 				activeTab,
 				onTabChange: setActiveTab,
 				currentRole,
+				permissions: activePermissions,
 				pendingOrdersCount,
 				onOpenInstallModal: () => handleOpenInstallModal("apk")
 			}),
@@ -46163,8 +46923,10 @@ function App() {
 			}),
 			showRoleSwitcherModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RoleSwitcherModal, {
 				currentRole,
+				currentStaffId: activeStaffMember?.id,
 				staffList: staff,
-				onSelectRole: setCurrentRole,
+				onSelectRole: handleSwitchRole,
+				onSelectUser: handleSelectStaffMember,
 				onClose: () => setShowRoleSwitcherModal(false)
 			}),
 			showInstallModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InstallModal, {

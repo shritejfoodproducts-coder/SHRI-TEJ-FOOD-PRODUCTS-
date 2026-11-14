@@ -1,5 +1,6 @@
 import React from 'react';
-import { UserRole } from '../types/erp';
+import { StaffPermissions, UserRole } from '../types/erp';
+import { getDefaultPermissionsForRole } from '../utils/permissions';
 import { 
   LayoutDashboard, 
   Users, 
@@ -12,7 +13,6 @@ import {
   Landmark, 
   FileSpreadsheet, 
   Settings,
-  Sparkles,
   Download,
   HardDrive
 } from 'lucide-react';
@@ -34,6 +34,7 @@ interface SidebarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
   currentRole: UserRole;
+  permissions?: StaffPermissions;
   pendingOrdersCount: number;
   lowStockCount: number;
   onOpenInstallModal?: () => void;
@@ -43,10 +44,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
   currentRole,
+  permissions,
   pendingOrdersCount,
   lowStockCount,
   onOpenInstallModal,
 }) => {
+  const perms = permissions || getDefaultPermissionsForRole(currentRole);
+
   const menuItems = [
     {
       id: 'dashboard' as ActiveTab,
@@ -62,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Customers',
       icon: Users,
       badge: null,
-      visible: currentRole !== 'production_head' && currentRole !== 'packing_staff',
+      visible: perms.viewCustomers,
     },
     {
       id: 'inventory' as ActiveTab,
@@ -71,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Package,
       badge: lowStockCount > 0 ? `${lowStockCount} अलर्ट` : null,
       badgeColor: 'bg-rose-500 text-white',
-      visible: true,
+      visible: perms.viewInventory,
     },
     {
       id: 'production' as ActiveTab,
@@ -79,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Production',
       icon: Factory,
       badge: null,
-      visible: currentRole !== 'delivery_staff' && currentRole !== 'salesman',
+      visible: perms.viewProduction,
     },
     {
       id: 'orders' as ActiveTab,
@@ -88,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: ClipboardList,
       badge: pendingOrdersCount > 0 ? `${pendingOrdersCount}` : null,
       badgeColor: 'bg-amber-500 text-slate-950 font-bold',
-      visible: true,
+      visible: perms.viewOrders,
     },
     {
       id: 'delivery' as ActiveTab,
@@ -96,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Delivery',
       icon: Truck,
       badge: null,
-      visible: true,
+      visible: perms.viewDelivery,
     },
     {
       id: 'staff' as ActiveTab,
@@ -104,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Staff',
       icon: UserCheck,
       badge: null,
-      visible: currentRole === 'admin' || currentRole === 'manager',
+      visible: currentRole === 'admin' || perms.manageStaff,
     },
     {
       id: 'accounting' as ActiveTab,
@@ -112,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Accounting',
       icon: TrendingUp,
       badge: null,
-      visible: currentRole === 'admin' || currentRole === 'accountant',
+      visible: perms.viewAccounting,
     },
     {
       id: 'bank_expenses' as ActiveTab,
@@ -120,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Bank & Expenses',
       icon: Landmark,
       badge: null,
-      visible: currentRole === 'admin' || currentRole === 'accountant',
+      visible: perms.viewAccounting || perms.addExpense,
     },
     {
       id: 'reports' as ActiveTab,
@@ -129,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: FileSpreadsheet,
       badge: 'Excel',
       badgeColor: 'bg-emerald-600 text-white',
-      visible: currentRole === 'admin' || currentRole === 'manager' || currentRole === 'accountant',
+      visible: perms.viewReports,
     },
     {
       id: 'settings' as ActiveTab,
@@ -137,7 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelEn: 'Settings',
       icon: Settings,
       badge: null,
-      visible: currentRole === 'admin',
+      visible: currentRole === 'admin' || perms.manageSettings,
     },
   ];
 

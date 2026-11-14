@@ -10,10 +10,29 @@ export type UserRole =
   | 'delivery_staff'    // डिलीवरी स्टाफ (Dispatch, customer delivery, cash collection)
   | 'salesman';         // सेल्समैन / फील्ड सेल्स (Market booking, customer orders)
 
+export interface StaffPermissions {
+  viewCustomers: boolean;
+  editCustomers: boolean;
+  viewOrders: boolean;
+  editOrders: boolean;
+  viewInventory: boolean;
+  editInventory: boolean;
+  viewProduction: boolean;
+  editProduction: boolean;
+  viewDelivery: boolean;
+  receivePayment: boolean;
+  viewAccounting: boolean;
+  addExpense: boolean;
+  viewReports: boolean;
+  manageStaff: boolean;
+  manageSettings: boolean;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   role: UserRole;
   roleHindi: string;
   password?: string;
@@ -21,6 +40,7 @@ export interface UserProfile {
   shift?: string;
   assignedVehicle?: string;
   joinedDate: string;
+  permissions?: StaffPermissions;
 }
 
 export type BagSize = 5 | 10 | 25 | 50; // In KG
@@ -103,6 +123,7 @@ export interface Customer {
   name: string;
   firmName: string;
   phone: string;
+  email?: string;
   address: string;
   city: string;
   gstin?: string;

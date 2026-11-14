@@ -9,8 +9,10 @@ import {
   ExpenseRecord, 
   UserProfile, 
   CompanySettings,
-  UserRole
+  UserRole,
+  StaffPermissions
 } from '../types/erp';
+import { getDefaultPermissionsForRole } from '../utils/permissions';
 import { 
   IndianRupee, 
   TrendingUp, 
@@ -19,12 +21,9 @@ import {
   Factory, 
   Truck, 
   Clock, 
-  AlertTriangle,
   Share2,
   Calendar,
-  CheckCircle2,
   ChevronRight,
-  ArrowUpRight,
   FileSpreadsheet
 } from 'lucide-react';
 import { ActiveTab } from '../components/Sidebar';
@@ -40,6 +39,7 @@ interface DashboardViewProps {
   staff: UserProfile[];
   settings: CompanySettings;
   currentRole: UserRole;
+  permissions?: StaffPermissions;
   onNavigate: (tab: ActiveTab) => void;
   onOpenNewOrder: () => void;
   onOpenNewProduction: () => void;
@@ -55,15 +55,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   products,
   production,
   expenses,
-  staff,
+  staff: _staff,
   settings,
   currentRole,
+  permissions,
   onNavigate,
   onOpenNewOrder,
   onOpenNewProduction,
   onOpenReceivePayment,
   onSelectOrder,
 }) => {
+  const perms = permissions || getDefaultPermissionsForRole(currentRole);
+  const canSeeProfit = currentRole === 'admin' || perms.viewAccounting;
   const todayStr = new Date().toISOString().slice(0, 10);
 
   // Today's Orders
@@ -188,13 +191,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Share2 className="w-4 h-4" />
               <span>WhatsApp दैनिक समरी</span>
             </button>
-            <button
-              onClick={() => onNavigate('reports')}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Excel डाउनलोड</span>
-            </button>
+            {perms.viewReports && (
+              <button
+                onClick={() => onNavigate('reports')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Excel डाउनलोड</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -222,11 +227,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* 2. Today Profit (Admin only sees real figure) */}
+        {/* 2. Today Profit (Accounting permission required) */}
         <div 
-          onClick={() => (currentRole === 'admin' ? onNavigate('accounting') : null)}
+          onClick={() => (canSeeProfit ? onNavigate('accounting') : null)}
           className={`bg-white p-4 rounded-2xl border border-slate-200 shadow-xs transition ${
-            currentRole === 'admin' ? 'hover:border-emerald-400 hover:shadow-md cursor-pointer' : ''
+            canSeeProfit ? 'hover:border-emerald-400 hover:shadow-md cursor-pointer' : ''
           }`}
         >
           <div className="flex justify-between items-start">
@@ -236,7 +241,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
           <div className="mt-2">
-            {currentRole === 'admin' ? (
+            {canSeeProfit ? (
               <>
                 <span className="font-mono font-black text-xl sm:text-2xl text-emerald-700 block">
                   ₹{estimatedNetProfit.toLocaleString('en-IN')}
@@ -248,9 +253,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             ) : (
               <>
                 <span className="text-sm font-semibold text-slate-400 block pt-1">
-                  केवल Admin अधिकार
+                  केवल अधिकृत अकाउंट
                 </span>
-                <span className="text-[11px] text-slate-400">मालिक का पर्सनल मोबाइल</span>
+                <span className="text-[11px] text-slate-400">Admin अनुमति आवश्यक</span>
               </>
             )}
           </div>
@@ -428,7 +433,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <td className="py-2 px-3 font-semibold text-rose-600">आज का कुल खर्च (Expenses)</td>
                   <td className="py-2 px-3 text-right font-mono font-bold text-rose-600">₹{todayExpensesTotal.toLocaleString('en-IN')}</td>
                 </tr>
-                {currentRole === 'admin' && (
+                {canSeeProfit && (
                   <tr className="bg-emerald-50/70 font-bold">
                     <td className="py-2.5 px-3 text-emerald-900">आज का अनुमानित शुद्ध मुनाफा (Net Profit)</td>
                     <td className="py-2.5 px-3 text-right font-mono text-emerald-800 text-sm">₹{estimatedNetProfit.toLocaleString('en-IN')}</td>
@@ -637,30 +642,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="bg-gradient-to-br from-amber-600 to-amber-700 text-white rounded-2xl p-5 shadow-sm space-y-2.5">
             <h4 className="font-bold text-sm">त्वरित शॉर्टकट (Quick Actions)</h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                onClick={onOpenNewOrder}
-                className="p-2.5 bg-white text-slate-900 rounded-xl font-bold hover:bg-amber-50 transition text-center"
-              >
-                + नया ऑर्डर
-              </button>
-              <button
-                onClick={onOpenNewProduction}
-                className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition text-center"
-              >
-                + पिसाई बैच
-              </button>
-              <button
-                onClick={onOpenReceivePayment}
-                className="p-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold transition text-center"
-              >
-                + भुगतान वसूली
-              </button>
-              <button
-                onClick={() => onNavigate('inventory')}
-                className="p-2.5 bg-amber-900/60 hover:bg-amber-900 text-white rounded-xl font-bold transition text-center"
-              >
-                गोदाम स्टॉक देखें
-              </button>
+              {perms.viewOrders && (
+                <button
+                  onClick={onOpenNewOrder}
+                  className="p-2.5 bg-white text-slate-900 rounded-xl font-bold hover:bg-amber-50 transition text-center"
+                >
+                  + नया ऑर्डर
+                </button>
+              )}
+              {perms.viewProduction && (
+                <button
+                  onClick={onOpenNewProduction}
+                  className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition text-center"
+                >
+                  + पिसाई बैच
+                </button>
+              )}
+              {perms.receivePayment && (
+                <button
+                  onClick={onOpenReceivePayment}
+                  className="p-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold transition text-center"
+                >
+                  + भुगतान वसूली
+                </button>
+              )}
+              {perms.viewInventory && (
+                <button
+                  onClick={() => onNavigate('inventory')}
+                  className="p-2.5 bg-amber-900/60 hover:bg-amber-900 text-white rounded-xl font-bold transition text-center"
+                >
+                  गोदाम स्टॉक देखें
+                </button>
+              )}
             </div>
           </div>
         </div>

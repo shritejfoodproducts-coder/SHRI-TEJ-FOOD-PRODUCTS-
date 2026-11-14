@@ -370,22 +370,26 @@ export const OrderView: React.FC<OrderViewProps> = ({
                         </button>
 
                         {/* Edit Order Button */}
-                        <button
-                          onClick={() => startEditOrder(order)}
-                          className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition"
-                          title="ऑर्डर में मात्रा, दर या राशि बदलें (Edit Order)"
-                        >
-                          <Edit3 className="w-3.5 h-3.5 text-amber-700" />
-                        </button>
+                        {onUpdateOrder && (
+                          <button
+                            onClick={() => startEditOrder(order)}
+                            className="p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 rounded-lg text-xs font-bold transition"
+                            title="ऑर्डर में मात्रा, दर या राशि बदलें (Edit Order)"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                          </button>
+                        )}
 
                         {/* Delete Order Button */}
-                        <button
-                          onClick={() => setDeleteConfirmOrder(order)}
-                          className="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition"
-                          title="ऑर्डर हटाएँ (Delete Order)"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        </button>
+                        {onDeleteOrder && (
+                          <button
+                            onClick={() => setDeleteConfirmOrder(order)}
+                            className="p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg text-xs font-bold transition"
+                            title="ऑर्डर हटाएँ (Delete Order)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          </button>
+                        )}
 
                         {/* Next status advance */}
                         {nextAction && (

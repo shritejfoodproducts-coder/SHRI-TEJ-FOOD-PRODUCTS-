@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserRole, CompanySettings } from '../types/erp';
+import { UserRole, CompanySettings, StaffPermissions } from '../types/erp';
+import { getDefaultPermissionsForRole } from '../utils/permissions';
 import { 
-  Building2, 
   Smartphone, 
-  Plus, 
   ShoppingCart, 
   Factory, 
   IndianRupee, 
@@ -21,6 +20,8 @@ import type { SyncDeviceRole } from '../../shared/erpSyncTypes';
 
 interface HeaderProps {
   currentRole: UserRole;
+  currentUserName?: string;
+  permissions?: StaffPermissions;
   settings: CompanySettings;
   lowStockCount: number;
   syncStatus?: SyncConnectionStatus;
@@ -37,6 +38,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
+  currentUserName,
+  permissions,
   settings,
   lowStockCount,
   syncStatus = 'connecting',
@@ -50,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInstallModal,
   onOpenLiveSync,
 }) => {
+  const perms = permissions || getDefaultPermissionsForRole(currentRole);
   const [timeStr, setTimeStr] = useState<string>('');
   const [storageStats, setStorageStats] = useState<LocalStorageStats | null>(null);
 
@@ -184,7 +188,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Low Stock Alert Button */}
-          {lowStockCount > 0 && (
+          {lowStockCount > 0 && perms.viewInventory && (
             <button
               onClick={onNavigateToInventory}
               title={`${lowStockCount} आइटम्स का स्टॉक कम है`}
@@ -200,39 +204,47 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Quick Action Buttons */}
           <div className="hidden md:flex items-center gap-1.5">
-            <button
-              onClick={onOpenNewOrder}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition border border-slate-700"
-            >
-              <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
-              <span>+ ऑर्डर</span>
-            </button>
+            {perms.viewOrders && (
+              <button
+                onClick={onOpenNewOrder}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition border border-slate-700"
+              >
+                <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
+                <span>+ ऑर्डर</span>
+              </button>
+            )}
 
-            <button
-              onClick={onOpenNewProduction}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-semibold text-xs rounded-lg transition"
-            >
-              <Factory className="w-3.5 h-3.5" />
-              <span>+ पिसाई</span>
-            </button>
+            {perms.viewProduction && (
+              <button
+                onClick={onOpenNewProduction}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-semibold text-xs rounded-lg transition"
+              >
+                <Factory className="w-3.5 h-3.5" />
+                <span>+ पिसाई</span>
+              </button>
+            )}
 
-            <button
-              onClick={onOpenReceivePayment}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition"
-            >
-              <IndianRupee className="w-3.5 h-3.5" />
-              <span>+ भुगतान</span>
-            </button>
+            {perms.receivePayment && (
+              <button
+                onClick={onOpenReceivePayment}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition"
+              >
+                <IndianRupee className="w-3.5 h-3.5" />
+                <span>+ भुगतान</span>
+              </button>
+            )}
           </div>
 
           {/* Role Simulator Switcher Button */}
           <button
             onClick={onOpenRoleSwitcher}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition cursor-pointer hover:opacity-90 ${roleInfo.color}`}
-            title="क्लिक करके किसी भी कर्मचारी का मोबाइल रोल बदलें"
+            title="क्लिक करके किसी भी कर्मचारी का मोबाइल अकाउंट बदलें"
           >
             <Smartphone className="w-3.5 h-3.5 shrink-0" />
-            <span className="font-bold hidden sm:inline">{roleInfo.label}</span>
+            <span className="font-bold hidden sm:inline">
+              {currentUserName ? `${currentUserName} (${roleInfo.label})` : roleInfo.label}
+            </span>
           </button>
         </div>
       </div>

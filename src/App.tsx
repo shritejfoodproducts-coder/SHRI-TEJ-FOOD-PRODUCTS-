@@ -26,6 +26,7 @@ import {
   INITIAL_EXPENSES 
 } from './data/initialData';
 import { saveStateToStorage, loadStateFromStorage, AppDatabaseState } from './utils/backup';
+import { getEffectivePermissions } from './utils/permissions';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 import type { LiveActivityEvent, SyncableErpState } from '../shared/erpSyncTypes';
 
@@ -75,6 +76,65 @@ export default function App() {
   // App UI State
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [currentRole, setCurrentRole] = useState<UserRole>('admin');
+  const [currentStaffId, setCurrentStaffId] = useState<string>('staff-1');
+
+  const activeStaffMember =
+    staff.find((s) => s.id === currentStaffId) ||
+    staff.find((s) => s.role === currentRole) ||
+    staff[0];
+  const activePermissions = getEffectivePermissions(activeStaffMember, currentRole);
+  const canManageStaff = currentRole === 'admin' || activePermissions.manageStaff;
+
+  const isTabAllowed = useCallback(
+    (tab: ActiveTab): boolean => {
+      switch (tab) {
+        case 'dashboard':
+          return true;
+        case 'customers':
+          return activePermissions.viewCustomers;
+        case 'inventory':
+          return activePermissions.viewInventory;
+        case 'production':
+          return activePermissions.viewProduction;
+        case 'orders':
+          return activePermissions.viewOrders;
+        case 'delivery':
+          return activePermissions.viewDelivery;
+        case 'staff':
+          return currentRole === 'admin' || activePermissions.manageStaff;
+        case 'accounting':
+          return activePermissions.viewAccounting;
+        case 'bank_expenses':
+          return activePermissions.viewAccounting || activePermissions.addExpense;
+        case 'reports':
+          return activePermissions.viewReports;
+        case 'settings':
+          return currentRole === 'admin' || activePermissions.manageSettings;
+        default:
+          return true;
+      }
+    },
+    [activePermissions, currentRole]
+  );
+
+  useEffect(() => {
+    if (!isTabAllowed(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, isTabAllowed]);
+
+  const handleSelectStaffMember = (member: UserProfile) => {
+    setCurrentStaffId(member.id);
+    setCurrentRole(member.role);
+  };
+
+  const handleSwitchRole = (nextRole: UserRole) => {
+    setCurrentRole(nextRole);
+    const matched = staff.find((s) => s.role === nextRole);
+    if (matched) {
+      setCurrentStaffId(matched.id);
+    }
+  };
 
   // Modals
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
@@ -209,18 +269,21 @@ export default function App() {
     sync.dispatchMutation({ type: 'customer:delete', customerId });
   };
 
-  // Handler: Add Staff
+  // Handler: Add Staff (Admin / permitted staff only)
   const handleStaffAdded = (newStaff: UserProfile) => {
+    if (!canManageStaff) return;
     sync.dispatchMutation({ type: 'staff:create', staffMember: newStaff });
   };
 
-  // Handler: Update Staff
+  // Handler: Update Staff (Admin / permitted staff only)
   const handleStaffUpdated = (updatedStaff: UserProfile) => {
+    if (!canManageStaff) return;
     sync.dispatchMutation({ type: 'staff:update', staffMember: updatedStaff });
   };
 
-  // Handler: Delete Staff
+  // Handler: Delete Staff (Admin / permitted staff only)
   const handleStaffDeleted = (staffId: string) => {
+    if (!canManageStaff) return;
     sync.dispatchMutation({ type: 'staff:delete', staffId });
   };
 
@@ -344,6 +407,8 @@ export default function App() {
       {/* Top Main Navigation Header */}
       <Header
         currentRole={currentRole}
+        currentUserName={activeStaffMember?.name}
+        permissions={activePermissions}
         settings={settings}
         lowStockCount={lowStockCount}
         syncStatus={sync.status}
@@ -368,6 +433,7 @@ export default function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           currentRole={currentRole}
+          permissions={activePermissions}
           pendingOrdersCount={pendingOrdersCount}
           lowStockCount={lowStockCount}
           onOpenInstallModal={() => handleOpenInstallModal('apk')}
@@ -387,6 +453,7 @@ export default function App() {
               staff={staff}
               settings={settings}
               currentRole={currentRole}
+              permissions={activePermissions}
               onNavigate={setActiveTab}
               onOpenNewOrder={() => setShowNewOrderModal(true)}
               onOpenNewProduction={() => setShowNewProductionModal(true)}
@@ -403,14 +470,15 @@ export default function App() {
               customers={customers}
               orders={orders}
               settings={settings}
+              canReceivePayment={activePermissions.receivePayment}
               onOpenNewCustomer={() => setShowNewCustomerModal(true)}
               onOpenReceivePayment={(custId) => {
                 setReceivePaymentCustId(custId);
                 setShowReceivePaymentModal(true);
               }}
               onSelectOrder={setSelectedOrderForInvoice}
-              onUpdateCustomer={handleCustomerUpdated}
-              onDeleteCustomer={handleCustomerDeleted}
+              onUpdateCustomer={activePermissions.editCustomers ? handleCustomerUpdated : undefined}
+              onDeleteCustomer={activePermissions.editCustomers ? handleCustomerDeleted : undefined}
             />
           )}
 
@@ -419,6 +487,7 @@ export default function App() {
               rawStock={rawStock}
               bagStock={bagStock}
               products={products}
+              canEdit={activePermissions.editInventory}
               onUpdateRawStock={handleRawStockUpdate}
               onUpdateBagStock={handleBagStockUpdate}
             />
@@ -431,8 +500,8 @@ export default function App() {
               orders={orders}
               bagStock={bagStock}
               onOpenNewProduction={() => setShowNewProductionModal(true)}
-              onUpdateProduction={handleProductionUpdated}
-              onDeleteProduction={handleProductionDeleted}
+              onUpdateProduction={activePermissions.editProduction ? handleProductionUpdated : undefined}
+              onDeleteProduction={activePermissions.editProduction ? handleProductionDeleted : undefined}
             />
           )}
 
@@ -442,8 +511,8 @@ export default function App() {
               onOpenNewOrder={() => setShowNewOrderModal(true)}
               onSelectOrder={setSelectedOrderForInvoice}
               onUpdateOrderStatus={handleOrderStatusUpdate}
-              onUpdateOrder={handleOrderUpdated}
-              onDeleteOrder={handleOrderDeleted}
+              onUpdateOrder={activePermissions.editOrders ? handleOrderUpdated : undefined}
+              onDeleteOrder={activePermissions.editOrders ? handleOrderDeleted : undefined}
             />
           )}
 
@@ -459,10 +528,13 @@ export default function App() {
             <StaffView
               staffList={staff}
               currentRole={currentRole}
+              currentStaffId={activeStaffMember?.id}
+              canManageStaff={canManageStaff}
               onAddStaff={handleStaffAdded}
-              onUpdateStaff={handleStaffUpdated}
-              onDeleteStaff={handleStaffDeleted}
-              onSwitchRole={setCurrentRole}
+              onUpdateStaff={canManageStaff ? handleStaffUpdated : undefined}
+              onDeleteStaff={canManageStaff ? handleStaffDeleted : undefined}
+              onSwitchRole={handleSwitchRole}
+              onSelectStaffMember={handleSelectStaffMember}
             />
           )}
 
@@ -480,6 +552,8 @@ export default function App() {
               expenses={expenses}
               orders={orders}
               settings={settings}
+              canAddExpense={activePermissions.addExpense}
+              canViewBalances={activePermissions.viewAccounting}
               onOpenNewExpense={() => setShowNewExpenseModal(true)}
             />
           )}
@@ -519,6 +593,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         currentRole={currentRole}
+        permissions={activePermissions}
         pendingOrdersCount={pendingOrdersCount}
         onOpenInstallModal={() => handleOpenInstallModal('apk')}
       />
@@ -578,8 +653,10 @@ export default function App() {
       {showRoleSwitcherModal && (
         <RoleSwitcherModal
           currentRole={currentRole}
+          currentStaffId={activeStaffMember?.id}
           staffList={staff}
-          onSelectRole={setCurrentRole}
+          onSelectRole={handleSwitchRole}
+          onSelectUser={handleSelectStaffMember}
           onClose={() => setShowRoleSwitcherModal(false)}
         />
       )}
