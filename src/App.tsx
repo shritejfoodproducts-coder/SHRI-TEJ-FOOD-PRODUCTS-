@@ -183,6 +183,10 @@ export default function App() {
     setActiveTab('dashboard');
   };
 
+  const handleResetPassword = (updatedMember: UserProfile) => {
+    sync.dispatchMutation({ type: 'staff:update', staffMember: updatedMember });
+  };
+
   // Load on mount
   useEffect(() => {
     const saved = loadStateFromStorage();
@@ -428,7 +432,10 @@ export default function App() {
           staffList={staff}
           syncStatus={sync.status}
           connectedDevicesCount={sync.connectedDevices.length}
+          syncRoomId={sync.config.roomId}
+          syncServerUrl={sync.config.syncServerUrl}
           onLoginSuccess={handleLoginSuccess}
+          onResetPassword={handleResetPassword}
           onOpenLiveSync={() => setShowLiveSyncModal(true)}
         />
         {showLiveSyncModal && (

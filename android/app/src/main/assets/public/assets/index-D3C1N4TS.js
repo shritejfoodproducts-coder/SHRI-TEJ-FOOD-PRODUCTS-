@@ -13482,6 +13482,19 @@ var ArrowDownRight = createLucideIcon("arrow-down-right", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ArrowLeft = createLucideIcon("arrow-left", [["path", {
+	d: "m12 19-7-7 7-7",
+	key: "1l729n"
+}], ["path", {
+	d: "M19 12H5",
+	key: "x3x0zl"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var ArrowRight = createLucideIcon("arrow-right", [["path", {
 	d: "M5 12h14",
 	key: "1ays0h"
@@ -14296,6 +14309,22 @@ var Info = createLucideIcon("info", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var KeyRound = createLucideIcon("key-round", [["path", {
+	d: "M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z",
+	key: "1s6t7t"
+}], ["circle", {
+	cx: "16.5",
+	cy: "7.5",
+	r: ".5",
+	fill: "currentColor",
+	key: "w0ekpg"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Key = createLucideIcon("key", [
 	["path", {
 		d: "m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4",
@@ -14404,6 +14433,16 @@ var LayoutDashboard = createLucideIcon("layout-dashboard", [
 		key: "ldoo1y"
 	}]
 ]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var LoaderCircle = createLucideIcon("loader-circle", [["path", {
+	d: "M21 12a9 9 0 1 1-6.219-8.56",
+	key: "13zald"
+}]]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -14778,6 +14817,19 @@ var Search = createLucideIcon("search", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Send = createLucideIcon("send", [["path", {
+	d: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z",
+	key: "1ffxy3"
+}], ["path", {
+	d: "m21.854 2.147-10.94 10.939",
+	key: "12cjpa"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Settings = createLucideIcon("settings", [["path", {
 	d: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915",
 	key: "1i5ecw"
@@ -14825,6 +14877,26 @@ var Share2 = createLucideIcon("share-2", [
 		y1: "6.51",
 		y2: "10.49",
 		key: "1n3mei"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ShieldAlert = createLucideIcon("shield-alert", [
+	["path", {
+		d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+		key: "oel41y"
+	}],
+	["path", {
+		d: "M12 8v4",
+		key: "1got3b"
+	}],
+	["path", {
+		d: "M12 16h.01",
+		key: "1drbdi"
 	}]
 ]);
 /**
@@ -22337,17 +22409,70 @@ function normalizePhone(value) {
 	if (digits.length > 10) return digits.slice(-10);
 	return digits;
 }
-var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, onLoginSuccess, onOpenLiveSync }) => {
+function resolveApiBaseUrl(syncServerUrl) {
+	if (typeof window === "undefined") return "";
+	if ((window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000") && syncServerUrl) return syncServerUrl.trim().replace(/\/+$/, "");
+	return "";
+}
+var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, syncRoomId = "tej-food-main", syncServerUrl, onLoginSuccess, onResetPassword, onOpenLiveSync }) => {
+	const [mode, setMode] = (0, import_react.useState)("login");
+	const [resetStep, setResetStep] = (0, import_react.useState)("request_otp");
 	const [identifier, setIdentifier] = (0, import_react.useState)("");
 	const [password, setPassword] = (0, import_react.useState)("");
 	const [showPassword, setShowPassword] = (0, import_react.useState)(false);
 	const [rememberMe, setRememberMe] = (0, import_react.useState)(false);
 	const [errorMsg, setErrorMsg] = (0, import_react.useState)(null);
+	const [successMsg, setSuccessMsg] = (0, import_react.useState)(null);
 	const [showDemoHelp, setShowDemoHelp] = (0, import_react.useState)(false);
+	const [resetPhoneOrId, setResetPhoneOrId] = (0, import_react.useState)("");
+	const [resetEmail, setResetEmail] = (0, import_react.useState)("");
+	const [maskedSentEmail, setMaskedSentEmail] = (0, import_react.useState)("");
+	const [otpCode, setOtpCode] = (0, import_react.useState)("");
+	const [newPassword, setNewPassword] = (0, import_react.useState)("");
+	const [confirmNewPassword, setConfirmNewPassword] = (0, import_react.useState)("");
+	const [showNewPassword, setShowNewPassword] = (0, import_react.useState)(false);
+	const [resetError, setResetError] = (0, import_react.useState)(null);
+	const [resetInfo, setResetInfo] = (0, import_react.useState)(null);
+	const [isSendingOtp, setIsSendingOtp] = (0, import_react.useState)(false);
+	const [isVerifyingOtp, setIsVerifyingOtp] = (0, import_react.useState)(false);
+	const [resendCooldown, setResendCooldown] = (0, import_react.useState)(0);
+	const [emailProviderConfigured, setEmailProviderConfigured] = (0, import_react.useState)(null);
 	const isDefaultAdminPass = staffList.find((s) => s.id === "staff-1" && s.role === "admin")?.password === "admin@tej786";
-	const handleSubmit = (e) => {
+	const apiBase = resolveApiBaseUrl(syncServerUrl);
+	(0, import_react.useEffect)(() => {
+		if (resendCooldown <= 0) return;
+		const t = window.setTimeout(() => setResendCooldown((prev) => Math.max(0, prev - 1)), 1e3);
+		return () => window.clearTimeout(t);
+	}, [resendCooldown]);
+	(0, import_react.useEffect)(() => {
+		if (mode !== "reset") return;
+		let active = true;
+		fetch(`${apiBase}/api/auth/email-otp-status`).then((res) => res.ok ? res.json() : null).then((data) => {
+			if (active && data) setEmailProviderConfigured(Boolean(data.configured));
+		}).catch(() => {
+			if (active) setEmailProviderConfigured(null);
+		});
+		return () => {
+			active = false;
+		};
+	}, [mode, apiBase]);
+	const findStaffByIdentifier = (rawId) => {
+		const trimmed = rawId.trim();
+		if (!trimmed) return void 0;
+		const normalizedInputPhone = normalizePhone(trimmed);
+		const lowerInput = trimmed.toLowerCase();
+		return staffList.find((member) => {
+			const memberPhoneNorm = normalizePhone(member.phone || "");
+			const phoneMatches = normalizedInputPhone.length >= 6 && memberPhoneNorm === normalizedInputPhone;
+			const emailMatches = Boolean(member.email) && member.email.trim().toLowerCase() === lowerInput;
+			const nameMatches = member.name.trim().toLowerCase() === lowerInput;
+			return phoneMatches || emailMatches || nameMatches;
+		});
+	};
+	const handleLoginSubmit = (e) => {
 		e.preventDefault();
 		setErrorMsg(null);
+		setSuccessMsg(null);
 		const rawId = identifier.trim();
 		const trimmedPass = password.trim();
 		if (!rawId) {
@@ -22358,15 +22483,7 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 			setErrorMsg("कृपया अपना पासवर्ड दर्ज करें।");
 			return;
 		}
-		const normalizedInputPhone = normalizePhone(rawId);
-		const lowerInput = rawId.toLowerCase();
-		const matchedMember = staffList.find((member) => {
-			const memberPhoneNorm = normalizePhone(member.phone || "");
-			const phoneMatches = normalizedInputPhone.length >= 6 && memberPhoneNorm === normalizedInputPhone;
-			const emailMatches = Boolean(member.email) && member.email.trim().toLowerCase() === lowerInput;
-			const nameMatches = member.name.trim().toLowerCase() === lowerInput;
-			return phoneMatches || emailMatches || nameMatches;
-		});
+		const matchedMember = findStaffByIdentifier(rawId);
 		if (!matchedMember) {
 			setErrorMsg("यह मोबाइल नंबर या ईमेल किसी स्टाफ खाते से मेल नहीं खा रहा है।");
 			return;
@@ -22376,15 +22493,118 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 			return;
 		}
 		if ((matchedMember.password || "") !== trimmedPass) {
-			setErrorMsg("गलत पासवर्ड! कृपया सही पासवर्ड दर्ज करें।");
+			setErrorMsg("गलत पासवर्ड! कृपया सही पासवर्ड दर्ज करें या \"पासवर्ड भूल गए?\" से ईमेल OTP द्वारा रीसेट करें।");
 			return;
 		}
 		onLoginSuccess(matchedMember, rememberMe);
+	};
+	const handleOpenResetView = () => {
+		setResetError(null);
+		setResetInfo(null);
+		setErrorMsg(null);
+		setSuccessMsg(null);
+		setResetPhoneOrId(identifier.trim());
+		setResetEmail("");
+		setMaskedSentEmail("");
+		setOtpCode("");
+		setNewPassword("");
+		setConfirmNewPassword("");
+		setResetStep("request_otp");
+		setMode("reset");
+	};
+	const handleRequestOtp = async (e) => {
+		if (e) e.preventDefault();
+		setResetError(null);
+		setResetInfo(null);
+		const cleanId = resetPhoneOrId.trim();
+		const cleanEmail = resetEmail.trim().toLowerCase();
+		if (!cleanId) {
+			setResetError("कृपया अपना रजिस्टर्ड मोबाइल नंबर दर्ज करें।");
+			return;
+		}
+		if (!cleanEmail || !cleanEmail.includes("@")) {
+			setResetError("कृपया अपना रजिस्टर्ड ईमेल आईडी दर्ज करें।");
+			return;
+		}
+		setIsSendingOtp(true);
+		try {
+			const response = await fetch(`${apiBase}/api/auth/request-reset-otp`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					identifier: cleanId,
+					email: cleanEmail,
+					roomId: syncRoomId
+				})
+			});
+			const data = await response.json().catch(() => null);
+			if (!response.ok || !data?.ok) {
+				if (data?.errorCode === "EMAIL_NOT_CONFIGURED") setEmailProviderConfigured(false);
+				setResetError(data?.message || "ईमेल पर OTP कोड भेजा नहीं जा सका। कृपया विवरण व इंटरनेट कनेक्शन जांचें।");
+				return;
+			}
+			setMaskedSentEmail(data.maskedEmail || cleanEmail);
+			setResetStep("verify_otp");
+			setResendCooldown(30);
+			setResetInfo(`आपके ईमेल (${data.maskedEmail || cleanEmail}) पर 6-अंकों का OTP कोड भेज दिया गया है।`);
+		} catch {
+			setResetError("सर्वर से संपर्क नहीं हो सका। ईमेल OTP के लिए इंटरनेट व लाइव सिंक सर्वर कनेक्ट होना ज़रूरी है।");
+		} finally {
+			setIsSendingOtp(false);
+		}
+	};
+	const handleVerifyOtpAndReset = async (e) => {
+		e.preventDefault();
+		setResetError(null);
+		const cleanOtp = otpCode.trim();
+		const nextPass = newPassword.trim();
+		const confirmPass = confirmNewPassword.trim();
+		if (!/^\d{6}$/.test(cleanOtp)) {
+			setResetError("कृपया अपने ईमेल में प्राप्त 6-अंकों का OTP कोड सही-सही दर्ज करें।");
+			return;
+		}
+		if (nextPass.length < 4) {
+			setResetError("नया पासवर्ड कम से कम 4 अक्षरों या अंकों का होना चाहिए।");
+			return;
+		}
+		if (nextPass !== confirmPass) {
+			setResetError("दोनों नए पासवर्ड एक जैसे नहीं हैं, कृपया दोबारा जांचें।");
+			return;
+		}
+		setIsVerifyingOtp(true);
+		try {
+			const response = await fetch(`${apiBase}/api/auth/verify-reset-otp`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					identifier: resetPhoneOrId.trim(),
+					email: resetEmail.trim().toLowerCase(),
+					otp: cleanOtp,
+					newPassword: nextPass,
+					roomId: syncRoomId
+				})
+			});
+			const data = await response.json().catch(() => null);
+			if (!response.ok || !data?.ok || !data.updatedMember) {
+				setResetError(data?.message || "OTP सत्यापन विफल रहा। केवल ईमेल में प्राप्त सही कोड डालने पर ही पासवर्ड रीसेट होगा।");
+				return;
+			}
+			onResetPassword(data.updatedMember);
+			setIdentifier(data.updatedMember.phone || data.updatedMember.email || "");
+			setPassword("");
+			setMode("login");
+			setSuccessMsg(`${data.updatedMember.name} का पासवर्ड ईमेल OTP सत्यापन के बाद सफलतापूर्वक बदल गया है! अब नए पासवर्ड से लॉगिन करें।`);
+		} catch {
+			setResetError("OTP सत्यापित करने में सर्वर त्रुटि हुई। कृपया इंटरनेट कनेक्शन जांचें।");
+		} finally {
+			setIsVerifyingOtp(false);
+		}
 	};
 	const handleQuickFillDemo = (member) => {
 		setIdentifier(member.phone || member.email || "");
 		setPassword(member.password || "");
 		setErrorMsg(null);
+		setSuccessMsg(null);
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/80 flex flex-col justify-between p-4 sm:p-6 font-sans selection:bg-amber-500 selection:text-white",
@@ -22410,11 +22630,11 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg ring-4 ring-amber-400/20",
-								children: "T"
+								children: mode === "login" ? "T" : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeyRound, { className: "w-8 h-8 text-slate-950" })
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 								className: "mt-3 text-xl font-black tracking-tight text-white",
-								children: settings.companyName || "Shri Tej Food Products"
+								children: mode === "login" ? settings.companyName || "Shri Tej Food Products" : "ईमेल OTP से पासवर्ड रीसेट"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold",
@@ -22422,13 +22642,20 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 								className: "mt-2 text-xs text-slate-300",
-								children: "आगे बढ़ने के लिए अपने मोबाइल नंबर या ईमेल से लॉगिन करें"
+								children: mode === "login" ? "आगे बढ़ने के लिए अपने मोबाइल नंबर या ईमेल से लॉगिन करें" : "आपके रजिस्टर्ड ईमेल पर 6-अंकों का कोड आएगा, कोड डालने पर ही पासवर्ड बदलेगा"
 							})
 						]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
-						onSubmit: handleSubmit,
+					}), mode === "login" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleLoginSubmit,
 						className: "p-6 space-y-4",
 						children: [
+							successMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4 text-emerald-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold",
+									children: successMsg
+								})]
+							}),
 							errorMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -22450,9 +22677,17 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 									className: "w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
 								})]
 							})] }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-								className: "block text-xs font-bold text-slate-700 mb-1.5",
-								children: "पासवर्ड (Password)"
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-between mb-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block text-xs font-bold text-slate-700",
+									children: "पासवर्ड (Password)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: handleOpenResetView,
+									className: "text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1 cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeyRound, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "पासवर्ड भूल गए?" })]
+								})]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "relative",
 								children: [
@@ -22490,6 +22725,22 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 								type: "submit",
 								className: "w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition cursor-pointer",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogIn, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लॉगिन करें (Sign In)" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-center",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: handleOpenResetView,
+									className: "text-xs font-semibold text-slate-500 hover:text-amber-700 transition cursor-pointer",
+									children: [
+										"नया पासवर्ड सेट करना है?",
+										" ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "font-bold underline",
+											children: "ईमेल OTP से रीसेट करें"
+										})
+									]
+								})
 							}),
 							isDefaultAdminPass && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-2 border-t border-slate-100",
@@ -22537,6 +22788,188 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 										}, member.id))
 									})]
 								})]
+							})
+						]
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "p-6 space-y-4",
+						children: [
+							emailProviderConfigured === false && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50 border border-amber-300 text-amber-950 rounded-xl p-3 flex items-start gap-2 text-[11px] leading-relaxed",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "w-4 h-4 text-amber-700 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "सर्वर ईमेल कॉन्फ़िगरेशन बाकी है:" }),
+									" असली ईमेल पर OTP भेजने के लिए सर्वर Secrets में",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+										className: "font-mono font-bold",
+										children: "SMTP_USER"
+									}),
+									" +",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+										className: "font-mono font-bold",
+										children: "SMTP_PASS"
+									}),
+									" (Gmail App Password) या",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+										className: "font-mono font-bold",
+										children: "RESEND_API_KEY"
+									}),
+									" सेट होना आवश्यक है। बिना ईमेल OTP कोड के पासवर्ड रीसेट नहीं होगा।"
+								] })]
+							}),
+							resetInfo && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4 text-emerald-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold",
+									children: resetInfo
+								})]
+							}),
+							resetError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold",
+									children: resetError
+								})]
+							}),
+							resetStep === "request_otp" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+								onSubmit: handleRequestOtp,
+								className: "space-y-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "कदम 1/2:" }), " अपना रजिस्टर्ड मोबाइल नंबर और ईमेल दर्ज करें। हम आपके ईमेल पर 6-अंकों का OTP कोड भेजेंगे।"]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-xs font-bold text-slate-700 mb-1.5",
+										children: "रजिस्टर्ड मोबाइल नंबर (Mobile Number)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: "text",
+											value: resetPhoneOrId,
+											onChange: (e) => setResetPhoneOrId(e.target.value),
+											placeholder: "उदाहरण: 9829012345",
+											className: "w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+										})]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-xs font-bold text-slate-700 mb-1.5",
+										children: "रजिस्टर्ड ईमेल (OTP इसी ईमेल पर आएगा)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: "email",
+											value: resetEmail,
+											onChange: (e) => setResetEmail(e.target.value),
+											placeholder: "उदाहरण: shritejfoodproducts@gmail.com",
+											className: "w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+										})]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "submit",
+										disabled: isSendingOtp,
+										className: "w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 text-slate-950 font-black text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition cursor-pointer",
+										children: isSendingOtp ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-4 h-4 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ईमेल पर OTP भेजा जा रहा है..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Send, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ईमेल पर OTP कोड भेजें (Send Code)" })] })
+									})
+								]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+								onSubmit: handleVerifyOtpAndReset,
+								className: "space-y-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "text-[11px] text-slate-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "कदम 2/2:" }),
+											" ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-mono",
+												children: maskedSentEmail
+											}),
+											" पर आया 6-अंकों का कोड डालें।"
+										] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											disabled: resendCooldown > 0 || isSendingOtp,
+											onClick: () => handleRequestOtp(),
+											className: "text-amber-800 font-bold underline disabled:no-underline disabled:opacity-50 shrink-0 cursor-pointer",
+											children: resendCooldown > 0 ? `${resendCooldown}s` : "दोबारा भेजें"
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-xs font-bold text-slate-700 mb-1.5",
+										children: "ईमेल OTP कोड (6-Digit Verification Code)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										inputMode: "numeric",
+										maxLength: 6,
+										value: otpCode,
+										onChange: (e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6)),
+										placeholder: "6-अंकों का कोड (जैसे 482910)",
+										className: "w-full px-4 py-3 text-center tracking-[0.4em] font-mono text-lg font-black rounded-xl border-2 border-amber-300 bg-amber-50/40 focus:bg-white focus:border-amber-500 text-slate-900 outline-none transition"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-xs font-bold text-slate-700 mb-1.5",
+										children: "नया पासवर्ड (New Password)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: showNewPassword ? "text" : "password",
+												value: newPassword,
+												onChange: (e) => setNewPassword(e.target.value),
+												placeholder: "कम से कम 4 अक्षर/अंक लिखें",
+												className: "w-full pl-10 pr-11 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setShowNewPassword((prev) => !prev),
+												className: "absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer",
+												"aria-label": showNewPassword ? "पासवर्ड छुपाएं" : "पासवर्ड देखें",
+												children: showNewPassword ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, { className: "w-4 h-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, { className: "w-4 h-4" })
+											})
+										]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block text-xs font-bold text-slate-700 mb-1.5",
+										children: "नया पासवर्ड कन्फर्म करें (Confirm Password)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: showNewPassword ? "text" : "password",
+											value: confirmNewPassword,
+											onChange: (e) => setConfirmNewPassword(e.target.value),
+											placeholder: "नया पासवर्ड दोबारा लिखें",
+											className: "w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-sm text-slate-900 font-medium outline-none transition"
+										})]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "submit",
+										disabled: isVerifyingOtp,
+										className: "w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:opacity-60 text-white font-black text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition cursor-pointer",
+										children: isVerifyingOtp ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-4 h-4 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कोड सत्यापित हो रहा है..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeyRound, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "OTP सत्यापित कर पासवर्ड बदलें" })] })
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										onClick: () => {
+											setResetStep("request_otp");
+											setResetError(null);
+											setResetInfo(null);
+										},
+										className: "w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer",
+										children: "मोबाइल / ईमेल बदलें"
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => {
+									setMode("login");
+									setResetError(null);
+									setResetInfo(null);
+								},
+								className: "w-full py-2 px-3 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "वापस लॉगिन स्क्रीन पर जाएं" })]
 							})
 						]
 					})]
@@ -46790,6 +47223,12 @@ function App() {
 		setCurrentRole("salesman");
 		setActiveTab("dashboard");
 	};
+	const handleResetPassword = (updatedMember) => {
+		sync.dispatchMutation({
+			type: "staff:update",
+			staffMember: updatedMember
+		});
+	};
 	(0, import_react.useEffect)(() => {
 		const saved = loadStateFromStorage();
 		let loadedStaff = INITIAL_STAFF;
@@ -47056,7 +47495,10 @@ function App() {
 		staffList: staff,
 		syncStatus: sync.status,
 		connectedDevicesCount: sync.connectedDevices.length,
+		syncRoomId: sync.config.roomId,
+		syncServerUrl: sync.config.syncServerUrl,
 		onLoginSuccess: handleLoginSuccess,
+		onResetPassword: handleResetPassword,
 		onOpenLiveSync: () => setShowLiveSyncModal(true)
 	}), showLiveSyncModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LiveSyncModal, {
 		onClose: () => setShowLiveSyncModal(false),

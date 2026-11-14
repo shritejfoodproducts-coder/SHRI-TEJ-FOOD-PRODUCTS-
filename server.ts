@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
   INITIAL_BAG_STOCK,
@@ -176,6 +178,24 @@ async function startServer() {
   const app = express();
   app.use(express.json({ limit: '5mb' }));
 
+  // Allow Capacitor native APK origins to call /api endpoints
+  app.use('/api', (req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
+
   app.get('/api/health', (_req, res) => {
     res.json({
       ok: true,
@@ -194,6 +214,420 @@ async function startServer() {
       hasMasterSeed: room.hasMasterSeed,
       devices: getRoomDevices(room.roomId),
       recentEventsCount: room.recentEvents.length,
+    });
+  });
+
+  // ---------------------------------------------------------
+  // Email OTP Password Reset System (Strict Email Verification)
+  // ---------------------------------------------------------
+  interface ResetOtpRecord {
+    otpHash: string;
+    staffId: string;
+    email: string;
+    roomId: string;
+    expiresAt: number;
+    requestedAt: number;
+    attemptsLeft: number;
+  }
+
+  const resetOtpStore = new Map<string, ResetOtpRecord>();
+
+  const normalizePhoneDigits = (raw: string): string => {
+    const digits = (raw || '').replace(/\D/g, '');
+    return digits.length > 10 ? digits.slice(-10) : digits;
+  };
+
+  const hashOtp = (otp: string): string =>
+    crypto.createHash('sha256').update(otp.trim()).digest('hex');
+
+  const maskEmail = (email: string): string => {
+    const [local, domain] = email.split('@');
+    if (!local || !domain) return '***';
+    const visible = local.slice(0, Math.min(2, local.length));
+    return `${visible}***@${domain}`;
+  };
+
+  const getEmailProviderInfo = (): { configured: boolean; provider: 'resend' | 'smtp' | null } => {
+    if (process.env.RESEND_API_KEY?.trim()) {
+      return { configured: true, provider: 'resend' };
+    }
+    if (process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim()) {
+      return { configured: true, provider: 'smtp' };
+    }
+    return { configured: false, provider: null };
+  };
+
+  const sendOtpEmail = async (params: {
+    toEmail: string;
+    recipientName: string;
+    companyName: string;
+    otp: string;
+  }): Promise<void> => {
+    const { toEmail, recipientName, companyName, otp } = params;
+    const subject = `${companyName} - पासवर्ड रीसेट OTP कोड (${otp})`;
+    const textBody = [
+      `नमस्ते ${recipientName},`,
+      '',
+      `${companyName} (Tejstha ERP) के पासवर्ड रीसेट के लिए आपका 6-अंकों का सत्यापन कोड (OTP):`,
+      '',
+      `OTP CODE: ${otp}`,
+      '',
+      'यह कोड 10 मिनट के लिए मान्य है। इसे किसी के साथ साझा न करें।',
+      'यदि आपने यह अनुरोध नहीं किया है, तो कृपया इस ईमेल को अनदेखा करें।',
+    ].join('\n');
+
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;">
+        <div style="background: #0f172a; color: #ffffff; padding: 20px 24px;">
+          <h2 style="margin: 0; font-size: 18px; color: #fbbf24;">${companyName}</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #cbd5e1;">पासवर्ड रीसेट सत्यापन कोड (Password Reset OTP)</p>
+        </div>
+        <div style="padding: 24px; color: #1e293b; font-size: 14px; line-height: 1.6;">
+          <p>नमस्ते <strong>${recipientName}</strong>,</p>
+          <p>आपने अपने ERP खाते का पासवर्ड रीसेट करने का अनुरोध किया है। कृपया ऐप में नीचे दिया गया 6-अंकों का कोड दर्ज करें:</p>
+          <div style="margin: 20px 0; text-align: center; background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 12px; padding: 16px;">
+            <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0f172a;">${otp}</span>
+          </div>
+          <p style="font-size: 12px; color: #64748b;">यह कोड केवल <strong>10 मिनट</strong> के लिए मान्य है। सुरक्षा के लिए यह कोड किसी अन्य व्यक्ति को न बताएं।</p>
+        </div>
+      </div>
+    `;
+
+    const resendKey = process.env.RESEND_API_KEY?.trim();
+    if (resendKey) {
+      const from = process.env.RESEND_FROM?.trim() || 'TEJ FOOD PRODUCTS <onboarding@resend.dev>';
+      const resp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: [toEmail],
+          subject,
+          text: textBody,
+          html: htmlBody,
+        }),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`Resend API error (${resp.status}): ${errText}`);
+      }
+      return;
+    }
+
+    const smtpUser = process.env.SMTP_USER?.trim() || '';
+    const smtpPass = process.env.SMTP_PASS?.trim() || '';
+    const smtpHost = process.env.SMTP_HOST?.trim() || 'smtp.gmail.com';
+    const smtpPort = Number(process.env.SMTP_PORT || 465);
+    const smtpSecure = process.env.SMTP_SECURE
+      ? process.env.SMTP_SECURE === 'true'
+      : smtpPort === 465;
+    const smtpFrom = process.env.SMTP_FROM?.trim() || `"${companyName}" <${smtpUser}>`;
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    await transporter.sendMail({
+      from: smtpFrom,
+      to: toEmail,
+      subject,
+      text: textBody,
+      html: htmlBody,
+    });
+  };
+
+  app.get('/api/auth/email-otp-status', (_req, res) => {
+    const info = getEmailProviderInfo();
+    res.json(info);
+  });
+
+  app.post('/api/auth/request-reset-otp', async (req, res) => {
+    try {
+      const { identifier, email, roomId: rawRoomId } = req.body as {
+        identifier?: string;
+        email?: string;
+        roomId?: string;
+      };
+
+      const providerInfo = getEmailProviderInfo();
+      if (!providerInfo.configured) {
+        res.status(503).json({
+          ok: false,
+          errorCode: 'EMAIL_NOT_CONFIGURED',
+          message:
+            'ईमेल OTP सेवा सर्वर पर कॉन्फ़िगर नहीं है। AI Studio Secrets में SMTP_USER व SMTP_PASS (Gmail App Password) या RESEND_API_KEY सेट करें।',
+        });
+        return;
+      }
+
+      const roomId = sanitizeRoomId(rawRoomId || 'tej-food-main');
+      const room = loadOrCreateRoom(roomId);
+
+      const cleanId = (identifier || '').trim();
+      const cleanEmail = (email || '').trim().toLowerCase();
+      if (!cleanId || !cleanEmail) {
+        res.status(400).json({
+          ok: false,
+          message: 'कृपया रजिस्टर्ड मोबाइल नंबर और ईमेल दोनों दर्ज करें।',
+        });
+        return;
+      }
+
+      const inputDigits = normalizePhoneDigits(cleanId);
+      const lowerId = cleanId.toLowerCase();
+
+      const member = room.state.staff.find((s) => {
+        const phoneDigits = normalizePhoneDigits(s.phone || '');
+        const phoneMatch = inputDigits.length >= 6 && phoneDigits === inputDigits;
+        const emailMatch = Boolean(s.email) && s.email!.trim().toLowerCase() === lowerId;
+        const nameMatch = s.name.trim().toLowerCase() === lowerId;
+        return phoneMatch || emailMatch || nameMatch;
+      });
+
+      if (!member) {
+        res.status(404).json({
+          ok: false,
+          message: 'इस मोबाइल नंबर या ईमेल से कोई स्टाफ खाता नहीं मिला।',
+        });
+        return;
+      }
+
+      if (!member.active) {
+        res.status(403).json({
+          ok: false,
+          message: 'यह खाता निष्क्रिय (Inactive) है। कृपया Admin से संपर्क करें।',
+        });
+        return;
+      }
+
+      const registeredEmail = (
+        member.email ||
+        (member.role === 'admin' ? room.state.settings.email : '') ||
+        ''
+      )
+        .trim()
+        .toLowerCase();
+
+      if (!registeredEmail) {
+        res.status(400).json({
+          ok: false,
+          message:
+            'इस खाते में कोई ईमेल आईडी सेव नहीं है। कृपया Admin लॉगिन के बाद स्टाफ प्रोफाइल में ईमेल जोड़ें।',
+        });
+        return;
+      }
+
+      if (registeredEmail !== cleanEmail) {
+        res.status(403).json({
+          ok: false,
+          message: 'दर्ज किया गया ईमेल इस खाते के रजिस्टर्ड ईमेल से मेल नहीं खा रहा है।',
+        });
+        return;
+      }
+
+      const storeKey = `${room.roomId}:${member.id}`;
+      const existingOtp = resetOtpStore.get(storeKey);
+      const now = Date.now();
+      if (existingOtp && now - existingOtp.requestedAt < 30_000) {
+        const waitSec = Math.ceil((30_000 - (now - existingOtp.requestedAt)) / 1000);
+        res.status(429).json({
+          ok: false,
+          message: `कृपया नया OTP भेजने से पहले ${waitSec} सेकंड प्रतीक्षा करें।`,
+        });
+        return;
+      }
+
+      const otp = crypto.randomInt(100000, 1000000).toString();
+      resetOtpStore.set(storeKey, {
+        otpHash: hashOtp(otp),
+        staffId: member.id,
+        email: registeredEmail,
+        roomId: room.roomId,
+        expiresAt: now + 10 * 60 * 1000,
+        requestedAt: now,
+        attemptsLeft: 5,
+      });
+
+      await sendOtpEmail({
+        toEmail: registeredEmail,
+        recipientName: member.name,
+        companyName: room.state.settings.companyName || 'Shri Tej Food Products',
+        otp,
+      });
+
+      res.json({
+        ok: true,
+        maskedEmail: maskEmail(registeredEmail),
+        expiresInMinutes: 10,
+      });
+    } catch (err) {
+      console.error('Failed to send reset OTP email:', err);
+      res.status(500).json({
+        ok: false,
+        message:
+          'ईमेल पर OTP भेजने में सर्वर त्रुटि हुई। कृपया SMTP / Email कॉन्फ़िगरेशन जांचें।',
+      });
+    }
+  });
+
+  app.post('/api/auth/verify-reset-otp', (req, res) => {
+    const { identifier, email, otp, newPassword, roomId: rawRoomId } = req.body as {
+      identifier?: string;
+      email?: string;
+      otp?: string;
+      newPassword?: string;
+      roomId?: string;
+    };
+
+    const roomId = sanitizeRoomId(rawRoomId || 'tej-food-main');
+    const room = loadOrCreateRoom(roomId);
+
+    const cleanId = (identifier || '').trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanOtp = (otp || '').trim();
+    const cleanNewPass = (newPassword || '').trim();
+
+    if (!cleanId || !cleanEmail || !cleanOtp || !cleanNewPass) {
+      res.status(400).json({
+        ok: false,
+        message: 'मोबाइल, ईमेल, OTP कोड और नया पासवर्ड सभी भरना अनिवार्य है।',
+      });
+      return;
+    }
+
+    if (cleanNewPass.length < 4) {
+      res.status(400).json({
+        ok: false,
+        message: 'नया पासवर्ड कम से कम 4 अक्षरों या अंकों का होना चाहिए।',
+      });
+      return;
+    }
+
+    const inputDigits = normalizePhoneDigits(cleanId);
+    const lowerId = cleanId.toLowerCase();
+
+    const member = room.state.staff.find((s) => {
+      const phoneDigits = normalizePhoneDigits(s.phone || '');
+      const phoneMatch = inputDigits.length >= 6 && phoneDigits === inputDigits;
+      const emailMatch = Boolean(s.email) && s.email!.trim().toLowerCase() === lowerId;
+      const nameMatch = s.name.trim().toLowerCase() === lowerId;
+      return phoneMatch || emailMatch || nameMatch;
+    });
+
+    if (!member || !member.active) {
+      res.status(404).json({
+        ok: false,
+        message: 'वैध स्टाफ खाता नहीं मिला।',
+      });
+      return;
+    }
+
+    const storeKey = `${room.roomId}:${member.id}`;
+    const record = resetOtpStore.get(storeKey);
+
+    if (!record || record.email !== cleanEmail) {
+      res.status(400).json({
+        ok: false,
+        message: 'इस ईमेल के लिए कोई सक्रिय OTP नहीं मिला। कृपया पहले ईमेल पर OTP कोड भेजें।',
+      });
+      return;
+    }
+
+    if (Date.now() > record.expiresAt) {
+      resetOtpStore.delete(storeKey);
+      res.status(400).json({
+        ok: false,
+        message: 'OTP कोड की समय सीमा (10 मिनट) समाप्त हो गई है। कृपया नया कोड भेजें।',
+      });
+      return;
+    }
+
+    const incomingBuf = Buffer.from(hashOtp(cleanOtp), 'hex');
+    const storedBuf = Buffer.from(record.otpHash, 'hex');
+    const isMatch =
+      incomingBuf.length === storedBuf.length &&
+      crypto.timingSafeEqual(incomingBuf, storedBuf);
+
+    if (!isMatch) {
+      record.attemptsLeft -= 1;
+      if (record.attemptsLeft <= 0) {
+        resetOtpStore.delete(storeKey);
+        res.status(400).json({
+          ok: false,
+          message: 'गलत OTP कोड! अधिकतम प्रयास समाप्त हो गए। कृपया नया OTP कोड भेजें।',
+        });
+        return;
+      }
+      res.status(400).json({
+        ok: false,
+        message: `गलत OTP कोड! कृपया ईमेल में आया सही 6-अंकों का कोड डालें (${record.attemptsLeft} प्रयास शेष)।`,
+      });
+      return;
+    }
+
+    // Valid OTP — single-use delete and update password in authoritative room state
+    resetOtpStore.delete(storeKey);
+
+    const updatedMember = {
+      ...member,
+      password: cleanNewPass,
+    };
+
+    const mutationResult = applyErpMutation(room.state, {
+      type: 'staff:update',
+      staffMember: updatedMember,
+    });
+
+    if (mutationResult.applied) {
+      room.state = mutationResult.nextState;
+      room.seq += 1;
+      const activity: LiveActivityEvent = {
+        id: `evt-pwd-reset-${Date.now()}`,
+        seq: room.seq,
+        timestamp: new Date().toISOString(),
+        actorDeviceId: 'email-otp-auth',
+        actorName: updatedMember.name,
+        actorRole: updatedMember.role,
+        category: 'staff',
+        title: `पासवर्ड रीसेट: ${updatedMember.name}`,
+        detail: 'ईमेल OTP सत्यापन द्वारा पासवर्ड बदला गया',
+      };
+      room.recentEvents = [activity, ...room.recentEvents].slice(0, 60);
+      scheduleRoomSave(room);
+
+      broadcastToRoom(room.roomId, {
+        type: 'mutation_broadcast',
+        roomId: room.roomId,
+        seq: room.seq,
+        envelope: {
+          mutationId: activity.id,
+          roomId: room.roomId,
+          actorDeviceId: 'email-otp-auth',
+          actorName: updatedMember.name,
+          actorRole: updatedMember.role,
+          timestamp: activity.timestamp,
+          action: {
+            type: 'staff:update',
+            staffMember: updatedMember,
+          },
+        },
+        activity,
+      });
+    }
+
+    res.json({
+      ok: true,
+      updatedMember,
+      message: `${updatedMember.name} का पासवर्ड सफलतापूर्वक बदल गया है।`,
     });
   });
 
