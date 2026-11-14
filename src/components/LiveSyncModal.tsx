@@ -22,12 +22,20 @@ import type {
   LiveActivityEvent,
   SyncDeviceRole,
 } from '../../shared/erpSyncTypes';
-import type { SyncConfig, SyncConnectionStatus } from '../hooks/useRealtimeSync';
+import type {
+  ServerProbeResult,
+  SyncConfig,
+  SyncConnectionStatus,
+  SyncTransportMode,
+} from '../hooks/useRealtimeSync';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface LiveSyncModalProps {
   onClose: () => void;
   config: SyncConfig;
   status: SyncConnectionStatus;
+  transportMode?: SyncTransportMode;
+  connectionError?: string | null;
   connectedDevices: ConnectedDevice[];
   recentEvents: LiveActivityEvent[];
   pendingCount: number;
@@ -35,6 +43,8 @@ interface LiveSyncModalProps {
   soundEnabled: boolean;
   onToggleSound: () => void;
   onUpdateConfig: (partial: Partial<SyncConfig>) => void;
+  onReconnectNow?: () => void;
+  onProbeServer?: (urlOverride?: string) => Promise<ServerProbeResult>;
   onPushMasterStateNow: () => void;
 }
 
@@ -42,6 +52,8 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
   onClose,
   config,
   status,
+  transportMode = 'none',
+  connectionError,
   connectedDevices,
   recentEvents,
   pendingCount,
@@ -49,6 +61,8 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
   soundEnabled,
   onToggleSound,
   onUpdateConfig,
+  onReconnectNow,
+  onProbeServer,
   onPushMasterStateNow,
 }) => {
   const [deviceNameInput, setDeviceNameInput] = useState(config.deviceName);
@@ -60,6 +74,8 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
   const [staffInviteQr, setStaffInviteQr] = useState('');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [pushedSuccess, setPushedSuccess] = useState(false);
+  const [isTestingServer, setIsTestingServer] = useState(false);
+  const [testResult, setTestResult] = useState<ServerProbeResult | null>(null);
 
   const isNativeShell =
     typeof window !== 'undefined' &&
@@ -91,11 +107,36 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
 
   const handleSaveIdentity = (e: React.FormEvent) => {
     e.preventDefault();
+    setTestResult(null);
     onUpdateConfig({
       deviceName: deviceNameInput.trim() || 'मोबाइल डिवाइस',
       roomId: roomIdInput.trim() || 'tej-food-main',
       syncServerUrl: serverUrlInput.trim() || undefined,
     });
+    if (onReconnectNow) {
+      onReconnectNow();
+    }
+  };
+
+  const handleTestServerConnection = async () => {
+    const cleanUrl = serverUrlInput.trim().replace(/\/+$/, '');
+    onUpdateConfig({
+      deviceName: deviceNameInput.trim() || 'मोबाइल डिवाइस',
+      roomId: roomIdInput.trim() || 'tej-food-main',
+      syncServerUrl: cleanUrl || undefined,
+    });
+    if (!onProbeServer) {
+      if (onReconnectNow) onReconnectNow();
+      return;
+    }
+    setIsTestingServer(true);
+    setTestResult(null);
+    const probe = await onProbeServer(cleanUrl);
+    setTestResult(probe);
+    setIsTestingServer(false);
+    if (probe.ok && onReconnectNow) {
+      onReconnectNow();
+    }
   };
 
   const handleSwitchMode = (mode: SyncDeviceRole) => {
@@ -164,11 +205,12 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 >
                   {status === 'connected' ? (
                     <>
-                      <Wifi className="w-3 h-3" /> लाइव सिंक चालू
+                      <Wifi className="w-3 h-3" /> लाइव सिंक चालू (
+                      {transportMode === 'http' ? 'HTTPS' : 'WS'})
                     </>
                   ) : (
                     <>
-                      <WifiOff className="w-3 h-3" /> जुड़ रहा है...
+                      <WifiOff className="w-3 h-3" /> कनेक्शन नहीं जुड़ा
                     </>
                   )}
                 </span>
@@ -331,17 +373,66 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
               </button>
             </div>
 
-            <div className="sm:col-span-12">
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                लाइव सिंक सर्वर URL (APK / मोबाइल के लिए)
+            <div className="sm:col-span-12 space-y-2">
+              <label className="block text-[11px] font-bold text-slate-700">
+                लाइव सिंक सर्वर URL (APK / मोबाइल डेटा के लिए)
               </label>
-              <input
-                type="url"
-                value={serverUrlInput}
-                onChange={(e) => setServerUrlInput(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="https://..."
-              />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="url"
+                  value={serverUrlInput}
+                  onChange={(e) => setServerUrlInput(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="https://your-deployed-app.run.app या http://192.168.1.10:3000"
+                />
+                <button
+                  type="button"
+                  onClick={handleTestServerConnection}
+                  disabled={isTestingServer}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition"
+                >
+                  {isTestingServer ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>जाँच हो रही है...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>कनेक्शन जांचें व जोड़ें</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {(testResult || (status !== 'connected' && connectionError)) && (
+                <div
+                  className={`rounded-xl p-3 text-[11px] flex items-start gap-2 border ${
+                    testResult?.ok
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : 'bg-rose-50 border-rose-200 text-rose-900'
+                  }`}
+                >
+                  <AlertTriangle
+                    className={`w-4 h-4 shrink-0 mt-0.5 ${
+                      testResult?.ok ? 'text-emerald-600' : 'text-rose-600'
+                    }`}
+                  />
+                  <div className="space-y-1">
+                    <p className="font-bold">
+                      {testResult ? testResult.message : connectionError}
+                    </p>
+                    {(!testResult || !testResult.ok) && (
+                      <p className="text-[10px] leading-relaxed opacity-90">
+                        <strong>मोबाइल डेटा + APK चलाने का तरीका:</strong> Google AI Studio में ऊपर{' '}
+                        <strong>Deploy / Share App</strong> बटन से ऐप को Cloud Run पर Deploy करें और जो पब्लिक URL मिले (जैसे{' '}
+                        <code className="font-mono">https://...run.app</code>) उसे यहाँ डालकर{' '}
+                        <strong>&quot;कनेक्शन जांचें व जोड़ें&quot;</strong> दबाएं।
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </form>
 

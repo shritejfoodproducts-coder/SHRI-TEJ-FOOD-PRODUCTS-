@@ -443,6 +443,8 @@ export default function App() {
             onClose={() => setShowLiveSyncModal(false)}
             config={sync.config}
             status={sync.status}
+            transportMode={sync.transportMode}
+            connectionError={sync.connectionError}
             connectedDevices={sync.connectedDevices}
             recentEvents={sync.recentEvents}
             pendingCount={sync.pendingCount}
@@ -450,6 +452,8 @@ export default function App() {
             soundEnabled={sync.soundEnabled}
             onToggleSound={() => sync.setSoundEnabled((prev) => !prev)}
             onUpdateConfig={sync.updateSyncConfig}
+            onReconnectNow={sync.reconnectNow}
+            onProbeServer={sync.probeServerHealth}
             onPushMasterStateNow={sync.pushMasterStateNow}
           />
         )}
@@ -774,6 +778,8 @@ export default function App() {
           onClose={() => setShowLiveSyncModal(false)}
           config={sync.config}
           status={sync.status}
+          transportMode={sync.transportMode}
+          connectionError={sync.connectionError}
           connectedDevices={sync.connectedDevices}
           recentEvents={sync.recentEvents}
           pendingCount={sync.pendingCount}
@@ -781,6 +787,8 @@ export default function App() {
           soundEnabled={sync.soundEnabled}
           onToggleSound={() => sync.setSoundEnabled((prev) => !prev)}
           onUpdateConfig={sync.updateSyncConfig}
+          onReconnectNow={sync.reconnectNow}
+          onProbeServer={sync.probeServerHealth}
           onPushMasterStateNow={sync.pushMasterStateNow}
         />
       )}

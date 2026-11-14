@@ -13105,6 +13105,17 @@ var DEFAULT_SYNC_SERVER_URL = "https://ais-pre-yevywmvpbfmbyiknv4vkin-3257699285
 function generateId(prefix) {
 	return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
+function isRunningInNativeShell() {
+	if (typeof window === "undefined") return false;
+	return window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000";
+}
+function resolveHttpBase(syncServerUrl) {
+	if (typeof window === "undefined") return "";
+	if (isRunningInNativeShell()) return (syncServerUrl || DEFAULT_SYNC_SERVER_URL).trim().replace(/\/+$/, "");
+	const trimmed = (syncServerUrl || "").trim().replace(/\/+$/, "");
+	if (trimmed && trimmed !== DEFAULT_SYNC_SERVER_URL && trimmed !== window.location.origin) return trimmed;
+	return "";
+}
 function getInitialSyncConfig() {
 	let saved = {};
 	try {
@@ -13169,17 +13180,23 @@ function playNotificationChime() {
 function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isAppLoaded, onRemoteActivity }) {
 	const [config, setConfig] = (0, import_react.useState)(() => getInitialSyncConfig());
 	const [status, setStatus] = (0, import_react.useState)("connecting");
+	const [transportMode, setTransportMode] = (0, import_react.useState)("none");
+	const [connectionError, setConnectionError] = (0, import_react.useState)(null);
 	const [connectedDevices, setConnectedDevices] = (0, import_react.useState)([]);
 	const [recentEvents, setRecentEvents] = (0, import_react.useState)([]);
 	const [serverSeq, setServerSeq] = (0, import_react.useState)(0);
 	const [pendingCount, setPendingCount] = (0, import_react.useState)(() => loadPendingQueue().length);
 	const [lastSyncedAt, setLastSyncedAt] = (0, import_react.useState)(null);
 	const [soundEnabled, setSoundEnabled] = (0, import_react.useState)(true);
+	const [connectTrigger, setConnectTrigger] = (0, import_react.useState)(0);
 	const wsRef = (0, import_react.useRef)(null);
 	const reconnectTimerRef = (0, import_react.useRef)(null);
 	const pingTimerRef = (0, import_react.useRef)(null);
+	const httpPollTimerRef = (0, import_react.useRef)(null);
 	const reconnectAttemptRef = (0, import_react.useRef)(0);
 	const processedPaymentIdsRef = (0, import_react.useRef)(/* @__PURE__ */ new Set());
+	const transportModeRef = (0, import_react.useRef)("none");
+	const serverSeqRef = (0, import_react.useRef)(0);
 	const getCurrentStateRef = (0, import_react.useRef)(getCurrentState);
 	getCurrentStateRef.current = getCurrentState;
 	const applyFullStateRef = (0, import_react.useRef)(applyFullState);
@@ -13192,7 +13209,43 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 	userRoleRef.current = currentUserRole;
 	const soundEnabledRef = (0, import_react.useRef)(soundEnabled);
 	soundEnabledRef.current = soundEnabled;
-	const flushPendingQueue = (0, import_react.useCallback)((ws) => {
+	const updateTransport = (next) => {
+		transportModeRef.current = next;
+		setTransportMode(next);
+	};
+	const probeServerHealth = (0, import_react.useCallback)(async (urlOverride) => {
+		const target = `${urlOverride !== void 0 ? urlOverride.trim().replace(/\/+$/, "") : resolveHttpBase(configRef.current.syncServerUrl)}/api/health`;
+		try {
+			const resp = await fetch(target, { method: "GET" });
+			const contentType = resp.headers.get("content-type") || "";
+			if (resp.status === 404) return {
+				ok: false,
+				message: "सर्वर URL पर ऐप डिप्लॉय नहीं मिला (404)। APK चलाने के लिए पहले AI Studio से \"Deploy App\" करें या लाइव Public Server URL डालें।"
+			};
+			if (!contentType.includes("application/json")) return {
+				ok: false,
+				message: "यह URL Google Auth/Preview पेज पर रीडायरेक्ट हो रहा है। मोबाइल APK के लिए कृपया Deployed Public URL या लोकल Wi-Fi Server URL (http://IP:3000) डालें।"
+			};
+			if (!resp.ok) return {
+				ok: false,
+				message: `सर्वर से त्रुटि मिली (HTTP ${resp.status})। कृपया सर्वर URL जांचें।`
+			};
+			if (!(await resp.json())?.ok) return {
+				ok: false,
+				message: "सर्वर ने वैध हेल्थ रिस्पॉन्स नहीं दिया।"
+			};
+			return {
+				ok: true,
+				message: "सर्वर कनेक्शन सफल! रियल-टाइम सिंक चालू है।"
+			};
+		} catch {
+			return {
+				ok: false,
+				message: "सर्वर तक नेटवर्क नहीं पहुँच पा रहा। कृपया अपना मोबाइल डेटा/इंटरनेट और सर्वर URL जांचें।"
+			};
+		}
+	}, []);
+	const flushPendingQueueWs = (0, import_react.useCallback)((ws) => {
 		const queue = loadPendingQueue();
 		if (queue.length === 0) return;
 		const remaining = [];
@@ -13204,25 +13257,135 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 		savePendingQueue(remaining);
 		setPendingCount(remaining.length);
 	}, []);
+	const flushPendingQueueHttp = (0, import_react.useCallback)(async (httpBase) => {
+		const queue = loadPendingQueue();
+		if (queue.length === 0) return;
+		const remaining = [];
+		for (const env of queue) try {
+			if (!(await fetch(`${httpBase}/api/sync/mutation`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ envelope: env })
+			})).ok) remaining.push(env);
+		} catch {
+			remaining.push(env);
+		}
+		savePendingQueue(remaining);
+		setPendingCount(remaining.length);
+	}, []);
 	(0, import_react.useEffect)(() => {
 		if (!isAppLoaded) return;
 		let unmounted = false;
+		const stopHttpPolling = () => {
+			if (httpPollTimerRef.current) {
+				window.clearInterval(httpPollTimerRef.current);
+				httpPollTimerRef.current = null;
+			}
+		};
+		const startHttpFallbackSync = async (httpBase) => {
+			if (unmounted) return false;
+			try {
+				const activeConfig = configRef.current;
+				const joinRes = await fetch(`${httpBase}/api/sync/join`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						roomId: activeConfig.roomId,
+						deviceId: activeConfig.deviceId,
+						deviceName: activeConfig.deviceName,
+						deviceRole: activeConfig.deviceRole,
+						userRole: userRoleRef.current,
+						initialMasterState: activeConfig.deviceRole === "master" ? getCurrentStateRef.current() : void 0
+					})
+				});
+				if (!joinRes.ok) return false;
+				const joinData = await joinRes.json();
+				if (!joinData?.ok) return false;
+				updateTransport("http");
+				setStatus("connected");
+				setConnectionError(null);
+				reconnectAttemptRef.current = 0;
+				serverSeqRef.current = joinData.seq;
+				setServerSeq(joinData.seq);
+				setConnectedDevices(joinData.devices || []);
+				setRecentEvents(joinData.recentEvents || []);
+				setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
+				if (joinData.hasMasterSeed || activeConfig.deviceRole === "staff") applyFullStateRef.current(joinData.state);
+				await flushPendingQueueHttp(httpBase);
+				stopHttpPolling();
+				httpPollTimerRef.current = window.setInterval(async () => {
+					if (unmounted) return;
+					try {
+						const cfg = configRef.current;
+						const qs = new URLSearchParams({
+							sinceSeq: String(serverSeqRef.current),
+							deviceId: cfg.deviceId,
+							deviceName: cfg.deviceName,
+							deviceRole: cfg.deviceRole,
+							userRole: userRoleRef.current
+						});
+						const pollResp = await fetch(`${httpBase}/api/sync/poll/${encodeURIComponent(cfg.roomId)}?${qs.toString()}`);
+						if (!pollResp.ok) throw new Error(`HTTP ${pollResp.status}`);
+						const pollData = await pollResp.json();
+						if (!pollData?.ok) return;
+						setConnectedDevices(pollData.devices || []);
+						setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
+						if (pollData.changed && pollData.state) {
+							const previousSeq = serverSeqRef.current;
+							serverSeqRef.current = pollData.seq;
+							setServerSeq(pollData.seq);
+							setRecentEvents(pollData.recentEvents || []);
+							applyFullStateRef.current(pollData.state);
+							const latestEvt = pollData.recentEvents?.[0];
+							if (pollData.seq > previousSeq && latestEvt && latestEvt.actorDeviceId !== cfg.deviceId) {
+								if (soundEnabledRef.current) playNotificationChime();
+								onRemoteActivityRef.current(latestEvt);
+							}
+						}
+					} catch {
+						stopHttpPolling();
+						updateTransport("none");
+						if (!unmounted) {
+							setStatus("reconnecting");
+							reconnectTimerRef.current = window.setTimeout(connect, 3500);
+						}
+					}
+				}, 3e3);
+				return true;
+			} catch {
+				return false;
+			}
+		};
 		const connect = () => {
 			if (unmounted) return;
-			const isNativeShell = window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000";
+			stopHttpPolling();
+			const httpBase = resolveHttpBase(configRef.current.syncServerUrl);
 			let wsUrl;
-			if (isNativeShell && configRef.current.syncServerUrl) wsUrl = configRef.current.syncServerUrl.trim().replace(/\/+$/, "").replace(/^https:/i, "wss:").replace(/^http:/i, "ws:") + "/ws";
+			if (httpBase) wsUrl = httpBase.replace(/^https:/i, "wss:").replace(/^http:/i, "ws:") + "/ws";
 			else wsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
 			setStatus(reconnectAttemptRef.current > 0 ? "reconnecting" : "connecting");
-			const ws = new WebSocket(wsUrl);
+			let wsOpened = false;
+			let ws;
+			try {
+				ws = new WebSocket(wsUrl);
+			} catch {
+				updateTransport("none");
+				setStatus("offline");
+				setConnectionError("सर्वर URL अमान्य है। कृपया सही https:// या http:// URL दर्ज करें।");
+				return;
+			}
 			wsRef.current = ws;
 			ws.onopen = () => {
 				if (unmounted) {
 					ws.close();
 					return;
 				}
+				wsOpened = true;
+				stopHttpPolling();
+				updateTransport("websocket");
 				reconnectAttemptRef.current = 0;
 				setStatus("connected");
+				setConnectionError(null);
 				const activeConfig = configRef.current;
 				ws.send(JSON.stringify({
 					type: "join",
@@ -13233,7 +13396,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 					userRole: userRoleRef.current,
 					initialMasterState: activeConfig.deviceRole === "master" ? getCurrentStateRef.current() : void 0
 				}));
-				flushPendingQueue(ws);
+				flushPendingQueueWs(ws);
 				if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
 				pingTimerRef.current = window.setInterval(() => {
 					if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "ping" }));
@@ -13248,6 +13411,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 				}
 				if (msg.type === "pong") return;
 				if (msg.type === "init") {
+					serverSeqRef.current = msg.seq;
 					setServerSeq(msg.seq);
 					setConnectedDevices(msg.devices);
 					setRecentEvents(msg.recentEvents);
@@ -13260,11 +13424,13 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 					return;
 				}
 				if (msg.type === "mutation_ack") {
+					serverSeqRef.current = msg.seq;
 					setServerSeq(msg.seq);
 					setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
 					return;
 				}
 				if (msg.type === "mutation_broadcast") {
+					serverSeqRef.current = msg.seq;
 					setServerSeq(msg.seq);
 					setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
 					setRecentEvents((prev) => [msg.activity, ...prev].slice(0, 60));
@@ -13279,14 +13445,22 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 					}
 				}
 			};
-			ws.onclose = () => {
+			ws.onclose = async () => {
 				if (pingTimerRef.current) {
 					window.clearInterval(pingTimerRef.current);
 					pingTimerRef.current = null;
 				}
 				if (unmounted) return;
+				if (!wsOpened) {
+					const probe = await probeServerHealth(httpBase);
+					if (unmounted) return;
+					if (probe.ok) {
+						if (await startHttpFallbackSync(httpBase)) return;
+					} else setConnectionError(probe.message);
+				}
+				updateTransport("none");
 				setStatus("reconnecting");
-				const delay = Math.min(1e4, 1e3 * Math.pow(1.6, reconnectAttemptRef.current));
+				const delay = Math.min(12e3, 1500 * Math.pow(1.5, reconnectAttemptRef.current));
 				reconnectAttemptRef.current += 1;
 				reconnectTimerRef.current = window.setTimeout(connect, delay);
 			};
@@ -13297,6 +13471,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 		connect();
 		return () => {
 			unmounted = true;
+			stopHttpPolling();
 			if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current);
 			if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
 			if (wsRef.current) wsRef.current.close();
@@ -13305,7 +13480,10 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 		isAppLoaded,
 		config.roomId,
 		config.syncServerUrl,
-		flushPendingQueue
+		connectTrigger,
+		flushPendingQueueWs,
+		flushPendingQueueHttp,
+		probeServerHealth
 	]);
 	(0, import_react.useEffect)(() => {
 		const ws = wsRef.current;
@@ -13336,6 +13514,12 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 			} catch {}
 			return next;
 		});
+		reconnectAttemptRef.current = 0;
+	}, []);
+	const reconnectNow = (0, import_react.useCallback)(() => {
+		reconnectAttemptRef.current = 0;
+		setConnectionError(null);
+		setConnectTrigger((prev) => prev + 1);
 	}, []);
 	const dispatchMutation = (0, import_react.useCallback)((action, actorNameOverride) => {
 		const res = applyErpMutation(getCurrentStateRef.current(), action, processedPaymentIdsRef.current);
@@ -13350,19 +13534,37 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 			action
 		};
 		const ws = wsRef.current;
-		if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({
-			type: "mutation",
-			envelope
-		}));
-		else {
-			const nextQueue = [...loadPendingQueue(), envelope];
-			savePendingQueue(nextQueue);
-			setPendingCount(nextQueue.length);
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			ws.send(JSON.stringify({
+				type: "mutation",
+				envelope
+			}));
+			return;
 		}
+		if (transportModeRef.current === "http") {
+			const httpBase = resolveHttpBase(configRef.current.syncServerUrl);
+			fetch(`${httpBase}/api/sync/mutation`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ envelope })
+			}).then((r) => {
+				if (!r.ok) throw new Error("HTTP sync failed");
+			}).catch(() => {
+				const nextQueue = [...loadPendingQueue(), envelope];
+				savePendingQueue(nextQueue);
+				setPendingCount(nextQueue.length);
+			});
+			return;
+		}
+		const nextQueue = [...loadPendingQueue(), envelope];
+		savePendingQueue(nextQueue);
+		setPendingCount(nextQueue.length);
 	}, []);
 	return {
 		config,
 		status,
+		transportMode,
+		connectionError,
 		connectedDevices,
 		recentEvents,
 		serverSeq,
@@ -13371,6 +13573,8 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 		soundEnabled,
 		setSoundEnabled,
 		updateSyncConfig,
+		reconnectNow,
+		probeServerHealth,
 		dispatchMutation,
 		pushMasterStateNow: (0, import_react.useCallback)(() => {
 			const current = getCurrentStateRef.current();
@@ -22015,13 +22219,15 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 	});
 };
 // src/components/LiveSyncModal.tsx
-var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, pendingCount, lastSyncedAt, soundEnabled, onToggleSound, onUpdateConfig, onPushMasterStateNow }) => {
+var LiveSyncModal = ({ onClose, config, status, transportMode = "none", connectionError, connectedDevices, recentEvents, pendingCount, lastSyncedAt, soundEnabled, onToggleSound, onUpdateConfig, onReconnectNow, onProbeServer, onPushMasterStateNow }) => {
 	const [deviceNameInput, setDeviceNameInput] = (0, import_react.useState)(config.deviceName);
 	const [roomIdInput, setRoomIdInput] = (0, import_react.useState)(config.roomId);
 	const [serverUrlInput, setServerUrlInput] = (0, import_react.useState)(config.syncServerUrl || "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app");
 	const [staffInviteQr, setStaffInviteQr] = (0, import_react.useState)("");
 	const [copiedInvite, setCopiedInvite] = (0, import_react.useState)(false);
 	const [pushedSuccess, setPushedSuccess] = (0, import_react.useState)(false);
+	const [isTestingServer, setIsTestingServer] = (0, import_react.useState)(false);
+	const [testResult, setTestResult] = (0, import_react.useState)(null);
 	const baseOrigin = typeof window !== "undefined" && (window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000") && config.syncServerUrl ? config.syncServerUrl.replace(/\/+$/, "") : typeof window !== "undefined" ? window.location.origin : "";
 	const staffInviteUrl = baseOrigin ? `${baseOrigin}/?syncRoom=${encodeURIComponent(config.roomId)}&mode=staff` : "";
 	(0, import_react.useEffect)(() => {
@@ -22037,11 +22243,31 @@ var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, 
 	}, [staffInviteUrl]);
 	const handleSaveIdentity = (e) => {
 		e.preventDefault();
+		setTestResult(null);
 		onUpdateConfig({
 			deviceName: deviceNameInput.trim() || "मोबाइल डिवाइस",
 			roomId: roomIdInput.trim() || "tej-food-main",
 			syncServerUrl: serverUrlInput.trim() || void 0
 		});
+		if (onReconnectNow) onReconnectNow();
+	};
+	const handleTestServerConnection = async () => {
+		const cleanUrl = serverUrlInput.trim().replace(/\/+$/, "");
+		onUpdateConfig({
+			deviceName: deviceNameInput.trim() || "मोबाइल डिवाइस",
+			roomId: roomIdInput.trim() || "tej-food-main",
+			syncServerUrl: cleanUrl || void 0
+		});
+		if (!onProbeServer) {
+			if (onReconnectNow) onReconnectNow();
+			return;
+		}
+		setIsTestingServer(true);
+		setTestResult(null);
+		const probe = await onProbeServer(cleanUrl);
+		setTestResult(probe);
+		setIsTestingServer(false);
+		if (probe.ok && onReconnectNow) onReconnectNow();
 	};
 	const handleSwitchMode = (mode) => {
 		const defaultName = mode === "master" ? "मालिक मुख्य मोबाइल (Owner Host)" : "स्टाफ / सेल्समैन मोबाइल";
@@ -22089,7 +22315,12 @@ var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, 
 							className: "flex items-center gap-2 flex-wrap",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: `text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 ${status === "connected" ? "bg-emerald-500 text-slate-950" : "bg-amber-400 text-slate-950"}`,
-								children: status === "connected" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wifi, { className: "w-3 h-3" }), " लाइव सिंक चालू"] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(WifiOff, { className: "w-3 h-3" }), " जुड़ रहा है..."] })
+								children: status === "connected" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wifi, { className: "w-3 h-3" }),
+									" लाइव सिंक चालू (",
+									transportMode === "http" ? "HTTPS" : "WS",
+									")"
+								] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(WifiOff, { className: "w-3 h-3" }), " कनेक्शन नहीं जुड़ा"] })
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "text-[10px] bg-white/10 text-slate-200 font-bold px-2 py-0.5 rounded-full",
 								children: [connectedDevices.length, " डिवाइस ऑनलाइन"]
@@ -22209,17 +22440,57 @@ var LiveSyncModal = ({ onClose, config, status, connectedDevices, recentEvents, 
 									})
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "sm:col-span-12",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-										className: "block text-[11px] font-bold text-slate-700 mb-1",
-										children: "लाइव सिंक सर्वर URL (APK / मोबाइल के लिए)"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-										type: "url",
-										value: serverUrlInput,
-										onChange: (e) => setServerUrlInput(e.target.value),
-										className: "w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500",
-										placeholder: "https://..."
-									})]
+									className: "sm:col-span-12 space-y-2",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "block text-[11px] font-bold text-slate-700",
+											children: "लाइव सिंक सर्वर URL (APK / मोबाइल डेटा के लिए)"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex flex-col sm:flex-row gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "url",
+												value: serverUrlInput,
+												onChange: (e) => setServerUrlInput(e.target.value),
+												className: "flex-1 px-3 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500",
+												placeholder: "https://your-deployed-app.run.app या http://192.168.1.10:3000"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: handleTestServerConnection,
+												disabled: isTestingServer,
+												className: "px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition",
+												children: isTestingServer ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "जाँच हो रही है..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कनेक्शन जांचें व जोड़ें" })] })
+											})]
+										}),
+										(testResult || status !== "connected" && connectionError) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: `rounded-xl p-3 text-[11px] flex items-start gap-2 border ${testResult?.ok ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-rose-50 border-rose-200 text-rose-900"}`,
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: `w-4 h-4 shrink-0 mt-0.5 ${testResult?.ok ? "text-emerald-600" : "text-rose-600"}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "font-bold",
+													children: testResult ? testResult.message : connectionError
+												}), (!testResult || !testResult.ok) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+													className: "text-[10px] leading-relaxed opacity-90",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "मोबाइल डेटा + APK चलाने का तरीका:" }),
+														" Google AI Studio में ऊपर",
+														" ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Deploy / Share App" }),
+														" बटन से ऐप को Cloud Run पर Deploy करें और जो पब्लिक URL मिले (जैसे",
+														" ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+															className: "font-mono",
+															children: "https://...run.app"
+														}),
+														") उसे यहाँ डालकर",
+														" ",
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\"कनेक्शन जांचें व जोड़ें\"" }),
+														" दबाएं।"
+													]
+												})]
+											})]
+										})
+									]
 								})
 							]
 						}),
@@ -47504,6 +47775,8 @@ function App() {
 		onClose: () => setShowLiveSyncModal(false),
 		config: sync.config,
 		status: sync.status,
+		transportMode: sync.transportMode,
+		connectionError: sync.connectionError,
 		connectedDevices: sync.connectedDevices,
 		recentEvents: sync.recentEvents,
 		pendingCount: sync.pendingCount,
@@ -47511,6 +47784,8 @@ function App() {
 		soundEnabled: sync.soundEnabled,
 		onToggleSound: () => sync.setSoundEnabled((prev) => !prev),
 		onUpdateConfig: sync.updateSyncConfig,
+		onReconnectNow: sync.reconnectNow,
+		onProbeServer: sync.probeServerHealth,
 		onPushMasterStateNow: sync.pushMasterStateNow
 	})] });
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -47784,6 +48059,8 @@ function App() {
 				onClose: () => setShowLiveSyncModal(false),
 				config: sync.config,
 				status: sync.status,
+				transportMode: sync.transportMode,
+				connectionError: sync.connectionError,
 				connectedDevices: sync.connectedDevices,
 				recentEvents: sync.recentEvents,
 				pendingCount: sync.pendingCount,
@@ -47791,6 +48068,8 @@ function App() {
 				soundEnabled: sync.soundEnabled,
 				onToggleSound: () => sync.setSoundEnabled((prev) => !prev),
 				onUpdateConfig: sync.updateSyncConfig,
+				onReconnectNow: sync.reconnectNow,
+				onProbeServer: sync.probeServerHealth,
 				onPushMasterStateNow: sync.pushMasterStateNow
 			})
 		]

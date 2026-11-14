@@ -57,6 +57,7 @@ interface ClientConnection {
 
 const rooms = new Map<string, PersistedRoomData>();
 const clients = new Map<WebSocket, ClientConnection>();
+const httpDevices = new Map<string, { roomId: string; device: ConnectedDevice; expiresAt: number }>();
 
 function sanitizeRoomId(raw: string): string {
   const cleaned = (raw || 'tej-food-main').trim().replace(/[^a-zA-Z0-9_-]/g, '-');
@@ -150,13 +151,21 @@ function scheduleRoomSave(room: PersistedRoomData): void {
 }
 
 function getRoomDevices(roomId: string): ConnectedDevice[] {
-  const list: ConnectedDevice[] = [];
-  for (const conn of clients.values()) {
-    if (conn.roomId === roomId && conn.ws.readyState === WebSocket.OPEN) {
-      list.push(conn.device);
+  const byId = new Map<string, ConnectedDevice>();
+  const now = Date.now();
+  for (const [devId, entry] of httpDevices.entries()) {
+    if (entry.expiresAt < now) {
+      httpDevices.delete(devId);
+    } else if (entry.roomId === roomId) {
+      byId.set(devId, entry.device);
     }
   }
-  return list;
+  for (const conn of clients.values()) {
+    if (conn.roomId === roomId && conn.ws.readyState === WebSocket.OPEN) {
+      byId.set(conn.device.deviceId, conn.device);
+    }
+  }
+  return Array.from(byId.values());
 }
 
 function sendJson(ws: WebSocket, msg: WsServerMessage): void {
@@ -215,6 +224,195 @@ async function startServer() {
       devices: getRoomDevices(room.roomId),
       recentEventsCount: room.recentEvents.length,
     });
+  });
+
+  // HTTP REST Sync Fallback Endpoints (for mobile data networks blocking WebSockets)
+  app.post('/api/sync/join', (req, res) => {
+    const { roomId: rawRoomId, deviceId, deviceName, deviceRole, userRole, initialMasterState } =
+      req.body as {
+        roomId?: string;
+        deviceId?: string;
+        deviceName?: string;
+        deviceRole?: SyncDeviceRole;
+        userRole?: UserRole;
+        initialMasterState?: SyncableErpState;
+      };
+
+    const roomId = sanitizeRoomId(rawRoomId || 'tej-food-main');
+    const room = loadOrCreateRoom(roomId);
+    const now = new Date().toISOString();
+
+    if (deviceId) {
+      const device: ConnectedDevice = {
+        deviceId,
+        deviceName: deviceName || 'मोबाइल डिवाइस',
+        deviceRole: deviceRole || 'staff',
+        userRole: userRole || 'salesman',
+        connectedAt: httpDevices.get(deviceId)?.device.connectedAt || now,
+        lastSeenAt: now,
+      };
+      httpDevices.set(deviceId, { roomId, device, expiresAt: Date.now() + 30_000 });
+    }
+
+    if (!room.hasMasterSeed && deviceRole === 'master' && initialMasterState) {
+      room.state = {
+        ...initialMasterState,
+        timestamp: now,
+      };
+      room.hasMasterSeed = true;
+      room.seq += 1;
+      const seedEvent: LiveActivityEvent = {
+        id: `evt-seed-${Date.now()}`,
+        seq: room.seq,
+        timestamp: now,
+        actorDeviceId: deviceId || 'http-master',
+        actorName: deviceName || 'मालिक (Master)',
+        actorRole: userRole || 'admin',
+        category: 'sync',
+        title: 'मुख्य मोबाइल सर्वर कनेक्ट हुआ',
+        detail: `${room.state.orders.length} ऑर्डर व ${room.state.customers.length} ग्राहक सिंक किए गए`,
+      };
+      room.recentEvents = [seedEvent, ...room.recentEvents].slice(0, 60);
+      scheduleRoomSave(room);
+    }
+
+    const devices = getRoomDevices(roomId);
+    broadcastToRoom(roomId, {
+      type: 'presence_update',
+      roomId,
+      devices,
+    });
+
+    res.json({
+      ok: true,
+      roomId,
+      seq: room.seq,
+      hasMasterSeed: room.hasMasterSeed,
+      state: room.state,
+      devices,
+      recentEvents: room.recentEvents,
+    });
+  });
+
+  app.get('/api/sync/poll/:roomId', (req, res) => {
+    const roomId = sanitizeRoomId(req.params.roomId);
+    const room = loadOrCreateRoom(roomId);
+    const sinceSeq = Number(req.query.sinceSeq ?? -1);
+    const deviceId = typeof req.query.deviceId === 'string' ? req.query.deviceId : '';
+    const deviceName = typeof req.query.deviceName === 'string' ? req.query.deviceName : '';
+    const deviceRole = req.query.deviceRole === 'master' ? 'master' : 'staff';
+    const userRole = (typeof req.query.userRole === 'string' ? req.query.userRole : 'salesman') as UserRole;
+
+    if (deviceId) {
+      const now = new Date().toISOString();
+      const prev = httpDevices.get(deviceId);
+      httpDevices.set(deviceId, {
+        roomId,
+        device: {
+          deviceId,
+          deviceName: deviceName || prev?.device.deviceName || 'मोबाइल डिवाइस',
+          deviceRole,
+          userRole,
+          connectedAt: prev?.device.connectedAt || now,
+          lastSeenAt: now,
+        },
+        expiresAt: Date.now() + 30_000,
+      });
+    }
+
+    const devices = getRoomDevices(roomId);
+    const changed = sinceSeq !== room.seq;
+    res.json({
+      ok: true,
+      roomId,
+      seq: room.seq,
+      hasMasterSeed: room.hasMasterSeed,
+      changed,
+      state: changed ? room.state : undefined,
+      devices,
+      recentEvents: room.recentEvents,
+    });
+  });
+
+  app.post('/api/sync/mutation', (req, res) => {
+    const { envelope } = req.body as {
+      envelope?: {
+        mutationId: string;
+        roomId: string;
+        actorDeviceId: string;
+        actorName: string;
+        actorRole: UserRole;
+        timestamp: string;
+        action: Parameters<typeof applyErpMutation>[1];
+      };
+    };
+
+    if (!envelope || !envelope.mutationId || !envelope.action) {
+      res.status(400).json({ ok: false, message: 'Invalid mutation payload' });
+      return;
+    }
+
+    const roomId = sanitizeRoomId(envelope.roomId || 'tej-food-main');
+    const room = loadOrCreateRoom(roomId);
+
+    if (room.processedMutationIds.includes(envelope.mutationId)) {
+      res.json({ ok: true, seq: room.seq, applied: false });
+      return;
+    }
+
+    const paymentSet = new Set(room.processedPaymentIds);
+    const result = applyErpMutation(room.state, envelope.action, paymentSet);
+
+    room.processedMutationIds.push(envelope.mutationId);
+    if (room.processedMutationIds.length > 600) {
+      room.processedMutationIds = room.processedMutationIds.slice(-500);
+    }
+    room.processedPaymentIds = Array.from(paymentSet).slice(-500);
+
+    if (!result.applied) {
+      res.json({ ok: true, seq: room.seq, applied: false });
+      return;
+    }
+
+    room.state = result.nextState;
+    room.seq += 1;
+    if (
+      envelope.action.type === 'master:push_full_state' ||
+      envelope.action.type === 'master:reset_factory' ||
+      envelope.actorRole === 'admin'
+    ) {
+      room.hasMasterSeed = true;
+    }
+
+    const activity: LiveActivityEvent = {
+      id: envelope.mutationId,
+      seq: room.seq,
+      timestamp: envelope.timestamp || new Date().toISOString(),
+      actorDeviceId: envelope.actorDeviceId,
+      actorName: envelope.actorName,
+      actorRole: envelope.actorRole,
+      category: result.activityMeta?.category || 'sync',
+      title: result.activityMeta?.title || 'डेटा अपडेट',
+      detail: result.activityMeta?.detail || '',
+    };
+
+    room.recentEvents = [activity, ...room.recentEvents].slice(0, 60);
+    scheduleRoomSave(room);
+
+    broadcastToRoom(roomId, {
+      type: 'mutation_broadcast',
+      roomId,
+      seq: room.seq,
+      envelope,
+      activity,
+      state:
+        envelope.action.type === 'master:push_full_state' ||
+        envelope.action.type === 'master:reset_factory'
+          ? room.state
+          : undefined,
+    });
+
+    res.json({ ok: true, seq: room.seq, applied: true, activity });
   });
 
   // ---------------------------------------------------------
