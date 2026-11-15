@@ -1,33 +1,31 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  Order, 
-  BagStockItem, 
-  ProductMaster, 
-  RawMaterialStock, 
-  Customer, 
-  ProductionBatch, 
-  ExpenseRecord, 
-  UserProfile, 
+import {
+  Order,
+  UserProfile,
   CompanySettings,
   UserRole,
   OrderStatus,
   BagSize,
-  CustomerPaymentRecord
+  CustomerPaymentRecord,
+  Customer,
+  ProductionBatch,
+  ExpenseRecord,
+  RawMaterialStock,
 } from './types/erp';
-import { 
-  INITIAL_SETTINGS, 
-  INITIAL_PRODUCTS, 
-  INITIAL_RAW_STOCK, 
-  INITIAL_BAG_STOCK, 
-  INITIAL_CUSTOMERS, 
-  INITIAL_STAFF, 
-  INITIAL_ORDERS, 
-  INITIAL_PRODUCTION, 
-  INITIAL_EXPENSES 
+import {
+  INITIAL_SETTINGS,
+  INITIAL_PRODUCTS,
+  INITIAL_RAW_STOCK,
+  INITIAL_BAG_STOCK,
+  INITIAL_CUSTOMERS,
+  INITIAL_STAFF,
+  INITIAL_ORDERS,
+  INITIAL_PRODUCTION,
+  INITIAL_EXPENSES,
 } from './data/initialData';
-import { saveStateToStorage, loadStateFromStorage, AppDatabaseState } from './utils/backup';
+import type { AppDatabaseState } from './utils/backup';
 import { getEffectivePermissions } from './utils/permissions';
-import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { useFirestoreErpSync } from './hooks/useFirestoreErpSync';
 import type { LiveActivityEvent, SyncableErpState } from '../shared/erpSyncTypes';
 
 // Components
@@ -62,23 +60,84 @@ import { ReportsView } from './views/ReportsView';
 import { SettingsView } from './views/SettingsView';
 
 export default function App() {
-  // Load initial from storage or defaults
-  const [initialLoaded, setInitialLoaded] = useState(false);
-  const [settings, setSettings] = useState<CompanySettings>(INITIAL_SETTINGS);
-  const [products, setProducts] = useState<ProductMaster[]>(INITIAL_PRODUCTS);
-  const [rawStock, setRawStock] = useState<RawMaterialStock>(INITIAL_RAW_STOCK);
-  const [bagStock, setBagStock] = useState<BagStockItem[]>(INITIAL_BAG_STOCK);
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [production, setProduction] = useState<ProductionBatch[]>(INITIAL_PRODUCTION);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(INITIAL_EXPENSES);
-  const [staff, setStaff] = useState<UserProfile[]>(INITIAL_STAFF);
-
-  // App UI State & Authentication (Always opens on Login Screen unless Remember Me was saved)
+  // App UI State & Staff Role Authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [currentRole, setCurrentRole] = useState<UserRole>('salesman');
   const [currentStaffId, setCurrentStaffId] = useState<string>('');
+  const autoLoginAttemptedRef = useRef(false);
+
+  // Modals & Live Toast
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [showNewProductionModal, setShowNewProductionModal] = useState(false);
+  const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+  const [showReceivePaymentModal, setShowReceivePaymentModal] = useState(false);
+  const [receivePaymentCustId, setReceivePaymentCustId] = useState<string | undefined>(undefined);
+  const [showRoleSwitcherModal, setShowRoleSwitcherModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showLiveSyncModal, setShowLiveSyncModal] = useState(false);
+  const [installModalTab, setInstallModalTab] = useState<'apk' | 'api'>('apk');
+  const [liveToast, setLiveToast] = useState<LiveActivityEvent | null>(null);
+  const [writeErrorBanner, setWriteErrorBanner] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+
+  const handleRemoteActivity = useCallback((evt: LiveActivityEvent) => {
+    setLiveToast(evt);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setLiveToast(null);
+    }, 6500);
+  }, []);
+
+  // Primary Persistence & Real-time Multi-Mobile Listener via Firebase Firestore onSnapshot
+  const sync = useFirestoreErpSync({
+    currentUserRole: isAuthenticated ? currentRole : 'salesman',
+    isAuthenticatedInErp: isAuthenticated,
+    onRemoteActivity: handleRemoteActivity,
+  });
+
+  const {
+    settings,
+    products,
+    rawStock,
+    bagStock,
+    customers,
+    orders,
+    production,
+    expenses,
+    staff,
+  } = sync;
+
+  // Restore "Remember Me" staff login once Firebase Auth + Firestore snapshot is ready
+  useEffect(() => {
+    if (!sync.firebaseUser || !sync.firestoreReady) {
+      if (!sync.firebaseUser) {
+        autoLoginAttemptedRef.current = false;
+        setIsAuthenticated(false);
+      }
+      return;
+    }
+
+    if (autoLoginAttemptedRef.current) return;
+    autoLoginAttemptedRef.current = true;
+
+    const rememberedId =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('tej_food_remembered_user_id')
+        : null;
+    if (rememberedId) {
+      const rememberedUser = staff.find((s) => s.id === rememberedId && s.active);
+      if (rememberedUser) {
+        setCurrentStaffId(rememberedUser.id);
+        setCurrentRole(rememberedUser.role);
+        setIsAuthenticated(true);
+      } else if (typeof window !== 'undefined') {
+        localStorage.removeItem('tej_food_remembered_user_id');
+      }
+    }
+  }, [sync.firebaseUser, sync.firestoreReady, staff]);
 
   const activeStaffMember =
     staff.find((s) => s.id === currentStaffId) ||
@@ -125,6 +184,21 @@ export default function App() {
     }
   }, [activeTab, isTabAllowed]);
 
+  const runMutation = useCallback(
+    (action: Parameters<typeof sync.dispatchMutation>[0]) => {
+      setWriteErrorBanner(null);
+      sync.dispatchMutation(action, activeStaffMember?.name).catch((err) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        setWriteErrorBanner(
+          msg.includes('permission') || msg.includes('PERMISSION_DENIED')
+            ? 'इस कार्य को Firestore में सेव करने की अनुमति नहीं है। कृपया Admin खाते से जांचें।'
+            : `डेटा सेव करने में त्रुटि: ${msg}`
+        );
+      });
+    },
+    [sync, activeStaffMember?.name]
+  );
+
   const handleSelectStaffMember = (member: UserProfile) => {
     setCurrentStaffId(member.id);
     setCurrentRole(member.role);
@@ -137,21 +211,6 @@ export default function App() {
       setCurrentStaffId(matched.id);
     }
   };
-
-  // Modals
-  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
-  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
-  const [showNewProductionModal, setShowNewProductionModal] = useState(false);
-  const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
-  const [showReceivePaymentModal, setShowReceivePaymentModal] = useState(false);
-  const [receivePaymentCustId, setReceivePaymentCustId] = useState<string | undefined>(undefined);
-  const [showRoleSwitcherModal, setShowRoleSwitcherModal] = useState(false);
-  const [showInstallModal, setShowInstallModal] = useState(false);
-  const [showLiveSyncModal, setShowLiveSyncModal] = useState(false);
-  const [installModalTab, setInstallModalTab] = useState<'apk' | 'api'>('apk');
-  const [liveToast, setLiveToast] = useState<LiveActivityEvent | null>(null);
-  const toastTimerRef = useRef<number | null>(null);
 
   const handleOpenInstallModal = (tab: 'apk' | 'api' = 'apk') => {
     setInstallModalTab(tab);
@@ -170,11 +229,6 @@ export default function App() {
         localStorage.removeItem('tej_food_remembered_user_id');
       }
     }
-    if (member.role === 'admin' && sync.config.deviceRole === 'master' && !sync.hasMasterSeed) {
-      window.setTimeout(() => {
-        sync.pushMasterStateNow();
-      }, 250);
-    }
   };
 
   const handleLogout = () => {
@@ -189,169 +243,61 @@ export default function App() {
   };
 
   const handleResetPassword = (updatedMember: UserProfile) => {
-    sync.dispatchMutation({ type: 'staff:update', staffMember: updatedMember });
+    runMutation({ type: 'staff:update', staffMember: updatedMember });
   };
 
-  // Load on mount
-  useEffect(() => {
-    const saved = loadStateFromStorage();
-    let loadedStaff = INITIAL_STAFF;
-    if (saved) {
-      if (saved.settings) setSettings(saved.settings);
-      if (saved.products) setProducts(saved.products);
-      if (saved.rawStock) setRawStock(saved.rawStock);
-      if (saved.bagStock) setBagStock(saved.bagStock);
-      if (saved.customers) setCustomers(saved.customers);
-      if (saved.orders) setOrders(saved.orders);
-      if (saved.production) setProduction(saved.production);
-      if (saved.expenses) setExpenses(saved.expenses);
-      if (saved.staff) {
-        setStaff(saved.staff);
-        loadedStaff = saved.staff;
-      }
-    }
-    const rememberedId =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('tej_food_remembered_user_id')
-        : null;
-    if (rememberedId) {
-      const rememberedUser = loadedStaff.find(
-        (s) => s.id === rememberedId && s.active
-      );
-      if (rememberedUser) {
-        setCurrentStaffId(rememberedUser.id);
-        setCurrentRole(rememberedUser.role);
-        setIsAuthenticated(true);
-      } else if (typeof window !== 'undefined') {
-        localStorage.removeItem('tej_food_remembered_user_id');
-      }
-    }
-    setInitialLoaded(true);
-  }, []);
-
-  // Save on state change after initial load (100% Mobile LocalStorage, Zero Cloud Cost)
-  useEffect(() => {
-    if (!initialLoaded) return;
-    const currentState: AppDatabaseState = {
-      version: '2.4.0',
-      timestamp: new Date().toISOString(),
-      settings,
-      products,
-      rawStock,
-      bagStock,
-      customers,
-      orders,
-      production,
-      expenses,
-      staff,
-    };
-    saveStateToStorage(currentState);
-  }, [initialLoaded, settings, products, rawStock, bagStock, customers, orders, production, expenses, staff]);
-
-  const getCurrentSyncState = useCallback((): SyncableErpState => ({
-    version: '2.4.0',
-    timestamp: new Date().toISOString(),
-    settings,
-    products,
-    rawStock,
-    bagStock,
-    customers,
-    orders,
-    production,
-    expenses,
-    staff,
-  }), [settings, products, rawStock, bagStock, customers, orders, production, expenses, staff]);
-
-  const applySyncedFullState = useCallback((next: SyncableErpState) => {
-    if (next.settings) setSettings(next.settings);
-    if (next.products) setProducts(next.products);
-    if (next.rawStock) setRawStock(next.rawStock);
-    if (next.bagStock) setBagStock(next.bagStock);
-    if (next.customers) setCustomers(next.customers);
-    if (next.orders) setOrders(next.orders);
-    if (next.production) setProduction(next.production);
-    if (next.expenses) setExpenses(next.expenses);
-    if (next.staff) setStaff(next.staff);
-  }, []);
-
-  const handleRemoteActivity = useCallback((evt: LiveActivityEvent) => {
-    setLiveToast(evt);
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => {
-      setLiveToast(null);
-    }, 6500);
-  }, []);
-
-  const sync = useRealtimeSync({
-    currentUserRole: isAuthenticated ? currentRole : 'salesman',
-    getCurrentState: getCurrentSyncState,
-    applyFullState: applySyncedFullState,
-    isAppLoaded: initialLoaded,
-    onRemoteActivity: handleRemoteActivity,
-  });
-
-  // Handler: New Order
+  // Handlers dispatching directly to Firebase Firestore
   const handleOrderCreated = (newOrder: Order) => {
-    sync.dispatchMutation({ type: 'order:create', order: newOrder });
+    runMutation({ type: 'order:create', order: newOrder });
     setShowNewOrderModal(false);
     setSelectedOrderForInvoice(newOrder);
   };
 
-  // Handler: New Production Batch
   const handleProductionCreated = (batch: ProductionBatch) => {
-    sync.dispatchMutation({ type: 'production:create', batch });
+    runMutation({ type: 'production:create', batch });
     setShowNewProductionModal(false);
   };
 
-  // Handler: New Expense
   const handleExpenseCreated = (newExp: ExpenseRecord) => {
-    sync.dispatchMutation({ type: 'expense:create', expense: newExp });
+    runMutation({ type: 'expense:create', expense: newExp });
     setShowNewExpenseModal(false);
   };
 
-  // Handler: New Customer
   const handleCustomerCreated = (newCust: Customer) => {
-    sync.dispatchMutation({ type: 'customer:create', customer: newCust });
+    runMutation({ type: 'customer:create', customer: newCust });
     setShowNewCustomerModal(false);
   };
 
-  // Handler: Update Customer
   const handleCustomerUpdated = (updatedCust: Customer) => {
-    sync.dispatchMutation({ type: 'customer:update', customer: updatedCust });
+    runMutation({ type: 'customer:update', customer: updatedCust });
   };
 
-  // Handler: Delete Customer
   const handleCustomerDeleted = (customerId: string) => {
-    sync.dispatchMutation({ type: 'customer:delete', customerId });
+    runMutation({ type: 'customer:delete', customerId });
   };
 
-  // Handler: Add Staff (Admin / permitted staff only)
   const handleStaffAdded = (newStaff: UserProfile) => {
     if (!canManageStaff) return;
-    sync.dispatchMutation({ type: 'staff:create', staffMember: newStaff });
+    runMutation({ type: 'staff:create', staffMember: newStaff });
   };
 
-  // Handler: Update Staff (Admin / permitted staff only)
   const handleStaffUpdated = (updatedStaff: UserProfile) => {
     if (!canManageStaff) return;
-    sync.dispatchMutation({ type: 'staff:update', staffMember: updatedStaff });
+    runMutation({ type: 'staff:update', staffMember: updatedStaff });
   };
 
-  // Handler: Delete Staff (Admin / permitted staff only)
   const handleStaffDeleted = (staffId: string) => {
     if (!canManageStaff) return;
-    sync.dispatchMutation({ type: 'staff:delete', staffId });
+    runMutation({ type: 'staff:delete', staffId });
   };
 
-  // Handler: Payment Received
   const handlePaymentReceived = (payment: CustomerPaymentRecord) => {
-    sync.dispatchMutation({ type: 'payment:receive', payment });
+    runMutation({ type: 'payment:receive', payment });
     setShowReceivePaymentModal(false);
   };
 
-  // Handler: Order status change
   const handleOrderStatusUpdate = (orderId: string, newStatus: OrderStatus) => {
-    sync.dispatchMutation({
+    runMutation({
       type: 'order:status',
       orderId,
       newStatus,
@@ -362,55 +308,56 @@ export default function App() {
     });
   };
 
-  // Handler: Update Order
   const handleOrderUpdated = (updatedOrder: Order, originalOrder: Order) => {
-    sync.dispatchMutation({ type: 'order:update', updatedOrder, originalOrder });
+    runMutation({ type: 'order:update', updatedOrder, originalOrder });
   };
 
-  // Handler: Delete Order
   const handleOrderDeleted = (orderId: string) => {
-    sync.dispatchMutation({ type: 'order:delete', orderId });
+    runMutation({ type: 'order:delete', orderId });
   };
 
-  // Handler: Update Production Batch
-  const handleProductionUpdated = (updatedBatch: ProductionBatch, originalBatch: ProductionBatch) => {
-    sync.dispatchMutation({ type: 'production:update', updatedBatch, originalBatch });
+  const handleProductionUpdated = (
+    updatedBatch: ProductionBatch,
+    originalBatch: ProductionBatch
+  ) => {
+    runMutation({ type: 'production:update', updatedBatch, originalBatch });
   };
 
-  // Handler: Delete Production Batch
   const handleProductionDeleted = (batchId: string) => {
-    sync.dispatchMutation({ type: 'production:delete', batchId });
+    runMutation({ type: 'production:delete', batchId });
   };
 
-  // Handler: Raw Stock update
   const handleRawStockUpdate = (newRaw: RawMaterialStock) => {
-    sync.dispatchMutation({ type: 'stock:raw_update', rawStock: newRaw });
+    runMutation({ type: 'stock:raw_update', rawStock: newRaw });
   };
 
-  // Handler: Bag Stock count update
-  const handleBagStockUpdate = (productId: string, bagSize: BagSize, newCount: number) => {
-    sync.dispatchMutation({ type: 'stock:bag_update', productId, bagSize, newCount });
+  const handleBagStockUpdate = (
+    productId: string,
+    bagSize: BagSize,
+    newCount: number
+  ) => {
+    runMutation({ type: 'stock:bag_update', productId, bagSize, newCount });
   };
 
-  // Handler: Save Settings
   const handleSaveSettings = (newSettings: CompanySettings) => {
-    sync.dispatchMutation({ type: 'settings:update', settings: newSettings });
+    runMutation({ type: 'settings:update', settings: newSettings });
   };
 
-  // Handler: Update product default rates
-  const handleUpdateProductRate = (productId: string, bagSize: BagSize, rate: number) => {
-    sync.dispatchMutation({ type: 'product:rate_update', productId, bagSize, rate });
+  const handleUpdateProductRate = (
+    productId: string,
+    bagSize: BagSize,
+    rate: number
+  ) => {
+    runMutation({ type: 'product:rate_update', productId, bagSize, rate });
   };
 
-  // Handler: Restore State
   const handleRestoreState = (restored: AppDatabaseState) => {
-    sync.dispatchMutation({ type: 'master:push_full_state', fullState: restored });
+    runMutation({ type: 'master:push_full_state', fullState: restored });
   };
 
-  // Handler: Reset Factory Seeds
   const handleResetFactorySeeds = () => {
     const defaultState: SyncableErpState = {
-      version: '2.4.0',
+      version: '2.5.0',
       timestamp: new Date().toISOString(),
       settings: INITIAL_SETTINGS,
       products: INITIAL_PRODUCTS,
@@ -422,14 +369,16 @@ export default function App() {
       expenses: INITIAL_EXPENSES,
       staff: INITIAL_STAFF,
     };
-    sync.dispatchMutation({ type: 'master:reset_factory', fullState: defaultState });
+    runMutation({ type: 'master:reset_factory', fullState: defaultState });
   };
 
   // Notification Counters
-  const pendingOrdersCount = orders.filter(o => o.status === 'pending' || o.status === 'in_production').length;
-  const lowStockCount = bagStock.filter(b => b.packedCount <= b.minThreshold).length;
+  const pendingOrdersCount = orders.filter(
+    (o) => o.status === 'pending' || o.status === 'in_production'
+  ).length;
+  const lowStockCount = bagStock.filter((b) => b.packedCount <= b.minThreshold).length;
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !sync.firebaseUser || !sync.firestoreReady) {
     return (
       <>
         <LoginScreen
@@ -439,6 +388,15 @@ export default function App() {
           connectedDevicesCount={sync.connectedDevices.length}
           syncRoomId={sync.config.roomId}
           syncServerUrl={sync.config.syncServerUrl}
+          authReady={sync.authReady}
+          firebaseEmail={sync.firebaseUser?.email}
+          authError={sync.authError}
+          isSigningIn={sync.isSigningIn}
+          firestoreReady={sync.firestoreReady}
+          accessDenied={sync.accessDenied}
+          connectionError={sync.connectionError}
+          onGoogleSignIn={sync.signInWithGoogle}
+          onGoogleSignOut={sync.signOutGoogle}
           onLoginSuccess={handleLoginSuccess}
           onResetPassword={handleResetPassword}
           onOpenLiveSync={() => setShowLiveSyncModal(true)}
@@ -448,11 +406,10 @@ export default function App() {
             onClose={() => setShowLiveSyncModal(false)}
             config={sync.config}
             status={sync.status}
-            transportMode={sync.transportMode}
+            firebaseEmail={sync.firebaseUser?.email}
             connectionError={sync.connectionError}
             connectedDevices={sync.connectedDevices}
             recentEvents={sync.recentEvents}
-            pendingCount={sync.pendingCount}
             lastSyncedAt={sync.lastSyncedAt}
             soundEnabled={sync.soundEnabled}
             onToggleSound={() => sync.setSoundEnabled((prev) => !prev)}
@@ -460,6 +417,8 @@ export default function App() {
             onReconnectNow={sync.reconnectNow}
             onProbeServer={sync.probeServerHealth}
             onPushMasterStateNow={sync.pushMasterStateNow}
+            onGoogleSignIn={sync.signInWithGoogle}
+            onGoogleSignOut={sync.signOutGoogle}
           />
         )}
       </>
@@ -477,7 +436,7 @@ export default function App() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
-                लाइव मोबाइल अपडेट
+                लाइव मोबाइल अपडेट (Firestore)
               </span>
               <span className="text-[10px] text-slate-400">अभी</span>
             </div>
@@ -493,6 +452,20 @@ export default function App() {
             className="p-1 text-slate-400 hover:text-white rounded-lg"
           >
             <CloseIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Firestore Write Error Banner (if any) */}
+      {writeErrorBanner && (
+        <div className="bg-rose-600 text-white px-4 py-2 text-xs font-bold flex items-center justify-between gap-2">
+          <span>{writeErrorBanner}</span>
+          <button
+            type="button"
+            onClick={() => setWriteErrorBanner(null)}
+            className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 cursor-pointer"
+          >
+            बंद करें
           </button>
         </div>
       )}
@@ -522,7 +495,6 @@ export default function App() {
 
       {/* Main Layout Area */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        {/* Sidebar for Desktop */}
         <Sidebar
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -533,7 +505,6 @@ export default function App() {
           onOpenInstallModal={() => handleOpenInstallModal('apk')}
         />
 
-        {/* Dynamic View Area */}
         <main className="flex-1 p-3 sm:p-6 overflow-y-auto">
           {activeTab === 'dashboard' && (
             <DashboardView
@@ -758,11 +729,11 @@ export default function App() {
 
       {/* Free App (APK) & API Download Center Modal */}
       {showInstallModal && (
-        <InstallModal 
+        <InstallModal
           onClose={() => setShowInstallModal(false)}
           initialTab={installModalTab}
           currentState={{
-            version: '2.4.0',
+            version: '2.5.0',
             timestamp: new Date().toISOString(),
             settings,
             products,
@@ -777,17 +748,16 @@ export default function App() {
         />
       )}
 
-      {/* Real-time Mobile Server & Multi-Device Sync Modal */}
+      {/* Real-time Firebase Cloud Sync Modal */}
       {showLiveSyncModal && (
         <LiveSyncModal
           onClose={() => setShowLiveSyncModal(false)}
           config={sync.config}
           status={sync.status}
-          transportMode={sync.transportMode}
+          firebaseEmail={sync.firebaseUser?.email}
           connectionError={sync.connectionError}
           connectedDevices={sync.connectedDevices}
           recentEvents={sync.recentEvents}
-          pendingCount={sync.pendingCount}
           lastSyncedAt={sync.lastSyncedAt}
           soundEnabled={sync.soundEnabled}
           onToggleSound={() => sync.setSoundEnabled((prev) => !prev)}
@@ -795,6 +765,8 @@ export default function App() {
           onReconnectNow={sync.reconnectNow}
           onProbeServer={sync.probeServerHealth}
           onPushMasterStateNow={sync.pushMasterStateNow}
+          onGoogleSignIn={sync.signInWithGoogle}
+          onGoogleSignOut={sync.signOutGoogle}
         />
       )}
     </div>

@@ -550,10 +550,19 @@ async function startServer() {
 
   app.post('/api/auth/request-reset-otp', async (req, res) => {
     try {
-      const { identifier, email, roomId: rawRoomId } = req.body as {
+      const { identifier, email, roomId: rawRoomId, staffHint } = req.body as {
         identifier?: string;
         email?: string;
         roomId?: string;
+        staffHint?: {
+          id?: string;
+          name?: string;
+          phone?: string;
+          email?: string;
+          role?: string;
+          active?: boolean;
+          companyName?: string;
+        };
       };
 
       const providerInfo = getEmailProviderInfo();
@@ -583,13 +592,25 @@ async function startServer() {
       const inputDigits = normalizePhoneDigits(cleanId);
       const lowerId = cleanId.toLowerCase();
 
-      const member = room.state.staff.find((s) => {
+      const roomMember = room.state.staff.find((s) => {
         const phoneDigits = normalizePhoneDigits(s.phone || '');
         const phoneMatch = inputDigits.length >= 6 && phoneDigits === inputDigits;
         const emailMatch = Boolean(s.email) && s.email!.trim().toLowerCase() === lowerId;
         const nameMatch = s.name.trim().toLowerCase() === lowerId;
         return phoneMatch || emailMatch || nameMatch;
       });
+
+      const member =
+        staffHint && staffHint.id && staffHint.name
+          ? {
+              id: staffHint.id,
+              name: staffHint.name,
+              phone: staffHint.phone || '',
+              email: staffHint.email,
+              role: staffHint.role || 'staff',
+              active: staffHint.active !== false,
+            }
+          : roomMember;
 
       if (!member) {
         res.status(404).json({
@@ -658,7 +679,7 @@ async function startServer() {
       await sendOtpEmail({
         toEmail: registeredEmail,
         recipientName: member.name,
-        companyName: room.state.settings.companyName || 'Shri Tej Food Products',
+        companyName: staffHint?.companyName || room.state.settings.companyName || 'Shri Tej Food Products',
         otp,
       });
 
@@ -678,12 +699,22 @@ async function startServer() {
   });
 
   app.post('/api/auth/verify-reset-otp', (req, res) => {
-    const { identifier, email, otp, newPassword, roomId: rawRoomId } = req.body as {
+    const { identifier, email, otp, newPassword, roomId: rawRoomId, staffHint } = req.body as {
       identifier?: string;
       email?: string;
       otp?: string;
       newPassword?: string;
       roomId?: string;
+      staffHint?: {
+        id?: string;
+        name?: string;
+        phone?: string;
+        email?: string;
+        role?: string;
+        roleHindi?: string;
+        active?: boolean;
+        joinedDate?: string;
+      };
     };
 
     const roomId = sanitizeRoomId(rawRoomId || 'tej-food-main');
@@ -713,13 +744,28 @@ async function startServer() {
     const inputDigits = normalizePhoneDigits(cleanId);
     const lowerId = cleanId.toLowerCase();
 
-    const member = room.state.staff.find((s) => {
+    const roomMember = room.state.staff.find((s) => {
       const phoneDigits = normalizePhoneDigits(s.phone || '');
       const phoneMatch = inputDigits.length >= 6 && phoneDigits === inputDigits;
       const emailMatch = Boolean(s.email) && s.email!.trim().toLowerCase() === lowerId;
       const nameMatch = s.name.trim().toLowerCase() === lowerId;
       return phoneMatch || emailMatch || nameMatch;
     });
+
+    const member =
+      staffHint && staffHint.id && staffHint.name
+        ? {
+            ...(roomMember || {}),
+            ...staffHint,
+            id: staffHint.id,
+            name: staffHint.name,
+            phone: staffHint.phone || roomMember?.phone || '',
+            role: (staffHint.role || roomMember?.role || 'salesman') as typeof room.state.staff[number]['role'],
+            roleHindi: staffHint.roleHindi || roomMember?.roleHindi || 'स्टाफ',
+            active: staffHint.active !== false,
+            joinedDate: staffHint.joinedDate || roomMember?.joinedDate || new Date().toISOString().slice(0, 10),
+          }
+        : roomMember;
 
     if (!member || !member.active) {
       res.status(404).json({

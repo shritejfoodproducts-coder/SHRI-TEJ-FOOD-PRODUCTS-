@@ -1,0 +1,315 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null &&
+             request.auth.token.email != null &&
+             request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function authEmailLower() {
+      return request.auth.token.email.lower();
+    }
+
+    function isBootstrappedAdmin() {
+      return isAuthenticated() &&
+             authEmailLower() == 'shritejfoodproducts@gmail.com';
+    }
+
+    function isFactoryOwner(factoryId) {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/factories/$(factoryId)) &&
+             get(/databases/$(database)/documents/factories/$(factoryId)).data.ownerUid == request.auth.uid;
+    }
+
+    function isFactoryAdmin(factoryId) {
+      return isBootstrappedAdmin() ||
+             isFactoryOwner(factoryId) ||
+             (isAuthenticated() &&
+              exists(/databases/$(database)/documents/factories/$(factoryId)/authorizedUsers/$(authEmailLower())) &&
+              get(/databases/$(database)/documents/factories/$(factoryId)/authorizedUsers/$(authEmailLower())).data.role == 'admin');
+    }
+
+    function isFactoryMember(factoryId) {
+      return isFactoryAdmin(factoryId) ||
+             (isAuthenticated() &&
+              exists(/databases/$(database)/documents/factories/$(factoryId)/authorizedUsers/$(authEmailLower())));
+    }
+
+    function isNonEmptyString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    function isValidUserAccount(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'factoryId']) &&
+             data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'factoryId', 'createdAt', 'lastLoginAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.email.size() <= 150 &&
+             data.role in ['admin', 'staff'] &&
+             isNonEmptyString(data.factoryId, 80);
+    }
+
+    function isValidFactoryWorkspace(data) {
+      return data.keys().hasAll(['roomId', 'version', 'ownerUid', 'settings', 'products', 'rawStock', 'bagStock']) &&
+             data.keys().hasOnly(['roomId', 'version', 'ownerUid', 'ownerEmail', 'timestamp', 'settings', 'products', 'rawStock', 'bagStock']) &&
+             isNonEmptyString(data.roomId, 80) &&
+             isNonEmptyString(data.version, 30) &&
+             isNonEmptyString(data.ownerUid, 128) &&
+             data.settings is map &&
+             data.products is list &&
+             data.rawStock is map &&
+             data.bagStock is list;
+    }
+
+    function isValidAuthorizedUser(data) {
+      return data.keys().hasAll(['email', 'role', 'addedByUid', 'createdAt']) &&
+             data.keys().hasOnly(['email', 'role', 'staffId', 'addedByUid', 'createdAt']) &&
+             isNonEmptyString(data.email, 150) &&
+             data.role in ['admin', 'staff'] &&
+             isNonEmptyString(data.addedByUid, 128) &&
+             isNonEmptyString(data.createdAt, 64);
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['id', 'name', 'firmName', 'phone', 'address', 'city', 'type', 'totalOrders', 'totalPurchased', 'totalPaid', 'currentDue', 'creditLimit']) &&
+             data.keys().hasOnly(['id', 'name', 'firmName', 'phone', 'email', 'address', 'city', 'gstin', 'type', 'totalOrders', 'totalPurchased', 'totalPaid', 'currentDue', 'creditLimit', 'lastOrderDate', 'updatedAt']) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.name, 120) &&
+             data.firmName is string && data.firmName.size() <= 150 &&
+             data.phone is string && data.phone.size() <= 30 &&
+             data.type in ['retailer', 'wholesaler', 'caterer', 'direct'] &&
+             data.totalOrders is number && data.totalOrders >= 0 &&
+             data.totalPurchased is number && data.totalPurchased >= 0 &&
+             data.totalPaid is number && data.totalPaid >= 0 &&
+             data.currentDue is number && data.currentDue >= 0 &&
+             data.creditLimit is number && data.creditLimit >= 0;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'invoiceNumber', 'customerId', 'customerName', 'date', 'billType', 'items', 'subtotal', 'taxAmount', 'discount', 'freightCharges', 'totalAmount', 'paidAmount', 'paymentMode', 'dueAmount', 'status']) &&
+             data.keys().hasOnly([
+               'id', 'invoiceNumber', 'customerId', 'customerName', 'customerFirm', 'customerPhone', 'customerAddress',
+               'date', 'billType', 'items', 'subtotal', 'taxAmount', 'discount', 'freightCharges',
+               'totalAmount', 'paidAmount', 'paymentMode', 'dueAmount', 'status',
+               'deliveryStaffId', 'deliveryStaffName', 'vehicleNumber', 'deliveredAt', 'notes',
+               'createdByUid', 'updatedAt'
+             ]) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.invoiceNumber, 60) &&
+             isNonEmptyString(data.customerId, 80) &&
+             isNonEmptyString(data.customerName, 120) &&
+             data.billType in ['gst', 'non_gst'] &&
+             data.items is list && data.items.size() > 0 && data.items.size() <= 100 &&
+             data.paymentMode in ['cash', 'bank', 'upi', 'credit', 'partial'] &&
+             data.status in ['pending', 'in_production', 'ready_dispatch', 'dispatched', 'delivered', 'cancelled'] &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.paidAmount is number && data.paidAmount >= 0 &&
+             data.dueAmount is number && data.dueAmount >= 0;
+    }
+
+    function isValidProduction(data) {
+      return data.keys().hasAll(['id', 'batchNumber', 'date', 'time', 'productId', 'productName', 'shift', 'operatorName', 'wheatInputKg', 'attaOutputKg', 'chokerOutputKg', 'lossKg', 'lossPercentage', 'packedBags', 'status']) &&
+             data.keys().hasOnly([
+               'id', 'batchNumber', 'date', 'time', 'productId', 'productName', 'shift', 'operatorName',
+               'wheatInputKg', 'attaOutputKg', 'chokerOutputKg', 'lossKg', 'lossPercentage',
+               'packedBags', 'electricityUnits', 'status', 'notes', 'createdByUid', 'updatedAt'
+             ]) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.batchNumber, 60) &&
+             isNonEmptyString(data.productId, 80) &&
+             isNonEmptyString(data.productName, 120) &&
+             data.wheatInputKg is number && data.wheatInputKg >= 0 &&
+             data.attaOutputKg is number && data.attaOutputKg >= 0 &&
+             data.chokerOutputKg is number && data.chokerOutputKg >= 0 &&
+             data.packedBags is map &&
+             data.status in ['completed', 'in_progress'];
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['id', 'date', 'category', 'categoryHindi', 'title', 'amount', 'paymentMode', 'paidTo', 'voucherNo', 'recordedBy']) &&
+             data.keys().hasOnly(['id', 'date', 'category', 'categoryHindi', 'title', 'amount', 'paymentMode', 'paidTo', 'voucherNo', 'recordedBy', 'notes', 'createdByUid', 'updatedAt']) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.title, 200) &&
+             data.amount is number && data.amount >= 0 &&
+             data.paymentMode in ['cash', 'bank', 'upi'] &&
+             isNonEmptyString(data.voucherNo, 60) &&
+             isNonEmptyString(data.recordedBy, 120);
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll(['id', 'customerId', 'customerName', 'date', 'amount', 'paymentMode', 'receivedBy']) &&
+             data.keys().hasOnly(['id', 'customerId', 'customerName', 'orderId', 'date', 'amount', 'paymentMode', 'referenceNo', 'receivedBy', 'notes', 'createdByUid']) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.customerId, 80) &&
+             isNonEmptyString(data.customerName, 120) &&
+             data.amount is number && data.amount > 0 &&
+             data.paymentMode in ['cash', 'bank', 'upi'] &&
+             isNonEmptyString(data.receivedBy, 120);
+    }
+
+    function isValidStaff(data) {
+      return data.keys().hasAll(['id', 'name', 'phone', 'role', 'roleHindi', 'active', 'joinedDate']) &&
+             data.keys().hasOnly(['id', 'name', 'phone', 'email', 'role', 'roleHindi', 'password', 'active', 'shift', 'assignedVehicle', 'joinedDate', 'permissions', 'updatedAt']) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.name, 120) &&
+             isNonEmptyString(data.phone, 30) &&
+             data.role in ['admin', 'manager', 'accountant', 'store_keeper', 'production_head', 'packing_staff', 'delivery_staff', 'salesman'] &&
+             data.active is bool &&
+             isNonEmptyString(data.joinedDate, 40);
+    }
+
+    function isValidDevice(data) {
+      return data.keys().hasAll(['deviceId', 'deviceName', 'deviceRole', 'userRole', 'uid', 'connectedAt', 'lastSeenAt']) &&
+             data.keys().hasOnly(['deviceId', 'deviceName', 'deviceRole', 'userRole', 'uid', 'connectedAt', 'lastSeenAt']) &&
+             isNonEmptyString(data.deviceId, 80) &&
+             isNonEmptyString(data.deviceName, 120) &&
+             data.deviceRole in ['master', 'staff'] &&
+             isNonEmptyString(data.userRole, 40) &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidActivity(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'actorDeviceId', 'actorName', 'actorRole', 'category', 'title', 'detail']) &&
+             data.keys().hasOnly(['id', 'seq', 'timestamp', 'actorDeviceId', 'actorName', 'actorRole', 'category', 'title', 'detail']) &&
+             isNonEmptyString(data.id, 80) &&
+             isNonEmptyString(data.actorDeviceId, 80) &&
+             isNonEmptyString(data.actorName, 120) &&
+             isNonEmptyString(data.title, 200) &&
+             data.detail is string && data.detail.size() <= 400;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /test/connection {
+      allow read: if isAuthenticated();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isBootstrappedAdmin();
+      allow create: if isOwner(userId) &&
+                       isValidUserAccount(request.resource.data) &&
+                       request.resource.data.uid == request.auth.uid &&
+                       (request.resource.data.role == 'staff' || isBootstrappedAdmin());
+      allow update: if isValidUserAccount(request.resource.data) &&
+                       request.resource.data.uid == resource.data.uid &&
+                       ((isOwner(userId) && (request.resource.data.role == resource.data.role || isBootstrappedAdmin())) ||
+                        isBootstrappedAdmin());
+      allow delete: if isBootstrappedAdmin();
+    }
+
+    match /factories/{factoryId} {
+      allow read: if isFactoryMember(factoryId) || isBootstrappedAdmin();
+      allow create: if isValidFactoryWorkspace(request.resource.data) &&
+                       request.resource.data.roomId == factoryId &&
+                       (isBootstrappedAdmin() ||
+                        (factoryId != 'tej-food-main' &&
+                         isAuthenticated() &&
+                         request.resource.data.ownerUid == request.auth.uid));
+      allow update: if isFactoryMember(factoryId) &&
+                       isValidFactoryWorkspace(request.resource.data) &&
+                       request.resource.data.roomId == resource.data.roomId &&
+                       request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isFactoryAdmin(factoryId);
+
+      match /authorizedUsers/{emailLower} {
+        allow read: if isFactoryAdmin(factoryId) ||
+                       (isAuthenticated() && authEmailLower() == emailLower);
+        allow create, update: if isFactoryAdmin(factoryId) &&
+                                 isValidAuthorizedUser(request.resource.data) &&
+                                 request.resource.data.email.lower() == emailLower;
+        allow delete: if isFactoryAdmin(factoryId);
+      }
+
+      match /staff/{staffId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create: if isFactoryAdmin(factoryId) &&
+                         isValidStaff(request.resource.data) &&
+                         request.resource.data.id == staffId;
+        allow update: if isValidStaff(request.resource.data) &&
+                         request.resource.data.id == resource.data.id &&
+                         (isFactoryAdmin(factoryId) ||
+                          (isFactoryMember(factoryId) &&
+                           resource.data.email is string &&
+                           resource.data.email.lower() == authEmailLower() &&
+                           request.resource.data.role == resource.data.role &&
+                           request.resource.data.active == resource.data.active &&
+                           request.resource.data.permissions == resource.data.permissions));
+        allow delete: if isFactoryAdmin(factoryId);
+      }
+
+      match /customers/{customerId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create, update: if isFactoryMember(factoryId) &&
+                                 isValidCustomer(request.resource.data) &&
+                                 request.resource.data.id == customerId;
+        allow delete: if isFactoryMember(factoryId);
+      }
+
+      match /orders/{orderId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create, update: if isFactoryMember(factoryId) &&
+                                 isValidOrder(request.resource.data) &&
+                                 request.resource.data.id == orderId;
+        allow delete: if isFactoryMember(factoryId);
+      }
+
+      match /production/{batchId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create, update: if isFactoryMember(factoryId) &&
+                                 isValidProduction(request.resource.data) &&
+                                 request.resource.data.id == batchId;
+        allow delete: if isFactoryMember(factoryId);
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create, update: if isFactoryMember(factoryId) &&
+                                 isValidExpense(request.resource.data) &&
+                                 request.resource.data.id == expenseId;
+        allow delete: if isFactoryMember(factoryId);
+      }
+
+      match /payments/{paymentId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create: if isFactoryMember(factoryId) &&
+                         isValidPayment(request.resource.data) &&
+                         request.resource.data.id == paymentId;
+        allow update, delete: if isFactoryAdmin(factoryId);
+      }
+
+      match /devices/{deviceId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create, update: if isFactoryMember(factoryId) &&
+                                 isValidDevice(request.resource.data) &&
+                                 request.resource.data.deviceId == deviceId;
+        allow delete: if isFactoryAdmin(factoryId) ||
+                         (isFactoryMember(factoryId) && resource.data.uid == request.auth.uid);
+      }
+
+      match /activity/{eventId} {
+        allow read: if isFactoryMember(factoryId);
+        allow create: if isFactoryMember(factoryId) &&
+                         isValidActivity(request.resource.data) &&
+                         request.resource.data.id == eventId;
+        allow update, delete: if isFactoryAdmin(factoryId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Authenticated Firebase user profile linked to a factory ERP workspace",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "staff"] },
+        "factoryId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "lastLoginAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role", "factoryId"]
+    },
+    "FactoryWorkspace": {
+      "title": "FactoryWorkspace",
+      "description": "Root factory document storing company settings, product masters, raw wheat stock, and packed bag inventory",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string" },
+        "version": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "ownerEmail": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "settings": { "type": "object" },
+        "products": { "type": "array" },
+        "rawStock": { "type": "object" },
+        "bagStock": { "type": "array" }
+      },
+      "required": ["roomId", "version", "ownerUid", "settings", "products", "rawStock", "bagStock"]
+    },
+    "AuthorizedUser": {
+      "title": "AuthorizedUser",
+      "description": "Allowlisted Google account emails authorized by Admin to access a factory room",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "staff"] },
+        "staffId": { "type": "string" },
+        "addedByUid": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "role", "addedByUid", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Factory buyer, wholesaler, retailer, or caterer account with due ledger",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "firmName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "gstin": { "type": "string" },
+        "type": { "type": "string", "enum": ["retailer", "wholesaler", "caterer", "direct"] },
+        "totalOrders": { "type": "number" },
+        "totalPurchased": { "type": "number" },
+        "totalPaid": { "type": "number" },
+        "currentDue": { "type": "number" },
+        "creditLimit": { "type": "number" },
+        "lastOrderDate": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "firmName", "phone", "address", "city", "type", "totalOrders", "totalPurchased", "totalPaid", "currentDue", "creditLimit"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Sales invoice / dispatch order with bag line items and payment breakdown",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerFirm": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerAddress": { "type": "string" },
+        "date": { "type": "string" },
+        "billType": { "type": "string", "enum": ["gst", "non_gst"] },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "freightCharges": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "paymentMode": { "type": "string", "enum": ["cash", "bank", "upi", "credit", "partial"] },
+        "dueAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "in_production", "ready_dispatch", "dispatched", "delivered", "cancelled"] },
+        "createdByUid": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "invoiceNumber", "customerId", "customerName", "date", "billType", "items", "totalAmount", "paidAmount", "dueAmount", "status"]
+    },
+    "ProductionBatch": {
+      "title": "ProductionBatch",
+      "description": "Milling shift batch tracking wheat input, atta output, choker, and packed bags",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "batchNumber": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "shift": { "type": "string" },
+        "operatorName": { "type": "string" },
+        "wheatInputKg": { "type": "number" },
+        "attaOutputKg": { "type": "number" },
+        "chokerOutputKg": { "type": "number" },
+        "lossKg": { "type": "number" },
+        "lossPercentage": { "type": "number" },
+        "packedBags": { "type": "object" },
+        "status": { "type": "string", "enum": ["completed", "in_progress"] }
+      },
+      "required": ["id", "batchNumber", "date", "productId", "productName", "wheatInputKg", "attaOutputKg", "packedBags", "status"]
+    },
+    "ExpenseRecord": {
+      "title": "ExpenseRecord",
+      "description": "Factory operational expense voucher",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "category": { "type": "string" },
+        "categoryHindi": { "type": "string" },
+        "title": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentMode": { "type": "string", "enum": ["cash", "bank", "upi"] },
+        "paidTo": { "type": "string" },
+        "voucherNo": { "type": "string" },
+        "recordedBy": { "type": "string" }
+      },
+      "required": ["id", "date", "category", "title", "amount", "paymentMode", "voucherNo", "recordedBy"]
+    },
+    "CustomerPaymentRecord": {
+      "title": "CustomerPaymentRecord",
+      "description": "Payment collection receipt from a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentMode": { "type": "string", "enum": ["cash", "bank", "upi"] },
+        "receivedBy": { "type": "string" }
+      },
+      "required": ["id", "customerId", "customerName", "date", "amount", "paymentMode", "receivedBy"]
+    },
+    "StaffProfile": {
+      "title": "StaffProfile",
+      "description": "Factory staff profile with role and granular permissions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "roleHindi": { "type": "string" },
+        "active": { "type": "boolean" },
+        "joinedDate": { "type": "string" },
+        "permissions": { "type": "object" }
+      },
+      "required": ["id", "name", "phone", "role", "roleHindi", "active", "joinedDate"]
+    },
+    "ConnectedDevice": {
+      "title": "ConnectedDevice",
+      "description": "Live connected mobile or desktop terminal in the factory room",
+      "type": "object",
+      "properties": {
+        "deviceId": { "type": "string" },
+        "deviceName": { "type": "string" },
+        "deviceRole": { "type": "string", "enum": ["master", "staff"] },
+        "userRole": { "type": "string" },
+        "uid": { "type": "string" },
+        "connectedAt": { "type": "string" },
+        "lastSeenAt": { "type": "string" }
+      },
+      "required": ["deviceId", "deviceName", "deviceRole", "userRole", "uid", "lastSeenAt"]
+    },
+    "LiveActivityEvent": {
+      "title": "LiveActivityEvent",
+      "description": "Real-time audit and toast notification event for cross-device updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "seq": { "type": "number" },
+        "timestamp": { "type": "string" },
+        "actorDeviceId": { "type": "string" },
+        "actorName": { "type": "string" },
+        "actorRole": { "type": "string" },
+        "category": { "type": "string" },
+        "title": { "type": "string" },
+        "detail": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "actorDeviceId", "actorName", "actorRole", "category", "title", "detail"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Private Firebase Auth user profile"
+    },
+    "/factories/{factoryId}": {
+      "schema": { "$ref": "#/entities/FactoryWorkspace" },
+      "description": "Factory workspace root settings, products, raw material stock, and bag inventory"
+    },
+    "/factories/{factoryId}/authorizedUsers/{emailLower}": {
+      "schema": { "$ref": "#/entities/AuthorizedUser" },
+      "description": "Allowlisted Google emails authorized by Admin for real-time sync access"
+    },
+    "/factories/{factoryId}/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Factory customer ledger records"
+    },
+    "/factories/{factoryId}/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Sales orders and GST/non-GST invoices"
+    },
+    "/factories/{factoryId}/production/{batchId}": {
+      "schema": { "$ref": "#/entities/ProductionBatch" },
+      "description": "Milling production batches"
+    },
+    "/factories/{factoryId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/ExpenseRecord" },
+      "description": "Factory operational expenses"
+    },
+    "/factories/{factoryId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/CustomerPaymentRecord" },
+      "description": "Customer payment receipts"
+    },
+    "/factories/{factoryId}/staff/{staffId}": {
+      "schema": { "$ref": "#/entities/StaffProfile" },
+      "description": "Factory staff directory and permissions"
+    },
+    "/factories/{factoryId}/devices/{deviceId}": {
+      "schema": { "$ref": "#/entities/ConnectedDevice" },
+      "description": "Connected mobile devices presence records"
+    },
+    "/factories/{factoryId}/activity/{eventId}": {
+      "schema": { "$ref": "#/entities/LiveActivityEvent" },
+      "description": "Real-time activity events across connected mobiles"
+    }
+  }
+}

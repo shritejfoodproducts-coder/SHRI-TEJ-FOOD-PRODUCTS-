@@ -10,13 +10,12 @@ import {
   Clock,
   Sparkles,
   Download,
-  HardDrive,
   Radio,
   Crown,
-  LogOut
+  LogOut,
+  Cloud
 } from 'lucide-react';
-import { getDeviceStorageStats, LocalStorageStats } from '../utils/localStorageStats';
-import type { SyncConnectionStatus } from '../hooks/useRealtimeSync';
+import type { SyncConnectionStatus } from '../hooks/useFirestoreErpSync';
 import type { SyncDeviceRole } from '../../shared/erpSyncTypes';
 
 interface HeaderProps {
@@ -58,7 +57,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const perms = permissions || getDefaultPermissionsForRole(currentRole);
   const [timeStr, setTimeStr] = useState<string>('');
-  const [storageStats, setStorageStats] = useState<LocalStorageStats | null>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -66,10 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
       setTimeStr(now.toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     };
     updateTime();
-    setStorageStats(getDeviceStorageStats());
     const interval = setInterval(() => {
       updateTime();
-      setStorageStats(getDeviceStorageStats());
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -124,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-medium">
               <span className="truncate max-w-[120px] sm:max-w-xs">{settings.companyName}</span>
               <span className="text-emerald-400 font-semibold hidden sm:inline flex items-center gap-1">
-                • 📱 100% फ्री लोकल स्टोरेज
+                • 🔥 Firebase लाइव सिंक
               </span>
             </div>
           </div>
@@ -174,14 +170,16 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="whitespace-nowrap sm:hidden">ऐप</span>
           </button>
 
-          {/* Local Storage Indicator (Desktop) */}
+          {/* Firebase Firestore Indicator (Desktop) */}
           <div 
-            onClick={onOpenInstallModal}
+            onClick={onOpenLiveSync || onOpenInstallModal}
             className="hidden xl:flex items-center gap-1.5 text-[11px] text-emerald-300 bg-emerald-950/60 px-2.5 py-1.5 rounded-lg border border-emerald-600/40 cursor-pointer hover:bg-emerald-950 transition"
-            title="क्लाउड का उपयोग नहीं है, डेटा केवल आपके फोन में सुरक्षित है"
+            title="डेटा Firebase Firestore क्लाउड में सुरक्षित है और सभी मोबाइल पर रियल-टाइम सिंक होता है"
           >
-            <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
-            <span>फ़ोन मेमोरी: {storageStats?.usedFormatted || 'लोकल सुरक्षित'}</span>
+            <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+            <span>
+              {syncStatus === 'connected' ? 'Firebase लाइव' : 'कनेक्टिंग...'}
+            </span>
           </div>
 
           {/* Live Clock (Hidden on small mobile) */}

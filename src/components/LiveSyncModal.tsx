@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   Activity,
+  AlertTriangle,
   Check,
+  Cloud,
   Copy,
   Crown,
+  Loader2,
+  LogOut,
   QrCode,
   Radio,
   RefreshCw,
@@ -23,40 +27,39 @@ import type {
   SyncDeviceRole,
 } from '../../shared/erpSyncTypes';
 import type {
+  FirestoreSyncConfig,
   ServerProbeResult,
-  SyncConfig,
   SyncConnectionStatus,
-  SyncTransportMode,
-} from '../hooks/useRealtimeSync';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+} from '../hooks/useFirestoreErpSync';
+import { FIREBASE_PROJECT_ID } from '../firebase';
 
 interface LiveSyncModalProps {
   onClose: () => void;
-  config: SyncConfig;
+  config: FirestoreSyncConfig;
   status: SyncConnectionStatus;
-  transportMode?: SyncTransportMode;
+  firebaseEmail?: string | null;
   connectionError?: string | null;
   connectedDevices: ConnectedDevice[];
   recentEvents: LiveActivityEvent[];
-  pendingCount: number;
   lastSyncedAt: string | null;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  onUpdateConfig: (partial: Partial<SyncConfig>) => void;
+  onUpdateConfig: (partial: Partial<FirestoreSyncConfig>) => void;
   onReconnectNow?: () => void;
-  onProbeServer?: (urlOverride?: string) => Promise<ServerProbeResult>;
-  onPushMasterStateNow: () => void;
+  onProbeServer?: () => Promise<ServerProbeResult>;
+  onPushMasterStateNow: () => Promise<void> | void;
+  onGoogleSignIn?: () => Promise<void>;
+  onGoogleSignOut?: () => Promise<void>;
 }
 
 export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
   onClose,
   config,
   status,
-  transportMode = 'none',
+  firebaseEmail,
   connectionError,
   connectedDevices,
   recentEvents,
-  pendingCount,
   lastSyncedAt,
   soundEnabled,
   onToggleSound,
@@ -64,16 +67,15 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
   onReconnectNow,
   onProbeServer,
   onPushMasterStateNow,
+  onGoogleSignIn,
+  onGoogleSignOut,
 }) => {
   const [deviceNameInput, setDeviceNameInput] = useState(config.deviceName);
   const [roomIdInput, setRoomIdInput] = useState(config.roomId);
-  const [serverUrlInput, setServerUrlInput] = useState(
-    config.syncServerUrl ||
-      'https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app'
-  );
   const [staffInviteQr, setStaffInviteQr] = useState('');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [pushedSuccess, setPushedSuccess] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
   const [isTestingServer, setIsTestingServer] = useState(false);
   const [testResult, setTestResult] = useState<ServerProbeResult | null>(null);
 
@@ -84,8 +86,8 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
       (window.location.hostname === 'localhost' && window.location.port !== '3000'));
 
   const baseOrigin =
-    isNativeShell && config.syncServerUrl
-      ? config.syncServerUrl.replace(/\/+$/, '')
+    isNativeShell
+      ? 'https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app'
       : typeof window !== 'undefined'
         ? window.location.origin
         : '';
@@ -111,19 +113,16 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
     onUpdateConfig({
       deviceName: deviceNameInput.trim() || 'मोबाइल डिवाइस',
       roomId: roomIdInput.trim() || 'tej-food-main',
-      syncServerUrl: serverUrlInput.trim() || undefined,
     });
     if (onReconnectNow) {
       onReconnectNow();
     }
   };
 
-  const handleTestServerConnection = async () => {
-    const cleanUrl = serverUrlInput.trim().replace(/\/+$/, '');
+  const handleTestFirestoreConnection = async () => {
     onUpdateConfig({
       deviceName: deviceNameInput.trim() || 'मोबाइल डिवाइस',
       roomId: roomIdInput.trim() || 'tej-food-main',
-      syncServerUrl: cleanUrl || undefined,
     });
     if (!onProbeServer) {
       if (onReconnectNow) onReconnectNow();
@@ -131,7 +130,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
     }
     setIsTestingServer(true);
     setTestResult(null);
-    const probe = await onProbeServer(cleanUrl);
+    const probe = await onProbeServer();
     setTestResult(probe);
     setIsTestingServer(false);
     if (probe.ok && onReconnectNow) {
@@ -163,10 +162,15 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
     setTimeout(() => setCopiedInvite(false), 2500);
   };
 
-  const handlePushNow = () => {
-    onPushMasterStateNow();
-    setPushedSuccess(true);
-    setTimeout(() => setPushedSuccess(false), 2500);
+  const handlePushNow = async () => {
+    setIsPushing(true);
+    try {
+      await onPushMasterStateNow();
+      setPushedSuccess(true);
+      setTimeout(() => setPushedSuccess(false), 2500);
+    } finally {
+      setIsPushing(false);
+    }
   };
 
   const formatTime = (iso: string) => {
@@ -205,8 +209,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 >
                   {status === 'connected' ? (
                     <>
-                      <Wifi className="w-3 h-3" /> लाइव सिंक चालू (
-                      {transportMode === 'http' ? 'HTTPS' : 'WS'})
+                      <Wifi className="w-3 h-3" /> Firebase Firestore लाइव
                     </>
                   ) : (
                     <>
@@ -219,7 +222,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white mt-0.5">
-                मोबाइल सर्वर एवं रियल-टाइम स्टाफ सिंक (Live Multi-Mobile Sync)
+                Firebase Firestore रियल-टाइम सिंक (Live Multi-Mobile Sync)
               </h2>
             </div>
           </div>
@@ -249,6 +252,49 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
 
         {/* Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs">
+          {/* Firebase Account Banner */}
+          <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400 shrink-0">
+                <Cloud className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold text-xs text-white">
+                  {firebaseEmail
+                    ? `क्लाउड अकाउंट जुड़ा है: ${firebaseEmail}`
+                    : 'Google क्लाउड अकाउंट से साइन इन करें'}
+                </p>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  Firebase Project: <span className="font-mono text-amber-300">{FIREBASE_PROJECT_ID}</span> • हर बदलाव बिना रिफ्रेश किए सभी मोबाइल पर तुरंत अपडेट होता है।
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {firebaseEmail ? (
+                onGoogleSignOut && (
+                  <button
+                    type="button"
+                    onClick={onGoogleSignOut}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer transition"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Google अकाउंट बदलें</span>
+                  </button>
+                )
+              ) : (
+                onGoogleSignIn && (
+                  <button
+                    type="button"
+                    onClick={onGoogleSignIn}
+                    className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg font-black text-xs cursor-pointer transition"
+                  >
+                    Google से जोड़ें
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
           {/* Mode Selector: Owner Master Mobile vs Staff Mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
@@ -272,7 +318,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 )}
               </div>
               <p className="text-[11px] text-slate-600 leading-relaxed">
-                यह फ़ोन फैक्ट्री का मुख्य कंट्रोलर रहेगा। बाकी सभी सेल्समैन/मुनीम जो भी ऑर्डर या पेमेंट डालेंगे, वह तुरंत इस फ़ोन पर लाइव दिखेगा व सेव होगा।
+                मालिक का मुख्य मोबाइल। सभी सेल्समैन/मुनीम जो भी ऑर्डर या पेमेंट डालेंगे, वह तुरंत इस फ़ोन पर लाइव दिखेगा व Firebase में सेव होगा।
               </p>
             </button>
 
@@ -297,28 +343,34 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 )}
               </div>
               <p className="text-[11px] text-slate-600 leading-relaxed">
-                सेल्समैन, मुनीम, ऑपरेटर या ड्राइवर अपने फ़ोन पर इस मोड में एंट्री करेंगे। हर नई एंट्री तुरंत मालिक के मोबाइल पर अपडेट हो जाएगी।
+                सेल्समैन, मुनीम, ऑपरेटर या ड्राइवर अपने फ़ोन पर इस मोड में एंट्री करेंगे। हर नई एंट्री बिना रिफ्रेश किए तुरंत सभी मोबाइल पर अपडेट होगी।
               </p>
             </button>
           </div>
 
           {/* Master Sync Action Banner */}
-          {config.deviceRole === 'master' && (
+          {config.deviceRole === 'master' && firebaseEmail && (
             <div className="bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <p className="font-bold text-amber-950 text-xs">
-                  क्या आपके मोबाइल में पुराना डेटा/QR सेव है?
+                  पूरा डेटा Firebase Firestore में री-सिंक करें
                 </p>
                 <p className="text-[11px] text-amber-800">
-                  यह बटन दबाते ही आपके मोबाइल का पूरा डेटा बाकी सभी जुड़े स्टाफ के मोबाइल पर तुरंत सिंक हो जाएगा।
+                  यह बटन दबाते ही वर्तमान पूरा ERP डेटा क्लाउड में सेव होकर सभी जुड़े स्टाफ के मोबाइल पर तुरंत ताज़ा हो जाएगा।
                 </p>
               </div>
               <button
                 type="button"
+                disabled={isPushing}
                 onClick={handlePushNow}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-black text-xs shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white rounded-xl font-black text-xs shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition"
               >
-                {pushedSuccess ? (
+                {isPushing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>सिंक हो रहा है...</span>
+                  </>
+                ) : pushedSuccess ? (
                   <>
                     <Check className="w-4 h-4" />
                     <span>सभी डिवाइस पर सिंक हुआ!</span>
@@ -326,7 +378,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 ) : (
                   <>
                     <RefreshCw className="w-4 h-4" />
-                    <span>मेरा डेटा सभी स्टाफ को भेजें</span>
+                    <span>क्लाउड में री-सिंक करें</span>
                   </>
                 )}
               </button>
@@ -364,76 +416,46 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
               />
             </div>
 
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-3 flex gap-2">
               <button
                 type="submit"
-                className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs cursor-pointer transition"
+                className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs cursor-pointer transition"
               >
-                नाम व कोड सेव करें
+                सेव करें
+              </button>
+              <button
+                type="button"
+                onClick={handleTestFirestoreConnection}
+                disabled={isTestingServer}
+                className="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition"
+                title="Firebase कनेक्शन जांचें"
+              >
+                {isTestingServer ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
               </button>
             </div>
 
-            <div className="sm:col-span-12 space-y-2">
-              <label className="block text-[11px] font-bold text-slate-700">
-                लाइव सिंक सर्वर URL (APK / मोबाइल डेटा के लिए)
-              </label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="url"
-                  value={serverUrlInput}
-                  onChange={(e) => setServerUrlInput(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://your-deployed-app.run.app या http://192.168.1.10:3000"
-                />
-                <button
-                  type="button"
-                  onClick={handleTestServerConnection}
-                  disabled={isTestingServer}
-                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer transition"
-                >
-                  {isTestingServer ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>जाँच हो रही है...</span>
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>कनेक्शन जांचें व जोड़ें</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {(testResult || (status !== 'connected' && connectionError)) && (
-                <div
-                  className={`rounded-xl p-3 text-[11px] flex items-start gap-2 border ${
-                    testResult?.ok
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : 'bg-rose-50 border-rose-200 text-rose-900'
+            {(testResult || (status !== 'connected' && connectionError)) && (
+              <div
+                className={`sm:col-span-12 rounded-xl p-3 text-[11px] flex items-start gap-2 border ${
+                  testResult?.ok
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-rose-50 border-rose-200 text-rose-900'
+                }`}
+              >
+                <AlertTriangle
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${
+                    testResult?.ok ? 'text-emerald-600' : 'text-rose-600'
                   }`}
-                >
-                  <AlertTriangle
-                    className={`w-4 h-4 shrink-0 mt-0.5 ${
-                      testResult?.ok ? 'text-emerald-600' : 'text-rose-600'
-                    }`}
-                  />
-                  <div className="space-y-1">
-                    <p className="font-bold">
-                      {testResult ? testResult.message : connectionError}
-                    </p>
-                    {(!testResult || !testResult.ok) && (
-                      <p className="text-[10px] leading-relaxed opacity-90">
-                        <strong>मोबाइल डेटा + APK चलाने का तरीका:</strong> Google AI Studio में ऊपर{' '}
-                        <strong>Deploy / Share App</strong> बटन से ऐप को Cloud Run पर Deploy करें और जो पब्लिक URL मिले (जैसे{' '}
-                        <code className="font-mono">https://...run.app</code>) उसे यहाँ डालकर{' '}
-                        <strong>&quot;कनेक्शन जांचें व जोड़ें&quot;</strong> दबाएं।
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+                />
+                <p className="font-bold">
+                  {testResult ? testResult.message : connectionError}
+                </p>
+              </div>
+            )}
           </form>
 
           {/* Invite Staff Phones via QR or WhatsApp Link */}
@@ -444,7 +466,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                 <span>अन्य स्टाफ / सेल्समैन के फ़ोन को अपने मोबाइल से जोड़ें</span>
               </div>
               <p className="text-[11px] text-slate-600 leading-relaxed">
-                यह लिंक अपने सेल्समैन या मुनीम को WhatsApp पर भेजें। जैसे ही वे इस लिंक को अपने फोन में खोलेंगे, उनका फोन सीधे आपके <strong>{config.roomId}</strong> रूम से जुड़ जाएगा और उनकी हर एंट्री तुरंत आपके मोबाइल पर दिखेगी।
+                स्टाफ को जोड़ने के लिए पहले <strong>स्टाफ सेक्शन</strong> में उनका Email जोड़ें (या इस लिंक को WhatsApp पर भेजें)। जैसे ही वे इस लिंक को अपने फोन में खोलकर साइन इन करेंगे, उनका फोन सीधे आपके <strong>{config.roomId}</strong> डेटाबेस से जुड़ जाएगा।
               </p>
               <div className="flex items-center gap-2 pt-1">
                 <button
@@ -465,11 +487,6 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                   )}
                 </button>
               </div>
-              {pendingCount > 0 && (
-                <p className="text-[11px] text-amber-700 font-bold">
-                  ⏳ {pendingCount} ऑफ़लाइन एंट्री सिंक होने के लिए कतार में हैं (नेटवर्क आते ही अपने आप भेजी जाएंगी)
-                </p>
-              )}
             </div>
 
             <div className="md:col-span-4 flex flex-col items-center justify-center bg-slate-50 rounded-xl p-3 border border-slate-200">
@@ -525,7 +542,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                           )}
                         </div>
                         <span className="text-[10px] text-slate-500 block pl-3.5">
-                          रोल: {dev.userRole} • जुड़ा: {formatTime(dev.connectedAt)}
+                          रोल: {dev.userRole} • जुड़ा: {formatTime(dev.lastSeenAt || dev.connectedAt)}
                         </span>
                       </div>
                       <span
@@ -535,7 +552,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
                             : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                         }`}
                       >
-                        {dev.deviceRole === 'master' ? '👑 सर्वर' : '📱 स्टाफ'}
+                        {dev.deviceRole === 'master' ? '👑 मालिक' : '📱 स्टाफ'}
                       </span>
                     </div>
                   ))
@@ -582,7 +599,7 @@ export const LiveSyncModal: React.FC<LiveSyncModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs shrink-0">
           <span className="text-slate-500 text-[11px]">
-            रूम कोड: <strong className="font-mono text-slate-800">{config.roomId}</strong> • लोकल स्टोरेज + लाइव सिंक एक्टिव
+            रूम कोड: <strong className="font-mono text-slate-800">{config.roomId}</strong> • Firebase Firestore onSnapshot एक्टिव
           </span>
           <button
             type="button"

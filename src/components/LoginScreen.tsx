@@ -20,8 +20,10 @@ import {
   Send,
   Loader2,
   ShieldAlert,
+  Cloud,
+  LogOut,
 } from 'lucide-react';
-import type { SyncConnectionStatus } from '../hooks/useRealtimeSync';
+import type { SyncConnectionStatus } from '../hooks/useFirestoreErpSync';
 
 interface LoginScreenProps {
   settings: CompanySettings;
@@ -30,6 +32,15 @@ interface LoginScreenProps {
   connectedDevicesCount?: number;
   syncRoomId?: string;
   syncServerUrl?: string;
+  authReady: boolean;
+  firebaseEmail?: string | null;
+  authError?: string | null;
+  isSigningIn?: boolean;
+  firestoreReady?: boolean;
+  accessDenied?: boolean;
+  connectionError?: string | null;
+  onGoogleSignIn: () => Promise<void>;
+  onGoogleSignOut: () => Promise<void>;
   onLoginSuccess: (member: UserProfile, rememberMe: boolean) => void;
   onResetPassword: (updatedMember: UserProfile) => void;
   onOpenLiveSync?: () => void;
@@ -63,6 +74,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   connectedDevicesCount = 1,
   syncRoomId = 'tej-food-main',
   syncServerUrl,
+  authReady,
+  firebaseEmail,
+  authError,
+  isSigningIn = false,
+  firestoreReady = false,
+  accessDenied = false,
+  connectionError,
+  onGoogleSignIn,
+  onGoogleSignOut,
   onLoginSuccess,
   onResetPassword,
   onOpenLiveSync,
@@ -209,6 +229,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       return;
     }
 
+    const matchedHint = findStaffByIdentifier(cleanId);
+
     setIsSendingOtp(true);
     try {
       const response = await fetch(`${apiBase}/api/auth/request-reset-otp`, {
@@ -218,6 +240,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           identifier: cleanId,
           email: cleanEmail,
           roomId: syncRoomId,
+          staffHint: matchedHint
+            ? {
+                ...matchedHint,
+                companyName: settings.companyName,
+              }
+            : undefined,
         }),
       });
 
@@ -278,6 +306,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       return;
     }
 
+    const matchedHint = findStaffByIdentifier(resetPhoneOrId.trim());
+
     setIsVerifyingOtp(true);
     try {
       const response = await fetch(`${apiBase}/api/auth/verify-reset-otp`, {
@@ -289,6 +319,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           otp: cleanOtp,
           newPassword: nextPass,
           roomId: syncRoomId,
+          staffHint: matchedHint,
         }),
       });
 
@@ -382,9 +413,97 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </p>
           </div>
 
-          {mode === 'login' ? (
+          {!authReady ? (
+            <div className="p-8 text-center space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
+              <p className="text-sm font-bold text-slate-800">
+                Firebase क्लाउड डेटाबेस से जुड़ रहा है...
+              </p>
+              <p className="text-xs text-slate-500">कृपया प्रतीक्षा करें</p>
+            </div>
+          ) : !firebaseEmail ? (
+            <div className="p-6 space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
+                  <Cloud className="w-5 h-5 text-amber-600 shrink-0" />
+                  <span>कदम 1: Google से लाइव क्लाउड सिंक जोड़ें</span>
+                </div>
+                <p className="text-xs text-amber-900/80 leading-relaxed">
+                  सभी मोबाइल पर डेटा सुरक्षित रखने और बिना रिफ्रेश किए रियल-टाइम अपडेट पाने के लिए अपने Google अकाउंट (जैसे <strong>shritejfoodproducts@gmail.com</strong>) से साइन इन करें।
+                </p>
+              </div>
+
+              {authError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span className="font-semibold">{authError}</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={isSigningIn}
+                onClick={() => void onGoogleSignIn()}
+                className="w-full py-3.5 px-4 bg-slate-950 hover:bg-slate-900 disabled:opacity-60 text-white font-black text-sm rounded-xl shadow-lg flex items-center justify-center gap-2.5 transition cursor-pointer"
+              >
+                {isSigningIn ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    <span>Google से जुड़ रहा है...</span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-4 h-4 text-amber-400" />
+                    <span>Google से साइन इन करें (Connect Firebase)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          ) : accessDenied ? (
+            <div className="p-6 space-y-4">
+              <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 font-black text-sm">
+                  <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
+                  <span>इस ईमेल को फ़ैक्ट्री डेटा की अनुमति नहीं है</span>
+                </div>
+                <p className="text-xs leading-relaxed">
+                  {connectionError ||
+                    `ईमेल (${firebaseEmail}) रूम "${syncRoomId}" में अधिकृत नहीं है। कृपया एडमिन (shritejfoodproducts@gmail.com) से स्टाफ लिस्ट में यह ईमेल जोड़ने को कहें।`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void onGoogleSignOut()}
+                className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>दूसरे Google अकाउंट से साइन इन करें</span>
+              </button>
+            </div>
+          ) : !firestoreReady ? (
+            <div className="p-8 text-center space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
+              <p className="text-sm font-bold text-slate-800">
+                Firestore से लाइव स्टाफ व डेटा लोड हो रहा है...
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono">{firebaseEmail}</p>
+            </div>
+          ) : mode === 'login' ? (
             /* LOGIN FORM */
             <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
+              <div className="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-[11px]">
+                <div className="flex items-center gap-1.5 text-emerald-900 font-semibold truncate">
+                  <Cloud className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">{firebaseEmail}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void onGoogleSignOut()}
+                  className="text-emerald-800 hover:text-emerald-950 font-bold underline shrink-0 cursor-pointer"
+                >
+                  बदलें
+                </button>
+              </div>
               {successMsg && (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
