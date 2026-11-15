@@ -1,9 +1,9 @@
-import type { BagSize } from '../src/types/erp';
+import type { BagSize } from '../src/types/erp.ts';
 import type {
   ErpMutationAction,
   LiveActivityEvent,
   SyncableErpState,
-} from './erpSyncTypes';
+} from './erpSyncTypes.ts';
 
 export interface MutationApplyResult {
   nextState: SyncableErpState;

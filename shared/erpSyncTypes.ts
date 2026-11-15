@@ -12,7 +12,7 @@ import type {
   RawMaterialStock,
   UserProfile,
   UserRole,
-} from '../src/types/erp';
+} from '../src/types/erp.ts';
 
 export type SyncDeviceRole = 'master' | 'staff';
 

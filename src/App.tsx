@@ -170,6 +170,11 @@ export default function App() {
         localStorage.removeItem('tej_food_remembered_user_id');
       }
     }
+    if (member.role === 'admin' && sync.config.deviceRole === 'master' && !sync.hasMasterSeed) {
+      window.setTimeout(() => {
+        sync.pushMasterStateNow();
+      }, 250);
+    }
   };
 
   const handleLogout = () => {

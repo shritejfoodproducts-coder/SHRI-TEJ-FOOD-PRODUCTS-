@@ -1,4 +1,4 @@
-import { 
+import type { 
   ProductMaster, 
   BagStockItem, 
   RawMaterialStock, 
@@ -8,7 +8,7 @@ import {
   UserProfile, 
   ExpenseRecord, 
   CompanySettings 
-} from '../types/erp';
+} from '../types/erp.ts';
 
 export const INITIAL_SETTINGS: CompanySettings = {
   companyName: 'Shri Tej Food Products',

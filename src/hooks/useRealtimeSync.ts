@@ -176,6 +176,7 @@ export function useRealtimeSync({
   const [pendingCount, setPendingCount] = useState<number>(() => loadPendingQueue().length);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [hasMasterSeed, setHasMasterSeed] = useState<boolean>(false);
   const [connectTrigger, setConnectTrigger] = useState<number>(0);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -313,7 +314,7 @@ export function useRealtimeSync({
             deviceRole: activeConfig.deviceRole,
             userRole: userRoleRef.current,
             initialMasterState:
-              activeConfig.deviceRole === 'master'
+              activeConfig.deviceRole === 'master' && userRoleRef.current === 'admin'
                 ? getCurrentStateRef.current()
                 : undefined,
           }),
@@ -335,6 +336,7 @@ export function useRealtimeSync({
         reconnectAttemptRef.current = 0;
         serverSeqRef.current = joinData.seq;
         setServerSeq(joinData.seq);
+        setHasMasterSeed(Boolean(joinData.hasMasterSeed));
         setConnectedDevices(joinData.devices || []);
         setRecentEvents(joinData.recentEvents || []);
         setLastSyncedAt(new Date().toISOString());
@@ -458,7 +460,7 @@ export function useRealtimeSync({
             deviceRole: activeConfig.deviceRole,
             userRole: userRoleRef.current,
             initialMasterState:
-              activeConfig.deviceRole === 'master'
+              activeConfig.deviceRole === 'master' && userRoleRef.current === 'admin'
                 ? getCurrentStateRef.current()
                 : undefined,
           })
@@ -487,6 +489,7 @@ export function useRealtimeSync({
         if (msg.type === 'init') {
           serverSeqRef.current = msg.seq;
           setServerSeq(msg.seq);
+          setHasMasterSeed(Boolean(msg.hasMasterSeed));
           setConnectedDevices(msg.devices);
           setRecentEvents(msg.recentEvents);
           setLastSyncedAt(new Date().toISOString());
@@ -688,6 +691,7 @@ export function useRealtimeSync({
     status,
     transportMode,
     connectionError,
+    hasMasterSeed,
     connectedDevices,
     recentEvents,
     serverSeq,

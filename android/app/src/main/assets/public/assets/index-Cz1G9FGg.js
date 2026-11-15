@@ -13188,6 +13188,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 	const [pendingCount, setPendingCount] = (0, import_react.useState)(() => loadPendingQueue().length);
 	const [lastSyncedAt, setLastSyncedAt] = (0, import_react.useState)(null);
 	const [soundEnabled, setSoundEnabled] = (0, import_react.useState)(true);
+	const [hasMasterSeed, setHasMasterSeed] = (0, import_react.useState)(false);
 	const [connectTrigger, setConnectTrigger] = (0, import_react.useState)(0);
 	const wsRef = (0, import_react.useRef)(null);
 	const reconnectTimerRef = (0, import_react.useRef)(null);
@@ -13295,7 +13296,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 						deviceName: activeConfig.deviceName,
 						deviceRole: activeConfig.deviceRole,
 						userRole: userRoleRef.current,
-						initialMasterState: activeConfig.deviceRole === "master" ? getCurrentStateRef.current() : void 0
+						initialMasterState: activeConfig.deviceRole === "master" && userRoleRef.current === "admin" ? getCurrentStateRef.current() : void 0
 					})
 				});
 				if (!joinRes.ok) return false;
@@ -13307,6 +13308,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 				reconnectAttemptRef.current = 0;
 				serverSeqRef.current = joinData.seq;
 				setServerSeq(joinData.seq);
+				setHasMasterSeed(Boolean(joinData.hasMasterSeed));
 				setConnectedDevices(joinData.devices || []);
 				setRecentEvents(joinData.recentEvents || []);
 				setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
@@ -13394,7 +13396,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 					deviceName: activeConfig.deviceName,
 					deviceRole: activeConfig.deviceRole,
 					userRole: userRoleRef.current,
-					initialMasterState: activeConfig.deviceRole === "master" ? getCurrentStateRef.current() : void 0
+					initialMasterState: activeConfig.deviceRole === "master" && userRoleRef.current === "admin" ? getCurrentStateRef.current() : void 0
 				}));
 				flushPendingQueueWs(ws);
 				if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
@@ -13413,6 +13415,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 				if (msg.type === "init") {
 					serverSeqRef.current = msg.seq;
 					setServerSeq(msg.seq);
+					setHasMasterSeed(Boolean(msg.hasMasterSeed));
 					setConnectedDevices(msg.devices);
 					setRecentEvents(msg.recentEvents);
 					setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
@@ -13565,6 +13568,7 @@ function useRealtimeSync({ currentUserRole, getCurrentState, applyFullState, isA
 		status,
 		transportMode,
 		connectionError,
+		hasMasterSeed,
 		connectedDevices,
 		recentEvents,
 		serverSeq,
@@ -47485,6 +47489,9 @@ function App() {
 			if (rememberMe) localStorage.setItem("tej_food_remembered_user_id", member.id);
 			else localStorage.removeItem("tej_food_remembered_user_id");
 		}
+		if (member.role === "admin" && sync.config.deviceRole === "master" && !sync.hasMasterSeed) window.setTimeout(() => {
+			sync.pushMasterStateNow();
+		}, 250);
 	};
 	const handleLogout = () => {
 		if (typeof window !== "undefined") localStorage.removeItem("tej_food_remembered_user_id");
