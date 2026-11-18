@@ -121,13 +121,9 @@ export default function App() {
     staff,
   } = sync;
 
-  // Restore "Remember Me" staff login once Firebase Auth + Firestore snapshot is ready
+  // Restore "Remember Me" staff login from local/cloud staff directory
   useEffect(() => {
-    if (!sync.firebaseUser || !sync.firestoreReady) {
-      if (!sync.firebaseUser) {
-        autoLoginAttemptedRef.current = false;
-        setIsAuthenticated(false);
-      }
+    if (sync.firebaseUser && !sync.firestoreReady) {
       return;
     }
 
@@ -401,7 +397,7 @@ export default function App() {
   ).length;
   const lowStockCount = bagStock.filter((b) => b.packedCount <= b.minThreshold).length;
 
-  if (!isAuthenticated || !sync.firebaseUser || !sync.firestoreReady) {
+  if (!isAuthenticated) {
     return (
       <>
         <LoginScreen
@@ -412,6 +408,7 @@ export default function App() {
           syncRoomId={sync.config.roomId}
           syncServerUrl={sync.config.syncServerUrl}
           authReady={sync.authReady}
+          authEnv={sync.authEnv}
           firebaseEmail={sync.firebaseUser?.email}
           authError={sync.authError}
           unauthorizedDomainHost={sync.unauthorizedDomainHost}
@@ -420,6 +417,7 @@ export default function App() {
           accessDenied={sync.accessDenied}
           connectionError={sync.connectionError}
           onGoogleSignIn={sync.signInWithGoogle}
+          onGoogleSignInRedirect={sync.signInWithGoogleRedirect}
           onGoogleSignOut={sync.signOutGoogle}
           onLoginSuccess={handleLoginSuccess}
           onResetPassword={handleResetPassword}

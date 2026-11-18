@@ -21142,6 +21142,9 @@ async function _getAndClearPendingRedirectStatus(resolver, auth) {
 	await persistence._remove(key);
 	return hasPendingRedirect;
 }
+async function _setPendingRedirectStatus(resolver, auth) {
+	return resolverPersistence(resolver)._set(pendingRedirectKey(auth), "true");
+}
 function _overrideRedirectResult(auth, result) {
 	redirectOutcomeMap.set(auth._key(), result);
 }
@@ -21167,6 +21170,107 @@ function pendingRedirectKey(auth) {
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+/**
+* Authenticates a Firebase client using a full-page redirect flow.
+*
+* @remarks
+* To handle the results and errors for this operation, refer to {@link getRedirectResult}.
+* Follow the {@link https://firebase.google.com/docs/auth/web/redirect-best-practices
+* | best practices} when using {@link signInWithRedirect}.
+*
+* This method does not work in a Node.js environment or with {@link Auth} instances created with a
+* {@link @firebase/app#FirebaseServerApp}.
+*
+* @example
+* ```javascript
+* // Sign in using a redirect.
+* const provider = new FacebookAuthProvider();
+* // You can add additional scopes to the provider:
+* provider.addScope('user_birthday');
+* // Start a sign in process for an unauthenticated user.
+* await signInWithRedirect(auth, provider);
+* // This will trigger a full page redirect away from your app
+*
+* // After returning from the redirect when your app initializes you can obtain the result
+* const result = await getRedirectResult(auth);
+* if (result) {
+*   // This is the signed-in user
+*   const user = result.user;
+*   // This gives you a Facebook Access Token.
+*   const credential = provider.credentialFromResult(auth, result);
+*   const token = credential.accessToken;
+* }
+* // As this API can be used for sign-in, linking and reauthentication,
+* // check the operationType to determine what triggered this redirect
+* // operation.
+* const operationType = result.operationType;
+* ```
+*
+* @param auth - The {@link Auth} instance.
+* @param provider - The provider to authenticate. The provider has to be an {@link OAuthProvider}.
+* Non-OAuth providers like {@link EmailAuthProvider} will throw an error.
+* @param resolver - An instance of {@link PopupRedirectResolver}, optional
+* if already supplied to {@link initializeAuth} or provided by {@link getAuth}.
+*
+* @public
+*/
+function signInWithRedirect(auth, provider, resolver) {
+	return _signInWithRedirect(auth, provider, resolver);
+}
+async function _signInWithRedirect(auth, provider, resolver) {
+	if (_isFirebaseServerApp(auth.app)) return Promise.reject(_serverAppCurrentUserOperationNotSupportedError(auth));
+	const authInternal = _castAuth(auth);
+	_assertInstanceOf(auth, provider, FederatedAuthProvider);
+	await authInternal._initializationPromise;
+	const resolverInternal = _withDefaultResolver(authInternal, resolver);
+	await _setPendingRedirectStatus(resolverInternal, authInternal);
+	return resolverInternal._openRedirect(authInternal, provider, "signInViaRedirect");
+}
+/**
+* Returns a {@link UserCredential} from the redirect-based sign-in flow.
+*
+* @remarks
+* If sign-in succeeded, returns the signed in user. If sign-in was unsuccessful, fails with an
+* error. If no redirect operation was called, returns `null`.
+*
+* This method does not work in a Node.js environment or with {@link Auth} instances created with a
+* {@link @firebase/app#FirebaseServerApp}.
+*
+* @example
+* ```javascript
+* // Sign in using a redirect.
+* const provider = new FacebookAuthProvider();
+* // You can add additional scopes to the provider:
+* provider.addScope('user_birthday');
+* // Start a sign in process for an unauthenticated user.
+* await signInWithRedirect(auth, provider);
+* // This will trigger a full page redirect away from your app
+*
+* // After returning from the redirect when your app initializes you can obtain the result
+* const result = await getRedirectResult(auth);
+* if (result) {
+*   // This is the signed-in user
+*   const user = result.user;
+*   // This gives you a Facebook Access Token.
+*   const credential = provider.credentialFromResult(auth, result);
+*   const token = credential.accessToken;
+* }
+* // As this API can be used for sign-in, linking and reauthentication,
+* // check the operationType to determine what triggered this redirect
+* // operation.
+* const operationType = result.operationType;
+* ```
+*
+* @param auth - The {@link Auth} instance.
+* @param resolver - An instance of {@link PopupRedirectResolver}, optional
+* if already supplied to {@link initializeAuth} or provided by {@link getAuth}.
+*
+* @public
+*/
+async function getRedirectResult(auth, resolver) {
+	await _castAuth(auth)._initializationPromise;
+	return _getRedirectResult(auth, resolver, false);
+}
 async function _getRedirectResult(auth, resolverExtern, bypassAuthState = false) {
 	if (_isFirebaseServerApp(auth.app)) return Promise.reject(_serverAppCurrentUserOperationNotSupportedError(auth));
 	const authInternal = _castAuth(auth);
@@ -49581,6 +49685,13 @@ function stripUndefinedDeep(value) {
 }
 // src/utils/backup.ts
 var STORAGE_KEY = "tej_food_products_erp_db_v1";
+function saveStateToStorage(state) {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	} catch (err) {
+		console.error("Failed to save state to localStorage:", err);
+	}
+}
 function loadStateFromStorage() {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
@@ -50309,14 +50420,45 @@ function playNotificationChime() {
 		osc.stop(ctx.currentTime + .25);
 	} catch {}
 }
+function detectAuthEnvironment() {
+	if (typeof window === "undefined") return {
+		isIframe: false,
+		isCapacitorNative: false,
+		isStandalonePwa: false,
+		isMobileDevice: false,
+		isInAppBrowser: false,
+		currentHost: ""
+	};
+	let isIframe = false;
+	try {
+		isIframe = window.self !== window.top;
+	} catch {
+		isIframe = true;
+	}
+	const winCap = window.Capacitor;
+	const isCapacitorNative = window.location.protocol === "capacitor:" || window.location.protocol === "file:" || Boolean(winCap?.isNativePlatform?.());
+	const isStandalonePwa = Boolean(window.matchMedia?.("(display-mode: standalone)").matches) || Boolean(navigator.standalone);
+	const ua = navigator.userAgent || "";
+	const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(ua);
+	const isInAppBrowser = /\bwv\b|WebView|FBAN|FBAV|Instagram|WhatsApp|Line\//i.test(ua);
+	return {
+		isIframe,
+		isCapacitorNative,
+		isStandalonePwa,
+		isMobileDevice,
+		isInAppBrowser,
+		currentHost: window.location.hostname || ""
+	};
+}
 function mapFirebaseAuthError(error) {
 	const code = typeof error === "object" && error !== null && "code" in error ? String(error.code || "") : "";
+	const rawMsg = error instanceof Error ? error.message : String(error || "");
 	if (code === "auth/popup-blocked") return {
-		message: "ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।",
+		message: "ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। पॉपअप Allow करें या नीचे \"Redirect से साइन इन\" बटन दबाएं।",
 		unauthorizedHost: null
 	};
 	if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return {
-		message: "Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।",
+		message: "Google साइन-इन पॉपअप पूरा होने से पहले बंद हो गया। यदि Chrome पेज पर \"The requested action is invalid\" आए, तो नीचे \"Redirect से साइन इन\" या \"Chrome में पूरा पेज खोलें\" विकल्प अपनाएं।",
 		unauthorizedHost: null
 	};
 	if (code === "auth/unauthorized-domain") {
@@ -50326,12 +50468,16 @@ function mapFirebaseAuthError(error) {
 			unauthorizedHost: currentHost || "unknown-domain"
 		};
 	}
+	if (code === "auth/bad-request" || code === "auth/missing-initial-state" || code === "auth/operation-not-supported-in-this-environment" || rawMsg.toLowerCase().includes("requested action is invalid") || rawMsg.toLowerCase().includes("missing initial state")) return {
+		message: "मोबाइल/PWA या इन-ऐप ब्राउज़र में पॉपअप सेशन टूटने के कारण Google साइन-इन पूरा नहीं हो सका (\"The requested action is invalid\")। कृपया ऐप को सीधे Chrome ब्राउज़र में खोलकर साइन इन करें।",
+		unauthorizedHost: null
+	};
 	if (code === "auth/network-request-failed") return {
 		message: "नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।",
 		unauthorizedHost: null
 	};
 	return {
-		message: error instanceof Error ? error.message : "Google साइन-इन में त्रुटि हुई।",
+		message: rawMsg || "Google साइन-इन में त्रुटि हुई।",
 		unauthorizedHost: null
 	};
 }
@@ -50360,6 +50506,7 @@ async function commitOperationsInChunks(ops) {
 }
 function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteActivity }) {
 	const [config, setConfig] = (0, import_react.useState)(() => getInitialSyncConfig());
+	const [authEnv] = (0, import_react.useState)(() => detectAuthEnvironment());
 	const [firebaseUser, setFirebaseUser] = (0, import_react.useState)(null);
 	const [authReady, setAuthReady] = (0, import_react.useState)(false);
 	const [authError, setAuthError] = (0, import_react.useState)(null);
@@ -50369,15 +50516,33 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 	const [status, setStatus] = (0, import_react.useState)("connecting");
 	const [connectionError, setConnectionError] = (0, import_react.useState)(null);
 	const [accessDenied, setAccessDenied] = (0, import_react.useState)(false);
-	const [settings, setSettings] = (0, import_react.useState)(INITIAL_SETTINGS);
-	const [products, setProducts] = (0, import_react.useState)(INITIAL_PRODUCTS);
-	const [rawStock, setRawStock] = (0, import_react.useState)(INITIAL_RAW_STOCK);
-	const [bagStock, setBagStock] = (0, import_react.useState)(INITIAL_BAG_STOCK);
-	const [customers, setCustomers] = (0, import_react.useState)(INITIAL_CUSTOMERS);
-	const [orders, setOrders] = (0, import_react.useState)(INITIAL_ORDERS);
-	const [production, setProduction] = (0, import_react.useState)(INITIAL_PRODUCTION);
-	const [expenses, setExpenses] = (0, import_react.useState)(INITIAL_EXPENSES);
-	const [staff, setStaff] = (0, import_react.useState)(INITIAL_STAFF);
+	const [initialLocal] = (0, import_react.useState)(() => {
+		const saved = loadStateFromStorage();
+		const defaults = buildDefaultState();
+		if (!saved) return defaults;
+		return {
+			version: saved.version || defaults.version,
+			timestamp: saved.timestamp || defaults.timestamp,
+			settings: saved.settings || defaults.settings,
+			products: Array.isArray(saved.products) && saved.products.length > 0 ? saved.products : defaults.products,
+			rawStock: saved.rawStock || defaults.rawStock,
+			bagStock: Array.isArray(saved.bagStock) && saved.bagStock.length > 0 ? saved.bagStock : defaults.bagStock,
+			customers: Array.isArray(saved.customers) ? saved.customers : defaults.customers,
+			orders: Array.isArray(saved.orders) ? saved.orders : defaults.orders,
+			production: Array.isArray(saved.production) ? saved.production : defaults.production,
+			expenses: Array.isArray(saved.expenses) ? saved.expenses : defaults.expenses,
+			staff: Array.isArray(saved.staff) && saved.staff.length > 0 ? saved.staff : defaults.staff
+		};
+	});
+	const [settings, setSettings] = (0, import_react.useState)(initialLocal.settings);
+	const [products, setProducts] = (0, import_react.useState)(initialLocal.products);
+	const [rawStock, setRawStock] = (0, import_react.useState)(initialLocal.rawStock);
+	const [bagStock, setBagStock] = (0, import_react.useState)(initialLocal.bagStock);
+	const [customers, setCustomers] = (0, import_react.useState)(initialLocal.customers);
+	const [orders, setOrders] = (0, import_react.useState)(initialLocal.orders);
+	const [production, setProduction] = (0, import_react.useState)(initialLocal.production);
+	const [expenses, setExpenses] = (0, import_react.useState)(initialLocal.expenses);
+	const [staff, setStaff] = (0, import_react.useState)(initialLocal.staff);
 	const [connectedDevices, setConnectedDevices] = (0, import_react.useState)([]);
 	const [recentEvents, setRecentEvents] = (0, import_react.useState)([]);
 	const [lastSyncedAt, setLastSyncedAt] = (0, import_react.useState)(null);
@@ -50412,6 +50577,15 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		staff
 	};
 	(0, import_react.useEffect)(() => {
+		let active = true;
+		getRedirectResult(auth, browserPopupRedirectResolver).catch((err) => {
+			if (!active) return;
+			const mapped = mapFirebaseAuthError(err);
+			if (mapped.message) {
+				setAuthError(mapped.message);
+				setUnauthorizedDomainHost(mapped.unauthorizedHost);
+			}
+		});
 		const unsubscribe = onAuthStateChanged(auth, async (user) => {
 			setFirebaseUser(user);
 			setAuthReady(true);
@@ -50460,23 +50634,67 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 				setRecentEvents([]);
 			}
 		});
-		return () => unsubscribe();
+		return () => {
+			active = false;
+			unsubscribe();
+		};
 	}, []);
-	const signInWithGoogle = (0, import_react.useCallback)(async () => {
+	const performGoogleSignIn = (0, import_react.useCallback)(async (preferRedirect = false) => {
 		setIsSigningIn(true);
 		setAuthError(null);
 		setUnauthorizedDomainHost(null);
 		setAccessDenied(false);
-		try {
-			await signInWithPopup(auth, googleProvider);
+		const env = detectAuthEnvironment();
+		if (env.isCapacitorNative) {
+			setIsSigningIn(false);
+			setAuthError("Android APK (WebView) के अंदर Google Popup साइन-इन Chrome में जाने पर \"The requested action is invalid\" दे सकता है। कृपया नीचे दिए बटन से ऐप को सीधे Chrome ब्राउज़र में खोलकर Google Sign-In करें।");
+			return;
+		}
+		if (!env.isIframe && (preferRedirect || env.isStandalonePwa)) try {
+			await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+			return;
 		} catch (err) {
 			const mapped = mapFirebaseAuthError(err);
 			setAuthError(mapped.message);
 			setUnauthorizedDomainHost(mapped.unauthorizedHost);
-		} finally {
 			setIsSigningIn(false);
+			return;
+		}
+		let timedOut = false;
+		const timeoutId = window.setTimeout(() => {
+			timedOut = true;
+			setIsSigningIn(false);
+			setAuthError("Google साइन-इन पॉपअप से जवाब नहीं मिला। यदि Chrome में नया टैब खुला है या \"The requested action is invalid\" दिख रहा है, तो कृपया नीचे \"Chrome में पूरा पेज खोलें\" या \"Redirect से साइन इन\" का उपयोग करें।");
+		}, 45e3);
+		try {
+			await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+		} catch (err) {
+			if (!timedOut) {
+				const code = typeof err === "object" && err !== null && "code" in err ? String(err.code || "") : "";
+				if (!env.isIframe && env.isMobileDevice && (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment")) try {
+					await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+					return;
+				} catch (redirectErr) {
+					const mappedRedirect = mapFirebaseAuthError(redirectErr);
+					setAuthError(mappedRedirect.message);
+					setUnauthorizedDomainHost(mappedRedirect.unauthorizedHost);
+					return;
+				}
+				const mapped = mapFirebaseAuthError(err);
+				setAuthError(mapped.message);
+				setUnauthorizedDomainHost(mapped.unauthorizedHost);
+			}
+		} finally {
+			window.clearTimeout(timeoutId);
+			if (!timedOut) setIsSigningIn(false);
 		}
 	}, []);
+	const signInWithGoogle = (0, import_react.useCallback)(async () => {
+		await performGoogleSignIn(false);
+	}, [performGoogleSignIn]);
+	const signInWithGoogleRedirect = (0, import_react.useCallback)(async () => {
+		await performGoogleSignIn(true);
+	}, [performGoogleSignIn]);
 	const signOutGoogle = (0, import_react.useCallback)(async () => {
 		try {
 			await signOut(auth);
@@ -50750,6 +50968,123 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		writeFullWorkspaceToFirestore
 	]);
 	(0, import_react.useEffect)(() => {
+		saveStateToStorage({
+			version: "2.5.0",
+			timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+			settings,
+			products,
+			rawStock,
+			bagStock,
+			customers,
+			orders,
+			production,
+			expenses,
+			staff
+		});
+	}, [
+		settings,
+		products,
+		rawStock,
+		bagStock,
+		customers,
+		orders,
+		production,
+		expenses,
+		staff
+	]);
+	const serverSeqRef = (0, import_react.useRef)(-1);
+	const applyLocalFullState = (0, import_react.useCallback)((next) => {
+		if (next.settings) setSettings(next.settings);
+		if (Array.isArray(next.products)) setProducts(next.products);
+		if (next.rawStock) setRawStock(next.rawStock);
+		if (Array.isArray(next.bagStock)) setBagStock(next.bagStock);
+		if (Array.isArray(next.customers)) setCustomers(next.customers);
+		if (Array.isArray(next.orders)) setOrders(next.orders);
+		if (Array.isArray(next.production)) setProduction(next.production);
+		if (Array.isArray(next.expenses)) setExpenses(next.expenses);
+		if (Array.isArray(next.staff) && next.staff.length > 0) setStaff(next.staff);
+	}, []);
+	const resolveSyncApiBase = (0, import_react.useCallback)(() => {
+		if (typeof window === "undefined") return "";
+		if (authEnv.isCapacitorNative) return (configRef.current.syncServerUrl || "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app").trim().replace(/\/+$/, "");
+		return "";
+	}, [authEnv.isCapacitorNative]);
+	(0, import_react.useEffect)(() => {
+		if (!authReady || firebaseUser) return;
+		let cancelled = false;
+		const roomId = sanitizeRoomId(config.roomId);
+		const base = resolveSyncApiBase();
+		const joinAndPoll = async () => {
+			try {
+				const joinRes = await fetch(`${base}/api/sync/join`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						roomId,
+						deviceId: configRef.current.deviceId,
+						deviceName: configRef.current.deviceName,
+						deviceRole: configRef.current.deviceRole,
+						userRole: userRoleRef.current,
+						initialMasterState: configRef.current.deviceRole === "master" ? liveStateRef.current : void 0
+					})
+				});
+				if (!joinRes.ok || cancelled) {
+					if (!cancelled) setStatus("offline");
+					return;
+				}
+				const json = await joinRes.json();
+				if (cancelled || !json?.ok) return;
+				serverSeqRef.current = typeof json.seq === "number" ? json.seq : 0;
+				if (json.hasMasterSeed && json.state) applyLocalFullState(json.state);
+				if (Array.isArray(json.devices)) setConnectedDevices(json.devices);
+				if (Array.isArray(json.recentEvents)) setRecentEvents(json.recentEvents);
+				setStatus("connected");
+				setConnectionError(null);
+				setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
+			} catch {
+				if (!cancelled) setStatus("offline");
+			}
+		};
+		joinAndPoll();
+		const pollTimer = window.setInterval(async () => {
+			if (cancelled) return;
+			try {
+				const qs = new URLSearchParams({
+					sinceSeq: String(serverSeqRef.current),
+					deviceId: configRef.current.deviceId,
+					deviceName: configRef.current.deviceName,
+					deviceRole: configRef.current.deviceRole,
+					userRole: userRoleRef.current
+				});
+				const pollRes = await fetch(`${base}/api/sync/poll/${encodeURIComponent(roomId)}?${qs.toString()}`);
+				if (!pollRes.ok || cancelled) return;
+				const json = await pollRes.json();
+				if (cancelled || !json?.ok) return;
+				if (Array.isArray(json.devices)) setConnectedDevices(json.devices);
+				if (Array.isArray(json.recentEvents)) setRecentEvents(json.recentEvents);
+				if (json.changed && json.hasMasterSeed && json.state) {
+					serverSeqRef.current = typeof json.seq === "number" ? json.seq : serverSeqRef.current;
+					applyLocalFullState(json.state);
+					setLastSyncedAt((/* @__PURE__ */ new Date()).toISOString());
+				}
+				setStatus("connected");
+			} catch {
+				if (!cancelled) setStatus("offline");
+			}
+		}, 5e3);
+		return () => {
+			cancelled = true;
+			window.clearInterval(pollTimer);
+		};
+	}, [
+		authReady,
+		firebaseUser,
+		config.roomId,
+		connectTrigger,
+		resolveSyncApiBase,
+		applyLocalFullState
+	]);
+	(0, import_react.useEffect)(() => {
 		if (!firebaseUser || !firestoreReady || accessDenied) return;
 		setDoc(doc(db, "factories", sanitizeRoomId(config.roomId), "devices", config.deviceId), stripUndefinedDeep({
 			deviceId: config.deviceId,
@@ -50789,10 +51124,19 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		setConnectTrigger((prev) => prev + 1);
 	}, []);
 	const probeServerHealth = (0, import_react.useCallback)(async () => {
-		if (!firebaseUserRef.current) return {
-			ok: false,
-			message: "कृपया पहले Google अकाउंट से साइन इन करें ताकि Firebase Firestore जुड़ सके।"
-		};
+		if (!firebaseUserRef.current) {
+			try {
+				const base = resolveSyncApiBase();
+				if ((await fetch(`${base}/api/health`)).ok) return {
+					ok: true,
+					message: "लोकल + सर्वर लाइव सिंक चालू है (डायरेक्ट मोबाइल+पासवर्ड मोड)।"
+				};
+			} catch {}
+			return {
+				ok: true,
+				message: "ऑफ़लाइन/लोकल स्टोरेज मोड चालू है। क्लाउड सिंक के लिए Google से जुड़ सकते हैं।"
+			};
+		}
 		if (!await testFirestoreConnection()) return {
 			ok: false,
 			message: "Firebase Firestore ऑफ़लाइन है। कृपया अपना मोबाइल डेटा या Wi-Fi जांचें।"
@@ -50801,11 +51145,10 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 			ok: true,
 			message: `Firebase Firestore (${FIREBASE_PROJECT_ID}) से लाइव कनेक्शन चालू है!`
 		};
-	}, []);
+	}, [resolveSyncApiBase]);
 	const dispatchMutation = (0, import_react.useCallback)(async (action, actorNameOverride) => {
 		const user = firebaseUserRef.current;
 		const roomId = sanitizeRoomId(configRef.current.roomId);
-		if (!user) throw new Error("Firebase से जुड़ा नहीं है। कृपया पहले Google से साइन इन करें।");
 		const currentState = liveStateRef.current;
 		const res = applyErpMutation(currentState, action, processedPaymentIdsRef.current);
 		if (!res.applied) return;
@@ -50822,6 +51165,34 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 			title: res.activityMeta?.title || "डेटा अपडेट",
 			detail: res.activityMeta?.detail || ""
 		};
+		if (!user) {
+			applyLocalFullState(res.nextState);
+			saveStateToStorage(res.nextState);
+			setRecentEvents((prev) => [activityEvent, ...prev].slice(0, 40));
+			setLastSyncedAt(nowIso);
+			try {
+				const base = resolveSyncApiBase();
+				const syncRes = await fetch(`${base}/api/sync/mutation`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ envelope: {
+						mutationId: evtId,
+						roomId,
+						actorDeviceId: configRef.current.deviceId,
+						actorName: actorNameOverride || configRef.current.deviceName,
+						actorRole: userRoleRef.current,
+						timestamp: nowIso,
+						action
+					} })
+				});
+				if (syncRes.ok) {
+					const data = await syncRes.json();
+					if (typeof data.seq === "number") serverSeqRef.current = data.seq;
+					setStatus("connected");
+				}
+			} catch {}
+			return;
+		}
 		const factoryRef = doc(db, "factories", roomId);
 		const activityRef = doc(db, "factories", roomId, "activity", evtId);
 		const batch = writeBatch(db);
@@ -51027,7 +51398,11 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		} catch (err) {
 			handleFirestoreError(err, OperationType.WRITE, `factories/${roomId}`);
 		}
-	}, [writeFullWorkspaceToFirestore]);
+	}, [
+		writeFullWorkspaceToFirestore,
+		applyLocalFullState,
+		resolveSyncApiBase
+	]);
 	const pushMasterStateNow = (0, import_react.useCallback)(async () => {
 		const current = liveStateRef.current;
 		await dispatchMutation({
@@ -51036,12 +51411,14 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		});
 	}, [dispatchMutation]);
 	return {
+		authEnv,
 		firebaseUser,
 		authReady,
 		authError,
 		unauthorizedDomainHost,
 		isSigningIn,
 		signInWithGoogle,
+		signInWithGoogleRedirect,
 		signOutGoogle,
 		firestoreReady,
 		accessDenied,
@@ -64599,7 +64976,7 @@ function resolveApiBaseUrl(syncServerUrl) {
 	if ((window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000") && syncServerUrl) return syncServerUrl.trim().replace(/\/+$/, "");
 	return "";
 }
-var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, syncRoomId = "tej-food-main", syncServerUrl, authReady, firebaseEmail, authError, unauthorizedDomainHost, isSigningIn = false, firestoreReady = false, accessDenied = false, connectionError, onGoogleSignIn, onGoogleSignOut, onLoginSuccess, onResetPassword, onOpenLiveSync }) => {
+var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, syncRoomId = "tej-food-main", syncServerUrl, authReady, authEnv, firebaseEmail, authError, unauthorizedDomainHost, isSigningIn = false, firestoreReady = false, accessDenied = false, connectionError, onGoogleSignIn, onGoogleSignInRedirect, onGoogleSignOut, onLoginSuccess, onResetPassword, onOpenLiveSync }) => {
 	const [mode, setMode] = (0, import_react.useState)("login");
 	const [resetStep, setResetStep] = (0, import_react.useState)("request_otp");
 	const [identifier, setIdentifier] = (0, import_react.useState)("");
@@ -64846,138 +65223,34 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 								children: mode === "login" ? "आगे बढ़ने के लिए अपने मोबाइल नंबर या ईमेल से लॉगिन करें" : "आपके रजिस्टर्ड ईमेल पर 6-अंकों का कोड आएगा, कोड डालने पर ही पासवर्ड बदलेगा"
 							})
 						]
-					}), !authReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "p-8 text-center space-y-3",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-8 h-8 animate-spin text-amber-500 mx-auto" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-sm font-bold text-slate-800",
-								children: "Firebase क्लाउड डेटाबेस से जुड़ रहा है..."
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-xs text-slate-500",
-								children: "कृपया प्रतीक्षा करें"
-							})
-						]
-					}) : !firebaseEmail ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "p-6 space-y-4",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-2 text-amber-900 font-black text-sm",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-5 h-5 text-amber-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कदम 1: Google से लाइव क्लाउड सिंक जोड़ें" })]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-									className: "text-xs text-amber-900/80 leading-relaxed",
-									children: [
-										"सभी मोबाइल पर डेटा सुरक्षित रखने और बिना रिफ्रेश किए रियल-टाइम अपडेट पाने के लिए अपने Google अकाउंट (जैसे ",
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "shritejfoodproducts@gmail.com" }),
-										") से साइन इन करें।"
-									]
-								})]
-							}),
-							authError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 space-y-2.5 text-xs",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-start gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "font-semibold",
-										children: authError
-									})]
-								}), unauthorizedDomainHost && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "bg-white border border-rose-200 rounded-xl p-3 space-y-2 text-[11px] text-slate-700",
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-											className: "font-bold text-slate-900",
-											children: "इस समस्या को 10 सेकंड में ठीक करें:"
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
-												className: "flex-1 font-mono text-[10px] text-slate-900 break-all",
-												children: unauthorizedDomainHost
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-												type: "button",
-												onClick: () => {
-													navigator.clipboard?.writeText(unauthorizedDomainHost);
-													setCopiedDomain(true);
-													window.setTimeout(() => setCopiedDomain(false), 2e3);
-												},
-												className: "px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] flex items-center gap-1 shrink-0 cursor-pointer",
-												children: copiedDomain ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3 h-3 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी हुआ" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी" })] })
-											})]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ol", {
-											className: "list-decimal pl-4 space-y-1 text-[11px] leading-relaxed",
-											children: [
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: "नीचे दिए लिंक से Firebase Console खोलें:" }),
-												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Authentication → Settings → Authorized domains → Add domain" }), " पर जाएं।"] }),
-												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
-													"ऊपर कॉपी किया गया डोमेन पेस्ट करके ",
-													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Add" }),
-													" दबाएं, फिर वापस आकर साइन इन करें।"
-												] })
-											]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
-											href: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`,
-											target: "_blank",
-											rel: "noopener noreferrer",
-											className: "inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg transition",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Firebase Authorized Domains खोलें" })]
-										})
-									]
-								})]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-								type: "button",
-								disabled: isSigningIn,
-								onClick: () => void onGoogleSignIn(),
-								className: "w-full py-3.5 px-4 bg-slate-950 hover:bg-slate-900 disabled:opacity-60 text-white font-black text-sm rounded-xl shadow-lg flex items-center justify-center gap-2.5 transition cursor-pointer",
-								children: isSigningIn ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-4 h-4 animate-spin text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google से जुड़ रहा है..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-4 h-4 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google से साइन इन करें (Connect Firebase)" })] })
-							})
-						]
-					}) : accessDenied ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "p-6 space-y-4",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 space-y-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center gap-2 font-black text-sm",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "w-5 h-5 text-rose-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "इस ईमेल को फ़ैक्ट्री डेटा की अनुमति नहीं है" })]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-xs leading-relaxed",
-								children: connectionError || `ईमेल (${firebaseEmail}) रूम "${syncRoomId}" में अधिकृत नहीं है। कृपया एडमिन (shritejfoodproducts@gmail.com) से स्टाफ लिस्ट में यह ईमेल जोड़ने को कहें।`
-							})]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							onClick: () => void onGoogleSignOut(),
-							className: "w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "दूसरे Google अकाउंट से साइन इन करें" })]
-						})]
-					}) : !firestoreReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "p-8 text-center space-y-3",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-8 h-8 animate-spin text-emerald-600 mx-auto" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-sm font-bold text-slate-800",
-								children: "Firestore से लाइव स्टाफ व डेटा लोड हो रहा है..."
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-[11px] text-slate-500 font-mono",
-								children: firebaseEmail
-							})
-						]
-					}) : mode === "login" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+					}), mode === "login" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
 						onSubmit: handleLoginSubmit,
 						className: "p-6 space-y-4",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							firebaseEmail && accessDenied ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-3 space-y-2 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-1.5 font-bold",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "w-4 h-4 text-rose-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "इस Google ईमेल को फ़ैक्ट्री डेटा अनुमति नहीं है" })]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										type: "button",
+										onClick: () => void onGoogleSignOut(),
+										className: "inline-flex items-center gap-1 text-rose-700 font-bold underline shrink-0 cursor-pointer",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LogOut, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "हटाएं" })]
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-[11px] leading-relaxed",
+									children: connectionError || `ईमेल (${firebaseEmail}) रूम "${syncRoomId}" में अधिकृत नहीं है। आप बिना Google के भी नीचे मोबाइल नंबर व पासवर्ड से लॉगिन कर सकते हैं।`
+								})]
+							}) : firebaseEmail ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-[11px]",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "flex items-center gap-1.5 text-emerald-900 font-semibold truncate",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									children: [firestoreReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 										className: "truncate",
-										children: firebaseEmail
+										children: firestoreReady ? `Firebase Cloud लाइव: ${firebaseEmail}` : `Firestore लोड हो रहा है (${firebaseEmail})...`
 									})]
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									type: "button",
@@ -64985,6 +65258,12 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 									className: "text-emerald-800 hover:text-emerald-950 font-bold underline shrink-0 cursor-pointer",
 									children: "बदलें"
 								})]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] text-slate-700",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 font-semibold",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3.5 h-3.5 text-amber-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सीधे मोबाइल नंबर और पासवर्ड से लॉगिन करें" })]
+								}), !authReady && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin text-amber-600 shrink-0" })]
 							}),
 							successMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
@@ -65078,6 +65357,75 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 										})
 									]
 								})
+							}),
+							!firebaseEmail && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "pt-3 border-t border-slate-100 space-y-2.5",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center justify-between text-[11px] font-bold text-slate-600",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "flex items-center gap-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-3.5 h-3.5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "वैकल्पिक: Google से लाइव क्लाउड सिंक जोड़ें" })]
+										})
+									}),
+									authError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3 py-2 space-y-2 text-[11px]",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-start gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-semibold",
+												children: authError
+											})]
+										}), unauthorizedDomainHost && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "bg-white border border-rose-200 rounded-lg p-2.5 space-y-1.5 text-[11px] text-slate-700",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-md px-2 py-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+													className: "flex-1 font-mono text-[10px] text-slate-900 break-all",
+													children: unauthorizedDomainHost
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													type: "button",
+													onClick: () => {
+														navigator.clipboard?.writeText(unauthorizedDomainHost);
+														setCopiedDomain(true);
+														window.setTimeout(() => setCopiedDomain(false), 2e3);
+													},
+													className: "px-2 py-0.5 rounded bg-slate-900 text-white font-bold text-[10px] flex items-center gap-1 shrink-0 cursor-pointer",
+													children: copiedDomain ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3 h-3 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी हुआ" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी" })] })
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`,
+												target: "_blank",
+												rel: "noopener noreferrer",
+												className: "inline-flex items-center justify-center gap-1 w-full py-1.5 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] rounded-md transition",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Firebase Authorized Domains खोलें" })]
+											})]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										disabled: isSigningIn,
+										onClick: () => void onGoogleSignIn(),
+										className: "w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer",
+										children: isSigningIn ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google से जुड़ रहा है..." })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-3.5 h-3.5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google से क्लाउड सिंक जोड़ें (Connect Firebase)" })] })
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-wrap gap-1.5",
+										children: [!authEnv?.isIframe && !authEnv?.isCapacitorNative && onGoogleSignInRedirect && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											disabled: isSigningIn,
+											onClick: () => void onGoogleSignInRedirect(),
+											className: "flex-1 py-2 px-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Mobile Redirect साइन-इन" })]
+										}), (authEnv?.isIframe || authEnv?.isCapacitorNative || authEnv?.isInAppBrowser) && typeof window !== "undefined" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+											href: authEnv?.isCapacitorNative ? syncServerUrl || "https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app" : window.location.href,
+											target: "_blank",
+											rel: "noopener noreferrer",
+											className: "flex-1 py-2 px-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3 text-blue-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Chrome टैब में खोलें" })]
+										})]
+									})
+								]
 							}),
 							isDefaultAdminPass && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-2 border-t border-slate-100",
@@ -91431,13 +91779,7 @@ function App() {
 	});
 	const { settings, products, rawStock, bagStock, customers, orders, production, expenses, staff } = sync;
 	(0, import_react.useEffect)(() => {
-		if (!sync.firebaseUser || !sync.firestoreReady) {
-			if (!sync.firebaseUser) {
-				autoLoginAttemptedRef.current = false;
-				setIsAuthenticated(false);
-			}
-			return;
-		}
+		if (sync.firebaseUser && !sync.firestoreReady) return;
 		if (autoLoginAttemptedRef.current) return;
 		autoLoginAttemptedRef.current = true;
 		const rememberedId = typeof window !== "undefined" ? localStorage.getItem("tej_food_remembered_user_id") : null;
@@ -91682,7 +92024,7 @@ function App() {
 	};
 	const pendingOrdersCount = orders.filter((o) => o.status === "pending" || o.status === "in_production").length;
 	const lowStockCount = bagStock.filter((b) => b.packedCount <= b.minThreshold).length;
-	if (!isAuthenticated || !sync.firebaseUser || !sync.firestoreReady) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoginScreen, {
+	if (!isAuthenticated) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoginScreen, {
 		settings,
 		staffList: staff,
 		syncStatus: sync.status,
@@ -91690,6 +92032,7 @@ function App() {
 		syncRoomId: sync.config.roomId,
 		syncServerUrl: sync.config.syncServerUrl,
 		authReady: sync.authReady,
+		authEnv: sync.authEnv,
 		firebaseEmail: sync.firebaseUser?.email,
 		authError: sync.authError,
 		unauthorizedDomainHost: sync.unauthorizedDomainHost,
@@ -91698,6 +92041,7 @@ function App() {
 		accessDenied: sync.accessDenied,
 		connectionError: sync.connectionError,
 		onGoogleSignIn: sync.signInWithGoogle,
+		onGoogleSignInRedirect: sync.signInWithGoogleRedirect,
 		onGoogleSignOut: sync.signOutGoogle,
 		onLoginSuccess: handleLoginSuccess,
 		onResetPassword: handleResetPassword,

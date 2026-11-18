@@ -2879,10 +2879,6 @@
     padding-left: calc(var(--spacing) * 3.5);
   }
 
-  .pl-4 {
-    padding-left: calc(var(--spacing) * 4);
-  }
-
   .pl-6 {
     padding-left: calc(var(--spacing) * 6);
   }
@@ -3089,10 +3085,6 @@
 
   .text-amber-400 {
     color: var(--color-amber-400);
-  }
-
-  .text-amber-500 {
-    color: var(--color-amber-500);
   }
 
   .text-amber-600 {

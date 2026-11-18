@@ -27,7 +27,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { FIREBASE_PROJECT_ID } from '../firebase';
-import type { SyncConnectionStatus } from '../hooks/useFirestoreErpSync';
+import type {
+  AuthEnvironmentInfo,
+  SyncConnectionStatus,
+} from '../hooks/useFirestoreErpSync';
 
 interface LoginScreenProps {
   settings: CompanySettings;
@@ -37,6 +40,7 @@ interface LoginScreenProps {
   syncRoomId?: string;
   syncServerUrl?: string;
   authReady: boolean;
+  authEnv?: AuthEnvironmentInfo;
   firebaseEmail?: string | null;
   authError?: string | null;
   unauthorizedDomainHost?: string | null;
@@ -45,6 +49,7 @@ interface LoginScreenProps {
   accessDenied?: boolean;
   connectionError?: string | null;
   onGoogleSignIn: () => Promise<void>;
+  onGoogleSignInRedirect?: () => Promise<void>;
   onGoogleSignOut: () => Promise<void>;
   onLoginSuccess: (member: UserProfile, rememberMe: boolean) => void;
   onResetPassword: (updatedMember: UserProfile) => void;
@@ -80,6 +85,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   syncRoomId = 'tej-food-main',
   syncServerUrl,
   authReady,
+  authEnv,
   firebaseEmail,
   authError,
   unauthorizedDomainHost,
@@ -88,6 +94,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   accessDenied = false,
   connectionError,
   onGoogleSignIn,
+  onGoogleSignInRedirect,
   onGoogleSignOut,
   onLoginSuccess,
   onResetPassword,
@@ -431,151 +438,63 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </p>
           </div>
 
-          {!authReady ? (
-            <div className="p-8 text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto" />
-              <p className="text-sm font-bold text-slate-800">
-                Firebase क्लाउड डेटाबेस से जुड़ रहा है...
-              </p>
-              <p className="text-xs text-slate-500">कृपया प्रतीक्षा करें</p>
-            </div>
-          ) : !firebaseEmail ? (
-            <div className="p-6 space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
-                  <Cloud className="w-5 h-5 text-amber-600 shrink-0" />
-                  <span>कदम 1: Google से लाइव क्लाउड सिंक जोड़ें</span>
-                </div>
-                <p className="text-xs text-amber-900/80 leading-relaxed">
-                  सभी मोबाइल पर डेटा सुरक्षित रखने और बिना रिफ्रेश किए रियल-टाइम अपडेट पाने के लिए अपने Google अकाउंट (जैसे <strong>shritejfoodproducts@gmail.com</strong>) से साइन इन करें।
-                </p>
-              </div>
-
-              {authError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 space-y-2.5 text-xs">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                    <span className="font-semibold">{authError}</span>
-                  </div>
-
-                  {unauthorizedDomainHost && (
-                    <div className="bg-white border border-rose-200 rounded-xl p-3 space-y-2 text-[11px] text-slate-700">
-                      <p className="font-bold text-slate-900">
-                        इस समस्या को 10 सेकंड में ठीक करें:
-                      </p>
-                      <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                        <code className="flex-1 font-mono text-[10px] text-slate-900 break-all">
-                          {unauthorizedDomainHost}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard?.writeText(unauthorizedDomainHost);
-                            setCopiedDomain(true);
-                            window.setTimeout(() => setCopiedDomain(false), 2000);
-                          }}
-                          className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] flex items-center gap-1 shrink-0 cursor-pointer"
-                        >
-                          {copiedDomain ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span>कॉपी हुआ</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>कॉपी</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
-                        <li>नीचे दिए लिंक से Firebase Console खोलें:</li>
-                        <li>
-                          <strong>Authentication → Settings → Authorized domains → Add domain</strong> पर जाएं।
-                        </li>
-                        <li>
-                          ऊपर कॉपी किया गया डोमेन पेस्ट करके <strong>Add</strong> दबाएं, फिर वापस आकर साइन इन करें।
-                        </li>
-                      </ol>
-                      <a
-                        href={`https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg transition"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Firebase Authorized Domains खोलें</span>
-                      </a>
+          {mode === 'login' ? (
+            /* DIRECT MOBILE NUMBER + PASSWORD LOGIN FORM (Always visible on main page) */
+            <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
+              {/* Cloud / Server Sync Status Strip */}
+              {firebaseEmail && accessDenied ? (
+                <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>इस Google ईमेल को फ़ैक्ट्री डेटा अनुमति नहीं है</span>
                     </div>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => void onGoogleSignOut()}
+                      className="inline-flex items-center gap-1 text-rose-700 font-bold underline shrink-0 cursor-pointer"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>हटाएं</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    {connectionError ||
+                      `ईमेल (${firebaseEmail}) रूम "${syncRoomId}" में अधिकृत नहीं है। आप बिना Google के भी नीचे मोबाइल नंबर व पासवर्ड से लॉगिन कर सकते हैं।`}
+                  </p>
+                </div>
+              ) : firebaseEmail ? (
+                <div className="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-[11px]">
+                  <div className="flex items-center gap-1.5 text-emerald-900 font-semibold truncate">
+                    {firestoreReady ? (
+                      <Cloud className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600 shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {firestoreReady
+                        ? `Firebase Cloud लाइव: ${firebaseEmail}`
+                        : `Firestore लोड हो रहा है (${firebaseEmail})...`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void onGoogleSignOut()}
+                    className="text-emerald-800 hover:text-emerald-950 font-bold underline shrink-0 cursor-pointer"
+                  >
+                    बदलें
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] text-slate-700">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>सीधे मोबाइल नंबर और पासवर्ड से लॉगिन करें</span>
+                  </div>
+                  {!authReady && <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600 shrink-0" />}
                 </div>
               )}
 
-              <button
-                type="button"
-                disabled={isSigningIn}
-                onClick={() => void onGoogleSignIn()}
-                className="w-full py-3.5 px-4 bg-slate-950 hover:bg-slate-900 disabled:opacity-60 text-white font-black text-sm rounded-xl shadow-lg flex items-center justify-center gap-2.5 transition cursor-pointer"
-              >
-                {isSigningIn ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                    <span>Google से जुड़ रहा है...</span>
-                  </>
-                ) : (
-                  <>
-                    <Cloud className="w-4 h-4 text-amber-400" />
-                    <span>Google से साइन इन करें (Connect Firebase)</span>
-                  </>
-                )}
-              </button>
-            </div>
-          ) : accessDenied ? (
-            <div className="p-6 space-y-4">
-              <div className="bg-rose-50 border border-rose-200 text-rose-900 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center gap-2 font-black text-sm">
-                  <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
-                  <span>इस ईमेल को फ़ैक्ट्री डेटा की अनुमति नहीं है</span>
-                </div>
-                <p className="text-xs leading-relaxed">
-                  {connectionError ||
-                    `ईमेल (${firebaseEmail}) रूम "${syncRoomId}" में अधिकृत नहीं है। कृपया एडमिन (shritejfoodproducts@gmail.com) से स्टाफ लिस्ट में यह ईमेल जोड़ने को कहें।`}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void onGoogleSignOut()}
-                className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>दूसरे Google अकाउंट से साइन इन करें</span>
-              </button>
-            </div>
-          ) : !firestoreReady ? (
-            <div className="p-8 text-center space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
-              <p className="text-sm font-bold text-slate-800">
-                Firestore से लाइव स्टाफ व डेटा लोड हो रहा है...
-              </p>
-              <p className="text-[11px] text-slate-500 font-mono">{firebaseEmail}</p>
-            </div>
-          ) : mode === 'login' ? (
-            /* LOGIN FORM */
-            <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
-              <div className="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-[11px]">
-                <div className="flex items-center gap-1.5 text-emerald-900 font-semibold truncate">
-                  <Cloud className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span className="truncate">{firebaseEmail}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void onGoogleSignOut()}
-                  className="text-emerald-800 hover:text-emerald-950 font-bold underline shrink-0 cursor-pointer"
-                >
-                  बदलें
-                </button>
-              </div>
               {successMsg && (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -673,6 +592,118 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   <span className="font-bold underline">ईमेल OTP से रीसेट करें</span>
                 </button>
               </div>
+
+              {/* Optional Google Cloud Sync Panel (Firebase Firestore) */}
+              {!firebaseEmail && (
+                <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                    <span className="flex items-center gap-1.5">
+                      <Cloud className="w-3.5 h-3.5 text-amber-600" />
+                      <span>वैकल्पिक: Google से लाइव क्लाउड सिंक जोड़ें</span>
+                    </span>
+                  </div>
+
+                  {authError && (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3 py-2 space-y-2 text-[11px]">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                        <span className="font-semibold">{authError}</span>
+                      </div>
+
+                      {unauthorizedDomainHost && (
+                        <div className="bg-white border border-rose-200 rounded-lg p-2.5 space-y-1.5 text-[11px] text-slate-700">
+                          <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-md px-2 py-1">
+                            <code className="flex-1 font-mono text-[10px] text-slate-900 break-all">
+                              {unauthorizedDomainHost}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard?.writeText(unauthorizedDomainHost);
+                                setCopiedDomain(true);
+                                window.setTimeout(() => setCopiedDomain(false), 2000);
+                              }}
+                              className="px-2 py-0.5 rounded bg-slate-900 text-white font-bold text-[10px] flex items-center gap-1 shrink-0 cursor-pointer"
+                            >
+                              {copiedDomain ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-400" />
+                                  <span>कॉपी हुआ</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>कॉपी</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <a
+                            href={`https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] rounded-md transition"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>Firebase Authorized Domains खोलें</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={isSigningIn}
+                    onClick={() => void onGoogleSignIn()}
+                    className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    {isSigningIn ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                        <span>Google से जुड़ रहा है...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Cloud className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Google से क्लाउड सिंक जोड़ें (Connect Firebase)</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {!authEnv?.isIframe && !authEnv?.isCapacitorNative && onGoogleSignInRedirect && (
+                      <button
+                        type="button"
+                        disabled={isSigningIn}
+                        onClick={() => void onGoogleSignInRedirect()}
+                        className="flex-1 py-2 px-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
+                      >
+                        <ExternalLink className="w-3 h-3 text-amber-700" />
+                        <span>Mobile Redirect साइन-इन</span>
+                      </button>
+                    )}
+
+                    {(authEnv?.isIframe || authEnv?.isCapacitorNative || authEnv?.isInAppBrowser) &&
+                      typeof window !== 'undefined' && (
+                        <a
+                          href={
+                            authEnv?.isCapacitorNative
+                              ? syncServerUrl ||
+                                'https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app'
+                              : window.location.href
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-2 px-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 font-bold text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition"
+                        >
+                          <ExternalLink className="w-3 h-3 text-blue-600" />
+                          <span>Chrome टैब में खोलें</span>
+                        </a>
+                      )}
+                  </div>
+                </div>
+              )}
 
               {/* First-time Demo Setup Helper (auto-hides if Admin changed password) */}
               {isDefaultAdminPass && (

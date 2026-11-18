@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  browserPopupRedirectResolver,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   type User,
 } from 'firebase/auth';
@@ -40,7 +43,7 @@ import {
   INITIAL_SETTINGS,
   INITIAL_STAFF,
 } from '../data/initialData';
-import { loadStateFromStorage } from '../utils/backup';
+import { loadStateFromStorage, saveStateToStorage } from '../utils/backup';
 import { applyErpMutation } from '../../shared/erpSyncReducer';
 import type {
   ConnectedDevice,
@@ -158,21 +161,76 @@ function playNotificationChime() {
   }
 }
 
+export interface AuthEnvironmentInfo {
+  isIframe: boolean;
+  isCapacitorNative: boolean;
+  isStandalonePwa: boolean;
+  isMobileDevice: boolean;
+  isInAppBrowser: boolean;
+  currentHost: string;
+}
+
+function detectAuthEnvironment(): AuthEnvironmentInfo {
+  if (typeof window === 'undefined') {
+    return {
+      isIframe: false,
+      isCapacitorNative: false,
+      isStandalonePwa: false,
+      isMobileDevice: false,
+      isInAppBrowser: false,
+      currentHost: '',
+    };
+  }
+
+  let isIframe = false;
+  try {
+    isIframe = window.self !== window.top;
+  } catch {
+    isIframe = true;
+  }
+
+  const winCap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  const isCapacitorNative =
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'file:' ||
+    Boolean(winCap?.isNativePlatform?.());
+
+  const isStandalonePwa =
+    Boolean(window.matchMedia?.('(display-mode: standalone)').matches) ||
+    Boolean((navigator as unknown as { standalone?: boolean }).standalone);
+
+  const ua = navigator.userAgent || '';
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(ua);
+  const isInAppBrowser = /\bwv\b|WebView|FBAN|FBAV|Instagram|WhatsApp|Line\//i.test(ua);
+
+  return {
+    isIframe,
+    isCapacitorNative,
+    isStandalonePwa,
+    isMobileDevice,
+    isInAppBrowser,
+    currentHost: window.location.hostname || '',
+  };
+}
+
 function mapFirebaseAuthError(error: unknown): { message: string; unauthorizedHost: string | null } {
   const code =
     typeof error === 'object' && error !== null && 'code' in error
       ? String((error as { code?: unknown }).code || '')
       : '';
+  const rawMsg = error instanceof Error ? error.message : String(error || '');
+
   if (code === 'auth/popup-blocked') {
     return {
       message:
-        'ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।',
+        'ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। पॉपअप Allow करें या नीचे "Redirect से साइन इन" बटन दबाएं।',
       unauthorizedHost: null,
     };
   }
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
     return {
-      message: 'Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।',
+      message:
+        'Google साइन-इन पॉपअप पूरा होने से पहले बंद हो गया। यदि Chrome पेज पर "The requested action is invalid" आए, तो नीचे "Redirect से साइन इन" या "Chrome में पूरा पेज खोलें" विकल्प अपनाएं।',
       unauthorizedHost: null,
     };
   }
@@ -186,6 +244,19 @@ function mapFirebaseAuthError(error: unknown): { message: string; unauthorizedHo
       unauthorizedHost: currentHost || 'unknown-domain',
     };
   }
+  if (
+    code === 'auth/bad-request' ||
+    code === 'auth/missing-initial-state' ||
+    code === 'auth/operation-not-supported-in-this-environment' ||
+    rawMsg.toLowerCase().includes('requested action is invalid') ||
+    rawMsg.toLowerCase().includes('missing initial state')
+  ) {
+    return {
+      message:
+        'मोबाइल/PWA या इन-ऐप ब्राउज़र में पॉपअप सेशन टूटने के कारण Google साइन-इन पूरा नहीं हो सका ("The requested action is invalid")। कृपया ऐप को सीधे Chrome ब्राउज़र में खोलकर साइन इन करें।',
+      unauthorizedHost: null,
+    };
+  }
   if (code === 'auth/network-request-failed') {
     return {
       message: 'नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।',
@@ -193,7 +264,7 @@ function mapFirebaseAuthError(error: unknown): { message: string; unauthorizedHo
     };
   }
   return {
-    message: error instanceof Error ? error.message : 'Google साइन-इन में त्रुटि हुई।',
+    message: rawMsg || 'Google साइन-इन में त्रुटि हुई।',
     unauthorizedHost: null,
   };
 }
@@ -238,6 +309,7 @@ export function useFirestoreErpSync({
   onRemoteActivity,
 }: UseFirestoreErpSyncOptions) {
   const [config, setConfig] = useState<FirestoreSyncConfig>(() => getInitialSyncConfig());
+  const [authEnv] = useState<AuthEnvironmentInfo>(() => detectAuthEnvironment());
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -249,15 +321,34 @@ export function useFirestoreErpSync({
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
 
-  const [settings, setSettings] = useState<CompanySettings>(INITIAL_SETTINGS);
-  const [products, setProducts] = useState<ProductMaster[]>(INITIAL_PRODUCTS);
-  const [rawStock, setRawStock] = useState<RawMaterialStock>(INITIAL_RAW_STOCK);
-  const [bagStock, setBagStock] = useState<BagStockItem[]>(INITIAL_BAG_STOCK);
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [production, setProduction] = useState<ProductionBatch[]>(INITIAL_PRODUCTION);
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(INITIAL_EXPENSES);
-  const [staff, setStaff] = useState<UserProfile[]>(INITIAL_STAFF);
+  const [initialLocal] = useState<SyncableErpState>(() => {
+    const saved = loadStateFromStorage();
+    const defaults = buildDefaultState();
+    if (!saved) return defaults;
+    return {
+      version: saved.version || defaults.version,
+      timestamp: saved.timestamp || defaults.timestamp,
+      settings: saved.settings || defaults.settings,
+      products: Array.isArray(saved.products) && saved.products.length > 0 ? saved.products : defaults.products,
+      rawStock: saved.rawStock || defaults.rawStock,
+      bagStock: Array.isArray(saved.bagStock) && saved.bagStock.length > 0 ? saved.bagStock : defaults.bagStock,
+      customers: Array.isArray(saved.customers) ? saved.customers : defaults.customers,
+      orders: Array.isArray(saved.orders) ? saved.orders : defaults.orders,
+      production: Array.isArray(saved.production) ? saved.production : defaults.production,
+      expenses: Array.isArray(saved.expenses) ? saved.expenses : defaults.expenses,
+      staff: Array.isArray(saved.staff) && saved.staff.length > 0 ? saved.staff : defaults.staff,
+    };
+  });
+
+  const [settings, setSettings] = useState<CompanySettings>(initialLocal.settings);
+  const [products, setProducts] = useState<ProductMaster[]>(initialLocal.products);
+  const [rawStock, setRawStock] = useState<RawMaterialStock>(initialLocal.rawStock);
+  const [bagStock, setBagStock] = useState<BagStockItem[]>(initialLocal.bagStock);
+  const [customers, setCustomers] = useState<Customer[]>(initialLocal.customers);
+  const [orders, setOrders] = useState<Order[]>(initialLocal.orders);
+  const [production, setProduction] = useState<ProductionBatch[]>(initialLocal.production);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>(initialLocal.expenses);
+  const [staff, setStaff] = useState<UserProfile[]>(initialLocal.staff);
 
   const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>([]);
   const [recentEvents, setRecentEvents] = useState<LiveActivityEvent[]>([]);
@@ -296,8 +387,19 @@ export function useFirestoreErpSync({
     staff,
   };
 
-  // 1. Firebase Auth Listener
+  // 1. Firebase Auth Listener + Redirect Result Handler
   useEffect(() => {
+    let active = true;
+
+    getRedirectResult(auth, browserPopupRedirectResolver).catch((err) => {
+      if (!active) return;
+      const mapped = mapFirebaseAuthError(err);
+      if (mapped.message) {
+        setAuthError(mapped.message);
+        setUnauthorizedDomainHost(mapped.unauthorizedHost);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       setAuthReady(true);
@@ -363,24 +465,101 @@ export function useFirestoreErpSync({
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
+  const performGoogleSignIn = useCallback(
+    async (preferRedirect = false) => {
+      setIsSigningIn(true);
+      setAuthError(null);
+      setUnauthorizedDomainHost(null);
+      setAccessDenied(false);
+
+      const env = detectAuthEnvironment();
+
+      if (env.isCapacitorNative) {
+        setIsSigningIn(false);
+        setAuthError(
+          'Android APK (WebView) के अंदर Google Popup साइन-इन Chrome में जाने पर "The requested action is invalid" दे सकता है। कृपया नीचे दिए बटन से ऐप को सीधे Chrome ब्राउज़र में खोलकर Google Sign-In करें।'
+        );
+        return;
+      }
+
+      // In installed Standalone PWA (not inside an iframe), popup loses window.opener when Chrome opens; use redirect.
+      const shouldUseRedirect = !env.isIframe && (preferRedirect || env.isStandalonePwa);
+
+      if (shouldUseRedirect) {
+        try {
+          await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+          return;
+        } catch (err) {
+          const mapped = mapFirebaseAuthError(err);
+          setAuthError(mapped.message);
+          setUnauthorizedDomainHost(mapped.unauthorizedHost);
+          setIsSigningIn(false);
+          return;
+        }
+      }
+
+      // Guard against Chrome external tab opening without closing/resolving popup opener
+      let timedOut = false;
+      const timeoutId = window.setTimeout(() => {
+        timedOut = true;
+        setIsSigningIn(false);
+        setAuthError(
+          'Google साइन-इन पॉपअप से जवाब नहीं मिला। यदि Chrome में नया टैब खुला है या "The requested action is invalid" दिख रहा है, तो कृपया नीचे "Chrome में पूरा पेज खोलें" या "Redirect से साइन इन" का उपयोग करें।'
+        );
+      }, 45000);
+
+      try {
+        await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      } catch (err) {
+        if (!timedOut) {
+          const code =
+            typeof err === 'object' && err !== null && 'code' in err
+              ? String((err as { code?: unknown }).code || '')
+              : '';
+          // If popup is blocked in a top-level mobile browser, seamlessly try redirect
+          if (
+            !env.isIframe &&
+            env.isMobileDevice &&
+            (code === 'auth/popup-blocked' ||
+              code === 'auth/operation-not-supported-in-this-environment')
+          ) {
+            try {
+              await signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver);
+              return;
+            } catch (redirectErr) {
+              const mappedRedirect = mapFirebaseAuthError(redirectErr);
+              setAuthError(mappedRedirect.message);
+              setUnauthorizedDomainHost(mappedRedirect.unauthorizedHost);
+              return;
+            }
+          }
+          const mapped = mapFirebaseAuthError(err);
+          setAuthError(mapped.message);
+          setUnauthorizedDomainHost(mapped.unauthorizedHost);
+        }
+      } finally {
+        window.clearTimeout(timeoutId);
+        if (!timedOut) {
+          setIsSigningIn(false);
+        }
+      }
+    },
+    []
+  );
+
   const signInWithGoogle = useCallback(async () => {
-    setIsSigningIn(true);
-    setAuthError(null);
-    setUnauthorizedDomainHost(null);
-    setAccessDenied(false);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      const mapped = mapFirebaseAuthError(err);
-      setAuthError(mapped.message);
-      setUnauthorizedDomainHost(mapped.unauthorizedHost);
-    } finally {
-      setIsSigningIn(false);
-    }
-  }, []);
+    await performGoogleSignIn(false);
+  }, [performGoogleSignIn]);
+
+  const signInWithGoogleRedirect = useCallback(async () => {
+    await performGoogleSignIn(true);
+  }, [performGoogleSignIn]);
 
   const signOutGoogle = useCallback(async () => {
     try {
@@ -803,6 +982,144 @@ export function useFirestoreErpSync({
     };
   }, [authReady, firebaseUser, config.roomId, connectTrigger, writeFullWorkspaceToFirestore]);
 
+  // Keep a local mirror of live ERP state so Direct Mobile+Password login works offline & across refreshes
+  useEffect(() => {
+    saveStateToStorage({
+      version: '2.5.0',
+      timestamp: new Date().toISOString(),
+      settings,
+      products,
+      rawStock,
+      bagStock,
+      customers,
+      orders,
+      production,
+      expenses,
+      staff,
+    });
+  }, [settings, products, rawStock, bagStock, customers, orders, production, expenses, staff]);
+
+  // 2B. Server HTTP Sync Fallback when logged in directly via Mobile+Password (no Google Auth)
+  const serverSeqRef = useRef<number>(-1);
+  const applyLocalFullState = useCallback((next: SyncableErpState) => {
+    if (next.settings) setSettings(next.settings);
+    if (Array.isArray(next.products)) setProducts(next.products);
+    if (next.rawStock) setRawStock(next.rawStock);
+    if (Array.isArray(next.bagStock)) setBagStock(next.bagStock);
+    if (Array.isArray(next.customers)) setCustomers(next.customers);
+    if (Array.isArray(next.orders)) setOrders(next.orders);
+    if (Array.isArray(next.production)) setProduction(next.production);
+    if (Array.isArray(next.expenses)) setExpenses(next.expenses);
+    if (Array.isArray(next.staff) && next.staff.length > 0) setStaff(next.staff);
+  }, []);
+
+  const resolveSyncApiBase = useCallback(() => {
+    if (typeof window === 'undefined') return '';
+    if (authEnv.isCapacitorNative) {
+      return (
+        configRef.current.syncServerUrl ||
+        'https://ais-pre-yevywmvpbfmbyiknv4vkin-325769928556.asia-northeast1.run.app'
+      )
+        .trim()
+        .replace(/\/+$/, '');
+    }
+    return '';
+  }, [authEnv.isCapacitorNative]);
+
+  useEffect(() => {
+    if (!authReady || firebaseUser) return;
+
+    let cancelled = false;
+    const roomId = sanitizeRoomId(config.roomId);
+    const base = resolveSyncApiBase();
+
+    const joinAndPoll = async () => {
+      try {
+        const joinRes = await fetch(`${base}/api/sync/join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            deviceId: configRef.current.deviceId,
+            deviceName: configRef.current.deviceName,
+            deviceRole: configRef.current.deviceRole,
+            userRole: userRoleRef.current,
+            initialMasterState:
+              configRef.current.deviceRole === 'master' ? liveStateRef.current : undefined,
+          }),
+        });
+        if (!joinRes.ok || cancelled) {
+          if (!cancelled) setStatus('offline');
+          return;
+        }
+        const json = (await joinRes.json()) as {
+          ok?: boolean;
+          seq?: number;
+          hasMasterSeed?: boolean;
+          state?: SyncableErpState;
+          devices?: ConnectedDevice[];
+          recentEvents?: LiveActivityEvent[];
+        };
+        if (cancelled || !json?.ok) return;
+        serverSeqRef.current = typeof json.seq === 'number' ? json.seq : 0;
+        if (json.hasMasterSeed && json.state) {
+          applyLocalFullState(json.state);
+        }
+        if (Array.isArray(json.devices)) setConnectedDevices(json.devices);
+        if (Array.isArray(json.recentEvents)) setRecentEvents(json.recentEvents);
+        setStatus('connected');
+        setConnectionError(null);
+        setLastSyncedAt(new Date().toISOString());
+      } catch {
+        if (!cancelled) {
+          setStatus('offline');
+        }
+      }
+    };
+
+    void joinAndPoll();
+
+    const pollTimer = window.setInterval(async () => {
+      if (cancelled) return;
+      try {
+        const qs = new URLSearchParams({
+          sinceSeq: String(serverSeqRef.current),
+          deviceId: configRef.current.deviceId,
+          deviceName: configRef.current.deviceName,
+          deviceRole: configRef.current.deviceRole,
+          userRole: userRoleRef.current,
+        });
+        const pollRes = await fetch(`${base}/api/sync/poll/${encodeURIComponent(roomId)}?${qs.toString()}`);
+        if (!pollRes.ok || cancelled) return;
+        const json = (await pollRes.json()) as {
+          ok?: boolean;
+          seq?: number;
+          changed?: boolean;
+          hasMasterSeed?: boolean;
+          state?: SyncableErpState;
+          devices?: ConnectedDevice[];
+          recentEvents?: LiveActivityEvent[];
+        };
+        if (cancelled || !json?.ok) return;
+        if (Array.isArray(json.devices)) setConnectedDevices(json.devices);
+        if (Array.isArray(json.recentEvents)) setRecentEvents(json.recentEvents);
+        if (json.changed && json.hasMasterSeed && json.state) {
+          serverSeqRef.current = typeof json.seq === 'number' ? json.seq : serverSeqRef.current;
+          applyLocalFullState(json.state);
+          setLastSyncedAt(new Date().toISOString());
+        }
+        setStatus('connected');
+      } catch {
+        if (!cancelled) setStatus('offline');
+      }
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollTimer);
+    };
+  }, [authReady, firebaseUser, config.roomId, connectTrigger, resolveSyncApiBase, applyLocalFullState]);
+
   // Update presence whenever user role or device identity changes
   useEffect(() => {
     if (!firebaseUser || !firestoreReady || accessDenied) return;
@@ -856,9 +1173,21 @@ export function useFirestoreErpSync({
 
   const probeServerHealth = useCallback(async (): Promise<ServerProbeResult> => {
     if (!firebaseUserRef.current) {
+      try {
+        const base = resolveSyncApiBase();
+        const res = await fetch(`${base}/api/health`);
+        if (res.ok) {
+          return {
+            ok: true,
+            message: 'लोकल + सर्वर लाइव सिंक चालू है (डायरेक्ट मोबाइल+पासवर्ड मोड)।',
+          };
+        }
+      } catch {
+        // ignore
+      }
       return {
-        ok: false,
-        message: 'कृपया पहले Google अकाउंट से साइन इन करें ताकि Firebase Firestore जुड़ सके।',
+        ok: true,
+        message: 'ऑफ़लाइन/लोकल स्टोरेज मोड चालू है। क्लाउड सिंक के लिए Google से जुड़ सकते हैं।',
       };
     }
     const ok = await testFirestoreConnection();
@@ -872,16 +1201,13 @@ export function useFirestoreErpSync({
       ok: true,
       message: `Firebase Firestore (${FIREBASE_PROJECT_ID}) से लाइव कनेक्शन चालू है!`,
     };
-  }, []);
+  }, [resolveSyncApiBase]);
 
-  // 3. Atomic Firestore Mutation Dispatcher
+  // 3. Atomic Firestore / Local+Server Mutation Dispatcher
   const dispatchMutation = useCallback(
     async (action: ErpMutationAction, actorNameOverride?: string) => {
       const user = firebaseUserRef.current;
       const roomId = sanitizeRoomId(configRef.current.roomId);
-      if (!user) {
-        throw new Error('Firebase से जुड़ा नहीं है। कृपया पहले Google से साइन इन करें।');
-      }
 
       const currentState = liveStateRef.current;
       const res = applyErpMutation(
@@ -904,6 +1230,43 @@ export function useFirestoreErpSync({
         title: res.activityMeta?.title || 'डेटा अपडेट',
         detail: res.activityMeta?.detail || '',
       };
+
+      // If logged in directly via Mobile + Password (no Firebase Google Auth yet), update local + Express server sync
+      if (!user) {
+        applyLocalFullState(res.nextState);
+        saveStateToStorage(res.nextState);
+        setRecentEvents((prev) => [activityEvent, ...prev].slice(0, 40));
+        setLastSyncedAt(nowIso);
+
+        try {
+          const base = resolveSyncApiBase();
+          const syncRes = await fetch(`${base}/api/sync/mutation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              envelope: {
+                mutationId: evtId,
+                roomId,
+                actorDeviceId: configRef.current.deviceId,
+                actorName: actorNameOverride || configRef.current.deviceName,
+                actorRole: userRoleRef.current,
+                timestamp: nowIso,
+                action,
+              },
+            }),
+          });
+          if (syncRes.ok) {
+            const data = (await syncRes.json()) as { seq?: number };
+            if (typeof data.seq === 'number') {
+              serverSeqRef.current = data.seq;
+            }
+            setStatus('connected');
+          }
+        } catch {
+          // Safe offline/local persistence already succeeded above
+        }
+        return;
+      }
 
       const factoryRef = doc(db, 'factories', roomId);
       const activityRef = doc(db, 'factories', roomId, 'activity', evtId);
@@ -1190,7 +1553,7 @@ export function useFirestoreErpSync({
         handleFirestoreError(err, OperationType.WRITE, `factories/${roomId}`);
       }
     },
-    [writeFullWorkspaceToFirestore]
+    [writeFullWorkspaceToFirestore, applyLocalFullState, resolveSyncApiBase]
   );
 
   const pushMasterStateNow = useCallback(async () => {
@@ -1200,12 +1563,14 @@ export function useFirestoreErpSync({
 
   return {
     // Auth & Readiness
+    authEnv,
     firebaseUser,
     authReady,
     authError,
     unauthorizedDomainHost,
     isSigningIn,
     signInWithGoogle,
+    signInWithGoogleRedirect,
     signOutGoogle,
     firestoreReady,
     accessDenied,
