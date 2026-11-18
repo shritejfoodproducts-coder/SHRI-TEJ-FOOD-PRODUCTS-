@@ -24,7 +24,8 @@ import {
   Share2,
   Calendar,
   ChevronRight,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Briefcase
 } from 'lucide-react';
 import { ActiveTab } from '../components/Sidebar';
 
@@ -39,6 +40,7 @@ interface DashboardViewProps {
   staff: UserProfile[];
   settings: CompanySettings;
   currentRole: UserRole;
+  activeStaffMember?: UserProfile;
   permissions?: StaffPermissions;
   onNavigate: (tab: ActiveTab) => void;
   onOpenNewOrder: () => void;
@@ -55,9 +57,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   products,
   production,
   expenses,
-  staff: _staff,
+  staff,
   settings,
   currentRole,
+  activeStaffMember,
   permissions,
   onNavigate,
   onOpenNewOrder,
@@ -135,6 +138,47 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Low stock items count
   const lowStockItems = bagStock.filter(b => b.packedCount <= b.minThreshold);
+
+  // Salesman Field Monthly Summary
+  const currentMonthPrefix = todayStr.slice(0, 7);
+  const canSeeSalesmanSummary =
+    currentRole === 'admin' ||
+    currentRole === 'manager' ||
+    currentRole === 'accountant' ||
+    currentRole === 'salesman' ||
+    perms.manageStaff ||
+    perms.viewReports;
+
+  const salesmanSummaryList = (() => {
+    if (!canSeeSalesmanSummary) return [];
+    const baseSalesmen = staff.filter((s) => s.role === 'salesman');
+    const scoped =
+      currentRole === 'salesman' && activeStaffMember
+        ? baseSalesmen.filter((s) => s.id === activeStaffMember.id)
+        : baseSalesmen;
+    const custMap = new Map<string, Customer>(customers.map((c) => [c.id, c]));
+
+    return scoped.map((sm) => {
+      const addedCustomers = customers.filter((c) => c.salesmanId === sm.id);
+      const monthOrders = orders.filter((o) => {
+        if (!o.date.startsWith(currentMonthPrefix)) return false;
+        const resolvedSalesmanId = o.salesmanId || custMap.get(o.customerId)?.salesmanId;
+        return resolvedSalesmanId === sm.id;
+      });
+      const monthAmount = monthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+      const monthBags = monthOrders.reduce(
+        (sum, o) => sum + o.items.reduce((s2, i) => s2 + i.quantity, 0),
+        0
+      );
+      return {
+        salesman: sm,
+        customerCount: addedCustomers.length,
+        orderCount: monthOrders.length,
+        bagCount: monthBags,
+        totalAmount: monthAmount,
+      };
+    });
+  })();
 
   // WhatsApp daily report share
   const handleShareDailyReport = () => {
@@ -263,7 +307,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* 3. Market Dues */}
         <div 
-          onClick={() => onNavigate('customers')}
+          onClick={() => onNavigate('wholesale_dealers')}
           className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-400 hover:shadow-md transition cursor-pointer group"
         >
           <div className="flex justify-between items-start">
@@ -277,7 +321,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ₹{totalMarketDues.toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] text-slate-500 mt-1 block">
-              कुल {customers.length} पंजीकृत ग्राहक
+              {customers.filter((c) => c.type === 'wholesaler').length} होलसेल •{' '}
+              {customers.filter((c) => c.type !== 'wholesaler').length} रिटेल
             </span>
           </div>
         </div>
@@ -495,6 +540,65 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Salesman Field Monthly Orders Summary Card */}
+      {canSeeSalesmanSummary && salesmanSummaryList.length > 0 && (
+        <div className="bg-white rounded-2xl border border-amber-200 shadow-xs overflow-hidden">
+          <div className="px-5 py-3.5 bg-gradient-to-r from-amber-50 to-white border-b border-amber-200 flex flex-wrap justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-amber-500 text-slate-950">
+                <Briefcase className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-slate-900">
+                  सेल्समैन फील्ड — इस माह के ऑर्डर्स ({currentMonthPrefix})
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  सेल्समैन द्वारा जोड़े गए ग्राहकों से इस महीने आए ऑर्डर और बिक्री का लेखा-जोखा
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('salesman_ledger')}
+              className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition"
+            >
+              <span>पूरा लेखा-जोखा देखें</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {salesmanSummaryList.map((row) => (
+              <div
+                key={row.salesman.id}
+                onClick={() => onNavigate('salesman_ledger')}
+                className="p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50/70 hover:bg-amber-50/40 cursor-pointer transition space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-xs text-slate-900 truncate">{row.salesman.name}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold shrink-0">
+                    {row.customerCount} ग्राहक
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">इस माह ऑर्डर</span>
+                    <span className="font-mono font-bold text-sm text-slate-900">
+                      {row.orderCount} ऑर्डर • {row.bagCount} बैग
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-500 block">कुल बिक्री</span>
+                    <span className="font-mono font-black text-base text-emerald-700">
+                      ₹{row.totalAmount.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Two Column: Recent Orders & Stock Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

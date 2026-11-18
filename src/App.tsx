@@ -58,6 +58,7 @@ import { AccountingView } from './views/AccountingView';
 import { BankExpenseView } from './views/BankExpenseView';
 import { ReportsView } from './views/ReportsView';
 import { SettingsView } from './views/SettingsView';
+import { SalesmanLedgerView } from './views/SalesmanLedgerView';
 
 export default function App() {
   // App UI State & Staff Role Authentication
@@ -70,18 +71,28 @@ export default function App() {
   // Modals & Live Toast
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [newOrderCustomerId, setNewOrderCustomerId] = useState<string | undefined>(undefined);
   const [showNewProductionModal, setShowNewProductionModal] = useState(false);
   const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+  const [newCustomerDefaultType, setNewCustomerDefaultType] = useState<'wholesaler' | 'retailer'>('retailer');
   const [showReceivePaymentModal, setShowReceivePaymentModal] = useState(false);
   const [receivePaymentCustId, setReceivePaymentCustId] = useState<string | undefined>(undefined);
+  const [salesmanLedgerTargetId, setSalesmanLedgerTargetId] = useState<string | undefined>(undefined);
   const [showRoleSwitcherModal, setShowRoleSwitcherModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showLiveSyncModal, setShowLiveSyncModal] = useState(false);
   const [installModalTab, setInstallModalTab] = useState<'apk' | 'api'>('apk');
   const [liveToast, setLiveToast] = useState<LiveActivityEvent | null>(null);
   const [writeErrorBanner, setWriteErrorBanner] = useState<string | null>(null);
+  const [showGmpQuotaBanner, setShowGmpQuotaBanner] = useState(false);
   const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onQuotaExceeded = () => setShowGmpQuotaBanner(true);
+    window.addEventListener('gmp-quota-exceeded', onQuotaExceeded);
+    return () => window.removeEventListener('gmp-quota-exceeded', onQuotaExceeded);
+  }, []);
 
   const handleRemoteActivity = useCallback((evt: LiveActivityEvent) => {
     setLiveToast(evt);
@@ -151,8 +162,19 @@ export default function App() {
       switch (tab) {
         case 'dashboard':
           return true;
+        case 'wholesale_dealers':
+        case 'retail_customers':
         case 'customers':
           return activePermissions.viewCustomers;
+        case 'salesman_ledger':
+          return (
+            currentRole === 'admin' ||
+            currentRole === 'manager' ||
+            currentRole === 'accountant' ||
+            currentRole === 'salesman' ||
+            activePermissions.manageStaff ||
+            activePermissions.viewReports
+          );
         case 'inventory':
           return activePermissions.viewInventory;
         case 'production':
@@ -250,6 +272,7 @@ export default function App() {
   const handleOrderCreated = (newOrder: Order) => {
     runMutation({ type: 'order:create', order: newOrder });
     setShowNewOrderModal(false);
+    setNewOrderCustomerId(undefined);
     setSelectedOrderForInvoice(newOrder);
   };
 
@@ -428,6 +451,32 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white">
+      {/* Case A: Google Maps Platform Demo Key Quota Warning Banner */}
+      {showGmpQuotaBanner && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm flex items-center justify-center gap-3">
+          <span>
+            Google Maps Platform quota reached. If you are the app owner, visit{' '}
+            <a
+              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-amber-950 hover:text-amber-800"
+            >
+              maps developer site
+            </a>{' '}
+            for instructions to update your account.
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowGmpQuotaBanner(false)}
+            className="p-1 text-amber-900 hover:bg-amber-200/60 rounded cursor-pointer"
+            aria-label="बंद करें"
+          >
+            <CloseIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Real-time Incoming Entry Toast Banner */}
       {liveToast && (
         <div className="fixed top-16 right-3 sm:right-6 z-50 max-w-sm w-[calc(100%-1.5rem)] bg-slate-950 text-white border-2 border-emerald-400 rounded-2xl shadow-2xl p-3.5 flex items-start gap-3 animate-bounce">
@@ -482,7 +531,10 @@ export default function App() {
         connectedDevicesCount={sync.connectedDevices.length}
         syncDeviceRole={sync.config.deviceRole}
         onOpenRoleSwitcher={() => setShowRoleSwitcherModal(true)}
-        onOpenNewOrder={() => setShowNewOrderModal(true)}
+        onOpenNewOrder={() => {
+          setNewOrderCustomerId(undefined);
+          setShowNewOrderModal(true);
+        }}
         onOpenNewProduction={() => setShowNewProductionModal(true)}
         onOpenReceivePayment={() => {
           setReceivePaymentCustId(undefined);
@@ -519,9 +571,13 @@ export default function App() {
               staff={staff}
               settings={settings}
               currentRole={currentRole}
+              activeStaffMember={activeStaffMember}
               permissions={activePermissions}
               onNavigate={setActiveTab}
-              onOpenNewOrder={() => setShowNewOrderModal(true)}
+              onOpenNewOrder={() => {
+                setNewOrderCustomerId(undefined);
+                setShowNewOrderModal(true);
+              }}
               onOpenNewProduction={() => setShowNewProductionModal(true)}
               onOpenReceivePayment={() => {
                 setReceivePaymentCustId(undefined);
@@ -531,13 +587,28 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'customers' && (
+          {(activeTab === 'wholesale_dealers' ||
+            activeTab === 'retail_customers' ||
+            activeTab === 'customers') && (
             <CustomerView
               customers={customers}
               orders={orders}
+              staff={staff}
               settings={settings}
+              sectionMode={
+                activeTab === 'wholesale_dealers'
+                  ? 'wholesale'
+                  : activeTab === 'retail_customers'
+                  ? 'retail'
+                  : 'all'
+              }
               canReceivePayment={activePermissions.receivePayment}
-              onOpenNewCustomer={() => setShowNewCustomerModal(true)}
+              onOpenNewCustomer={(defaultType) => {
+                setNewCustomerDefaultType(
+                  defaultType || (activeTab === 'wholesale_dealers' ? 'wholesaler' : 'retailer')
+                );
+                setShowNewCustomerModal(true);
+              }}
               onOpenReceivePayment={(custId) => {
                 setReceivePaymentCustId(custId);
                 setShowReceivePaymentModal(true);
@@ -545,6 +616,33 @@ export default function App() {
               onSelectOrder={setSelectedOrderForInvoice}
               onUpdateCustomer={activePermissions.editCustomers ? handleCustomerUpdated : undefined}
               onDeleteCustomer={activePermissions.editCustomers ? handleCustomerDeleted : undefined}
+            />
+          )}
+
+          {activeTab === 'salesman_ledger' && (
+            <SalesmanLedgerView
+              staffList={staff}
+              customers={customers}
+              orders={orders}
+              settings={settings}
+              currentRole={currentRole}
+              activeStaffMember={activeStaffMember}
+              canManageStaff={canManageStaff}
+              initialSelectedSalesmanId={salesmanLedgerTargetId}
+              onSelectOrder={setSelectedOrderForInvoice}
+              onUpdateStaff={canManageStaff ? handleStaffUpdated : undefined}
+              onOpenNewOrderForCustomer={(custId) => {
+                setNewOrderCustomerId(custId);
+                setShowNewOrderModal(true);
+              }}
+              onOpenNewCustomer={() => {
+                setNewCustomerDefaultType('retailer');
+                setShowNewCustomerModal(true);
+              }}
+              onOpenReceivePayment={(custId) => {
+                setReceivePaymentCustId(custId);
+                setShowReceivePaymentModal(true);
+              }}
             />
           )}
 
@@ -574,7 +672,11 @@ export default function App() {
           {activeTab === 'orders' && (
             <OrderView
               orders={orders}
-              onOpenNewOrder={() => setShowNewOrderModal(true)}
+              staff={staff}
+              onOpenNewOrder={() => {
+                setNewOrderCustomerId(undefined);
+                setShowNewOrderModal(true);
+              }}
               onSelectOrder={setSelectedOrderForInvoice}
               onUpdateOrderStatus={handleOrderStatusUpdate}
               onUpdateOrder={activePermissions.editOrders ? handleOrderUpdated : undefined}
@@ -593,6 +695,8 @@ export default function App() {
           {activeTab === 'staff' && (
             <StaffView
               staffList={staff}
+              customers={customers}
+              orders={orders}
               currentRole={currentRole}
               currentStaffId={activeStaffMember?.id}
               canManageStaff={canManageStaff}
@@ -601,6 +705,10 @@ export default function App() {
               onDeleteStaff={canManageStaff ? handleStaffDeleted : undefined}
               onSwitchRole={handleSwitchRole}
               onSelectStaffMember={handleSelectStaffMember}
+              onOpenSalesmanLedger={(smId) => {
+                setSalesmanLedgerTargetId(smId);
+                setActiveTab('salesman_ledger');
+              }}
             />
           )}
 
@@ -679,7 +787,12 @@ export default function App() {
           customers={customers}
           products={products}
           staff={staff}
-          onClose={() => setShowNewOrderModal(false)}
+          activeStaffMember={activeStaffMember}
+          preselectedCustomerId={newOrderCustomerId}
+          onClose={() => {
+            setShowNewOrderModal(false);
+            setNewOrderCustomerId(undefined);
+          }}
           onSubmit={handleOrderCreated}
         />
       )}
@@ -702,6 +815,9 @@ export default function App() {
 
       {showNewCustomerModal && (
         <NewCustomerModal
+          staff={staff}
+          activeStaffMember={activeStaffMember}
+          defaultType={newCustomerDefaultType}
           onClose={() => setShowNewCustomerModal(false)}
           onSubmit={handleCustomerCreated}
         />

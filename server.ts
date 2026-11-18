@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { WebSocketServer, WebSocket } from 'ws';
+import { GoogleGenAI } from '@google/genai';
 import {
   INITIAL_BAG_STOCK,
   INITIAL_CUSTOMERS,
@@ -213,6 +214,232 @@ async function startServer() {
       connectedClients: clients.size,
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // ---------------------------------------------------------
+  // Google Maps Platform Proxy & Gemini Maps Grounding API
+  // ---------------------------------------------------------
+  const getMapsApiKey = (): string =>
+    (process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
+
+  app.get('/api/maps/config', (_req, res) => {
+    const apiKey = getMapsApiKey();
+    res.json({
+      ok: Boolean(apiKey),
+      apiKey,
+      hasGeminiGrounding: Boolean(process.env.GEMINI_API_KEY?.trim()),
+    });
+  });
+
+  app.post('/api/maps/geocode', async (req, res) => {
+    const apiKey = getMapsApiKey();
+    if (!apiKey) {
+      res.status(503).json({
+        ok: false,
+        message: 'Google Maps API Key सर्वर पर उपलब्ध नहीं है।',
+      });
+      return;
+    }
+
+    const { lat, lng, address } = req.body as {
+      lat?: number;
+      lng?: number;
+      address?: string;
+    };
+
+    try {
+      const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        url.searchParams.set('latlng', `${lat},${lng}`);
+      } else if (address && address.trim()) {
+        url.searchParams.set('address', address.trim());
+        url.searchParams.set('region', 'in');
+      } else {
+        res.status(400).json({ ok: false, message: 'lat/lng या address आवश्यक है।' });
+        return;
+      }
+      url.searchParams.set('language', 'hi');
+      url.searchParams.set('key', apiKey);
+
+      const resp = await fetch(url.toString());
+      if (resp.status === 429) {
+        res.status(429).json({
+          ok: false,
+          errorCode: 'RESOURCE_EXHAUSTED',
+          message: 'Google Maps API quota exceeded (429).',
+        });
+        return;
+      }
+
+      const data = (await resp.json()) as {
+        status?: string;
+        error_message?: string;
+        results?: Array<{
+          formatted_address?: string;
+          place_id?: string;
+          geometry?: { location?: { lat?: number; lng?: number } };
+          address_components?: Array<{
+            long_name?: string;
+            types?: string[];
+          }>;
+        }>;
+      };
+
+      if (data.status === 'OVER_QUERY_LIMIT') {
+        res.status(429).json({
+          ok: false,
+          errorCode: 'OVER_QUERY_LIMIT',
+          message: data.error_message || 'OVER_QUERY_LIMIT',
+        });
+        return;
+      }
+
+      if (data.status !== 'OK' || !data.results || data.results.length === 0) {
+        res.status(200).json({
+          ok: false,
+          status: data.status || 'ZERO_RESULTS',
+          message: data.error_message || 'इस स्थान का पूरा पता Google Maps पर नहीं मिला।',
+        });
+        return;
+      }
+
+      const best = data.results[0];
+      const comps = best.address_components || [];
+      const cityComp =
+        comps.find((c) => c.types?.includes('locality')) ||
+        comps.find((c) => c.types?.includes('administrative_area_level_2')) ||
+        comps.find((c) => c.types?.includes('administrative_area_level_3'));
+
+      const rLat = best.geometry?.location?.lat ?? lat;
+      const rLng = best.geometry?.location?.lng ?? lng;
+
+      res.json({
+        ok: true,
+        formattedAddress: best.formatted_address || '',
+        city: cityComp?.long_name || '',
+        placeId: best.place_id || '',
+        lat: rLat,
+        lng: rLng,
+        googleMapsUrl:
+          typeof rLat === 'number' && typeof rLng === 'number'
+            ? `https://www.google.com/maps/search/?api=1&query=${rLat},${rLng}`
+            : '',
+      });
+    } catch (err) {
+      console.error('Server geocode error:', err);
+      res.status(500).json({
+        ok: false,
+        message: 'लोकेशन पता खोजने में सर्वर त्रुटि हुई।',
+      });
+    }
+  });
+
+  app.post('/api/maps/grounding', async (req, res) => {
+    const geminiKey = process.env.GEMINI_API_KEY?.trim();
+    if (!geminiKey) {
+      res.status(503).json({
+        ok: false,
+        errorCode: 'GEMINI_NOT_CONFIGURED',
+        message: 'GEMINI_API_KEY सर्वर पर उपलब्ध नहीं है।',
+      });
+      return;
+    }
+
+    const { lat, lng, query, firmName } = req.body as {
+      lat?: number;
+      lng?: number;
+      query?: string;
+      firmName?: string;
+    };
+
+    const hasLatLng =
+      typeof lat === 'number' &&
+      typeof lng === 'number' &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng);
+
+    const userPrompt = query?.trim()
+      ? query.trim()
+      : firmName?.trim()
+        ? `Verify nearby wholesale grain markets, transport hubs, or landmarks near "${firmName.trim()}" for flour mill (आटा मिल) delivery routing. Reply briefly in Hindi/English.`
+        : 'List 2-3 notable nearby market areas, mandi, or major road landmarks near this location for flour delivery trucks in brief Hindi/English.';
+
+    try {
+      const ai = new GoogleGenAI({
+        apiKey: geminiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: userPrompt,
+        config: {
+          tools: [{ googleMaps: {} }],
+          ...(hasLatLng
+            ? {
+                toolConfig: {
+                  retrievalConfig: {
+                    latLng: { latitude: lat as number, longitude: lng as number },
+                  },
+                },
+              }
+            : {}),
+        },
+      });
+
+      const candidate = response.candidates?.[0] as
+        | {
+            groundingMetadata?: {
+              groundingChunks?: Array<{
+                maps?: {
+                  uri?: string;
+                  title?: string;
+                  placeId?: string;
+                  placeAnswerSources?: {
+                    reviewSnippets?: Array<{
+                      googleMapsUri?: string;
+                      reviewId?: string;
+                    }>;
+                  };
+                };
+              }>;
+              googleMapsWidgetContextToken?: string;
+            };
+          }
+        | undefined;
+
+      const rawChunks = candidate?.groundingMetadata?.groundingChunks || [];
+      const groundingChunks = rawChunks
+        .filter((c) => Boolean(c.maps?.uri || c.maps?.title))
+        .map((c) => ({
+          title: c.maps?.title || 'Google Maps स्थान',
+          uri: c.maps?.uri || '',
+          placeId: c.maps?.placeId || '',
+          reviewSnippets: c.maps?.placeAnswerSources?.reviewSnippets || [],
+        }));
+
+      res.json({
+        ok: true,
+        summary: response.text || '',
+        groundingChunks,
+        widgetContextToken: candidate?.groundingMetadata?.googleMapsWidgetContextToken || null,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+        res.status(429).json({
+          ok: false,
+          errorCode: 'RESOURCE_EXHAUSTED',
+          message: 'API Quota exceeded (RESOURCE_EXHAUSTED).',
+        });
+        return;
+      }
+      console.error('Maps Grounding error:', err);
+      res.status(500).json({
+        ok: false,
+        message: 'Google Maps Grounding जानकारी लोड करने में समस्या हुई।',
+      });
+    }
   });
 
   app.get('/api/sync-status/:roomId', (req, res) => {

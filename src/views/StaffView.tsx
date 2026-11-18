@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StaffPermissions, UserProfile, UserRole } from '../types/erp';
+import { CommissionType, Customer, Order, StaffPermissions, UserProfile, UserRole } from '../types/erp';
+import { formatCommissionRuleHindi, resolveOrderCommission } from '../../shared/commission';
 import {
   ALL_TRUE_PERMISSIONS,
   PERMISSION_GROUPS,
@@ -27,11 +28,14 @@ import {
   Lock,
   Sliders,
   CheckSquare,
-  Mail
+  Mail,
+  Briefcase
 } from 'lucide-react';
 
 interface StaffViewProps {
   staffList: UserProfile[];
+  customers?: Customer[];
+  orders?: Order[];
   currentRole: UserRole;
   currentStaffId?: string;
   canManageStaff: boolean;
@@ -40,10 +44,13 @@ interface StaffViewProps {
   onDeleteStaff?: (staffId: string) => void;
   onSwitchRole: (role: UserRole) => void;
   onSelectStaffMember?: (member: UserProfile) => void;
+  onOpenSalesmanLedger?: (salesmanId: string) => void;
 }
 
 export const StaffView: React.FC<StaffViewProps> = ({
   staffList,
+  customers = [],
+  orders = [],
   currentRole,
   currentStaffId,
   canManageStaff,
@@ -52,6 +59,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
   onDeleteStaff,
   onSwitchRole,
   onSelectStaffMember,
+  onOpenSalesmanLedger,
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState<UserProfile | null>(null);
@@ -67,6 +75,9 @@ export const StaffView: React.FC<StaffViewProps> = ({
   const [password, setPassword] = useState('');
   const [shift, setShift] = useState('सुबह शिफ्ट (8 AM - 5 PM)');
   const [assignedVehicle, setAssignedVehicle] = useState('');
+  const [baseSalary, setBaseSalary] = useState<number>(15000);
+  const [commissionType, setCommissionType] = useState<CommissionType>('percent');
+  const [commissionRate, setCommissionRate] = useState<number>(2);
   const [newPermissions, setNewPermissions] = useState<StaffPermissions>(
     getDefaultPermissionsForRole('packing_staff')
   );
@@ -80,6 +91,9 @@ export const StaffView: React.FC<StaffViewProps> = ({
   const [editShift, setEditShift] = useState('');
   const [editVehicle, setEditVehicle] = useState('');
   const [editActive, setEditActive] = useState(true);
+  const [editBaseSalary, setEditBaseSalary] = useState<number>(15000);
+  const [editCommissionType, setEditCommissionType] = useState<CommissionType>('percent');
+  const [editCommissionRate, setEditCommissionRate] = useState<number>(2);
   const [showEditPass, setShowEditPass] = useState(false);
   const [editPermissions, setEditPermissions] = useState<StaffPermissions>(
     getDefaultPermissionsForRole('packing_staff')
@@ -113,6 +127,9 @@ export const StaffView: React.FC<StaffViewProps> = ({
     setPassword('');
     setShift('सुबह शिफ्ट (8 AM - 5 PM)');
     setAssignedVehicle('');
+    setBaseSalary(15000);
+    setCommissionType('percent');
+    setCommissionRate(2);
     setNewPermissions(getDefaultPermissionsForRole('packing_staff'));
     setShowAddModal(true);
   };
@@ -135,6 +152,13 @@ export const StaffView: React.FC<StaffViewProps> = ({
       assignedVehicle: role === 'delivery_staff' ? (assignedVehicle.trim() || 'महिंद्रा बोलेरो पिकअप RJ-14-GA-4521') : undefined,
       joinedDate: new Date().toISOString().slice(0, 10),
       permissions: role === 'admin' ? { ...ALL_TRUE_PERMISSIONS } : { ...newPermissions },
+      ...(role === 'salesman'
+        ? {
+            baseSalary: Math.max(0, Number(baseSalary) || 0),
+            commissionType,
+            commissionRate: Math.max(0, Number(commissionRate) || 0),
+          }
+        : {}),
     };
 
     onAddStaff(newStaff);
@@ -152,6 +176,9 @@ export const StaffView: React.FC<StaffViewProps> = ({
     setEditShift(staff.shift || 'सुबह शिफ्ट (8 AM - 5 PM)');
     setEditVehicle(staff.assignedVehicle || '');
     setEditActive(staff.active);
+    setEditBaseSalary(staff.baseSalary ?? 15000);
+    setEditCommissionType(staff.commissionType || 'percent');
+    setEditCommissionRate(staff.commissionRate ?? 2);
     setShowEditPass(false);
     setEditPermissions(getEffectivePermissions(staff, staff.role));
   };
@@ -173,6 +200,13 @@ export const StaffView: React.FC<StaffViewProps> = ({
       assignedVehicle: editRole === 'delivery_staff' ? (editVehicle.trim() || 'महिंद्रा बोलेरो पिकअप RJ-14-GA-4521') : undefined,
       active: editActive,
       permissions: editRole === 'admin' ? { ...ALL_TRUE_PERMISSIONS } : { ...editPermissions },
+      ...(editRole === 'salesman'
+        ? {
+            baseSalary: Math.max(0, Number(editBaseSalary) || 0),
+            commissionType: editCommissionType,
+            commissionRate: Math.max(0, Number(editCommissionRate) || 0),
+          }
+        : {}),
     };
 
     onUpdateStaff(updated);
@@ -481,6 +515,64 @@ export const StaffView: React.FC<StaffViewProps> = ({
                 )}
               </div>
 
+              {/* Salesman Field, Salary & Commission Summary */}
+              {member.role === 'salesman' && (() => {
+                const curMonth = new Date().toISOString().slice(0, 7);
+                const linkedCusts = customers.filter((c) => c.salesmanId === member.id);
+                const linkedCustIds = new Set(linkedCusts.map((c) => c.id));
+                const monthOrders = orders.filter(
+                  (o) =>
+                    o.status !== 'cancelled' &&
+                    o.date.startsWith(curMonth) &&
+                    (o.salesmanId === member.id || (!o.salesmanId && linkedCustIds.has(o.customerId)))
+                );
+                const monthAmount = monthOrders.reduce((s, o) => s + o.totalAmount, 0);
+                const deliveredComm = monthOrders.reduce(
+                  (s, o) => s + resolveOrderCommission(o, member).creditedAmount,
+                  0
+                );
+                const baseSal = member.baseSalary || 0;
+
+                return (
+                  <div className="bg-amber-50/90 border border-amber-300 rounded-xl p-2.5 text-[11px] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-amber-950 flex items-center gap-1">
+                        <Briefcase className="w-3.5 h-3.5 text-amber-700" />
+                        <span>सेल्समैन फील्ड (इस माह)</span>
+                      </span>
+                      <span className="font-mono font-bold text-emerald-700">
+                        ₹{monthAmount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-amber-900">
+                      <span>जोड़े ग्राहक: <strong>{linkedCusts.length}</strong></span>
+                      <span>इस माह ऑर्डर: <strong>{monthOrders.length}</strong></span>
+                    </div>
+                    <div className="pt-1 border-t border-amber-200/80 space-y-0.5 text-[10px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">मूल वेतन + डिलीवर कमीशन:</span>
+                        <span className="font-mono font-black text-emerald-800">
+                          ₹{(baseSal + deliveredComm).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-amber-800">
+                        <span>नियम: {formatCommissionRuleHindi(member)}</span>
+                        <span className="font-mono font-bold">+₹{deliveredComm.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                    {onOpenSalesmanLedger && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenSalesmanLedger(member.id)}
+                        className="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition"
+                      >
+                        फील्ड लेखा व सैलरी/कमीशन खोलें
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Permission Summary Badge */}
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-[11px]">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -709,6 +801,59 @@ export const StaffView: React.FC<StaffViewProps> = ({
                 </div>
               )}
 
+              {editRole === 'salesman' && (
+                <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2.5">
+                  <h4 className="font-bold text-amber-950 text-xs flex items-center gap-1.5">
+                    <Briefcase className="w-4 h-4 text-amber-700" />
+                    <span>सेल्समैन सैलरी व डिलीवरी कमीशन सेटिंग (Salary & Commission)</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">मूल मासिक सैलरी (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editBaseSalary}
+                        onChange={(e) => setEditBaseSalary(Number(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">कमीशन प्रकार</label>
+                      <select
+                        value={editCommissionType}
+                        onChange={(e) => setEditCommissionType(e.target.value as CommissionType)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-semibold"
+                      >
+                        <option value="percent">बिल राशि का प्रतिशत (%)</option>
+                        <option value="per_bag">प्रति बैग कमीशन (₹/बैग)</option>
+                        <option value="fixed_per_order">प्रति डिलीवर्ड ऑर्डर (₹)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        {editCommissionType === 'percent'
+                          ? 'कमीशन दर (%)'
+                          : editCommissionType === 'per_bag'
+                          ? 'प्रति बैग राशि (₹)'
+                          : 'प्रति ऑर्डर राशि (₹)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={editCommissionRate}
+                        onChange={(e) => setEditCommissionRate(Number(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-emerald-700"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-amber-900">
+                    ऑर्डर का स्टेटस <strong>Delivered</strong> होते ही यह कमीशन अपने-आप सेल्समैन की सैलरी में जुड़ जाएगा।
+                  </p>
+                </div>
+              )}
+
               {/* Granular Permission Controls */}
               {renderPermissionMatrix(editPermissions, setEditPermissions, editRole)}
 
@@ -925,6 +1070,59 @@ export const StaffView: React.FC<StaffViewProps> = ({
                   />
                 </div>
               </div>
+
+              {role === 'salesman' && (
+                <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2.5">
+                  <h4 className="font-bold text-amber-950 text-xs flex items-center gap-1.5">
+                    <Briefcase className="w-4 h-4 text-amber-700" />
+                    <span>सेल्समैन सैलरी व कमीशन सेटिंग (Salary & Commission)</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">मूल मासिक सैलरी (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={baseSalary}
+                        onChange={(e) => setBaseSalary(Number(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">कमीशन प्रकार</label>
+                      <select
+                        value={commissionType}
+                        onChange={(e) => setCommissionType(e.target.value as CommissionType)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-semibold"
+                      >
+                        <option value="percent">बिल राशि का प्रतिशत (%)</option>
+                        <option value="per_bag">प्रति बैग कमीशन (₹/बैग)</option>
+                        <option value="fixed_per_order">प्रति डिलीवर्ड ऑर्डर (₹)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        {commissionType === 'percent'
+                          ? 'कमीशन दर (%)'
+                          : commissionType === 'per_bag'
+                          ? 'प्रति बैग राशि (₹)'
+                          : 'प्रति ऑर्डर राशि (₹)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={commissionRate}
+                        onChange={(e) => setCommissionRate(Number(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-emerald-700"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-amber-900">
+                    ऑर्डर डिलीवर (Delivered) होने के बाद यह कमीशन अपने-आप सेल्समैन की सैलरी में जुड़ेगा।
+                  </p>
+                </div>
+              )}
 
               {/* Granular Permission Controls */}
               {renderPermissionMatrix(newPermissions, setNewPermissions, role)}

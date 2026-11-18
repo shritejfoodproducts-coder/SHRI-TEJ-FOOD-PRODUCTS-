@@ -200,9 +200,14 @@ export const InstallModal: React.FC<InstallModalProps> = ({
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-slate-950 text-white p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+            <div className="w-11 h-11 rounded-xl bg-[#08172E] flex items-center justify-center border border-amber-400/50 overflow-hidden shadow-sm shrink-0">
               {activeTab === 'apk' ? (
-                <Smartphone className="w-6 h-6 text-amber-200" />
+                <img
+                  src="/logo.png"
+                  alt="TEJ FOOD App Icon"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <Code className="w-6 h-6 text-amber-200" />
               )}

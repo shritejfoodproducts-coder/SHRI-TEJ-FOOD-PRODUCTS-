@@ -914,9 +914,11 @@ export function useFirestoreErpSync({
         switch (action.type) {
           case 'order:create': {
             const { order } = action;
+            const createdOrder =
+              res.nextState.orders.find((o) => o.id === order.id) || order;
             batch.set(
-              doc(db, 'factories', roomId, 'orders', order.id),
-              stripUndefinedDeep({ ...order, createdByUid: user.uid, updatedAt: nowIso })
+              doc(db, 'factories', roomId, 'orders', createdOrder.id),
+              stripUndefinedDeep({ ...createdOrder, createdByUid: user.uid, updatedAt: nowIso })
             );
             const updatedCustomer = res.nextState.customers.find(
               (c) => c.id === order.customerId
@@ -936,12 +938,14 @@ export function useFirestoreErpSync({
 
           case 'order:update': {
             const { updatedOrder } = action;
+            const resolvedOrder =
+              res.nextState.orders.find((o) => o.id === updatedOrder.id) || updatedOrder;
             batch.set(
-              doc(db, 'factories', roomId, 'orders', updatedOrder.id),
-              stripUndefinedDeep({ ...updatedOrder, updatedAt: nowIso })
+              doc(db, 'factories', roomId, 'orders', resolvedOrder.id),
+              stripUndefinedDeep({ ...resolvedOrder, updatedAt: nowIso })
             );
             const updatedCustomer = res.nextState.customers.find(
-              (c) => c.id === updatedOrder.customerId
+              (c) => c.id === resolvedOrder.customerId
             );
             if (updatedCustomer) {
               batch.set(

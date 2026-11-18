@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Customer, ProductMaster, Order, OrderItem, BagSize, BillType, UserProfile } from '../types/erp';
-import { X, Plus, Trash2, ShoppingCart, Calculator } from 'lucide-react';
+import { X, Plus, Trash2, ShoppingCart, Briefcase } from 'lucide-react';
 
 interface NewOrderModalProps {
   customers: Customer[];
   products: ProductMaster[];
   staff: UserProfile[];
+  activeStaffMember?: UserProfile;
+  preselectedCustomerId?: string;
   onClose: () => void;
   onSubmit: (order: Order) => void;
 }
@@ -14,10 +16,20 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({
   customers,
   products,
   staff,
+  activeStaffMember,
+  preselectedCustomerId,
   onClose,
   onSubmit,
 }) => {
-  const [customerId, setCustomerId] = useState<string>(customers[0]?.id || '');
+  const initialCustId = preselectedCustomerId || customers[0]?.id || '';
+  const initialCustomer = customers.find((c) => c.id === initialCustId);
+  const salesmen = staff.filter((s) => s.role === 'salesman' && s.active);
+
+  const [customerId, setCustomerId] = useState<string>(initialCustId);
+  const [salesmanId, setSalesmanId] = useState<string>(
+    initialCustomer?.salesmanId ||
+      (activeStaffMember?.role === 'salesman' ? activeStaffMember.id : '')
+  );
   const [billType, setBillType] = useState<BillType>('gst');
   const [deliveryStaffId, setDeliveryStaffId] = useState<string>('staff-7');
   const [vehicleNumber, setVehicleNumber] = useState<string>('RJ-14-GA-4521');
@@ -39,6 +51,17 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({
   ]);
 
   const selectedCustomer = customers.find(c => c.id === customerId);
+
+  // Whenever customer changes, auto-link their assigned salesman so monthly ledger stays accurate
+  useEffect(() => {
+    if (selectedCustomer?.salesmanId) {
+      setSalesmanId(selectedCustomer.salesmanId);
+    } else if (activeStaffMember?.role === 'salesman') {
+      setSalesmanId(activeStaffMember.id);
+    } else {
+      setSalesmanId('');
+    }
+  }, [selectedCustomer?.id, selectedCustomer?.salesmanId, activeStaffMember]);
 
   // Line item modifiers
   const handleAddItem = () => {
@@ -106,6 +129,9 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({
     if (!selectedCustomer) return;
 
     const deliveryStaffMember = staff.find(s => s.id === deliveryStaffId);
+    const matchedSalesman =
+      staff.find((s) => s.id === salesmanId) ||
+      (activeStaffMember?.id === salesmanId ? activeStaffMember : undefined);
     const invoicePrefix = billType === 'gst' ? 'TEJ/26-27/' : 'TEJ/CH-';
     const randomSeq = Math.floor(1000 + Math.random() * 9000);
 
@@ -133,6 +159,8 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({
       deliveryStaffName: deliveryStaffMember?.name || 'सोनू सैनी',
       vehicleNumber: vehicleNumber || 'RJ-14-GA-4521',
       notes,
+      salesmanId: salesmanId || undefined,
+      salesmanName: matchedSalesman?.name || selectedCustomer.salesmanName || undefined,
     };
 
     onSubmit(newOrder);
@@ -400,17 +428,44 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">
-              ऑर्डर नोट / विशेष निर्देश (वैकल्पिक)
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="उदा. दोपहर 3 बजे तक डिलीवरी, दुकान पर अनलोडिंग"
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1 flex items-center gap-1">
+                <Briefcase className="w-3.5 h-3.5 text-amber-600" />
+                <span>सेल्समैन / फील्ड क्रेडिट (Salesman)</span>
+              </label>
+              <select
+                value={salesmanId}
+                onChange={(e) => setSalesmanId(e.target.value)}
+                disabled={activeStaffMember?.role === 'salesman'}
+                className="w-full px-3 py-2 bg-amber-50/70 border border-amber-300 rounded-xl text-xs font-bold text-slate-800"
+              >
+                <option value="">डायरेक्ट ऑर्डर (कोई सेल्समैन नहीं)</option>
+                {salesmen.map((sm) => (
+                  <option key={sm.id} value={sm.id}>
+                    {sm.name}
+                  </option>
+                ))}
+              </select>
+              {selectedCustomer?.salesmanName && (
+                <span className="text-[10px] text-amber-800 font-semibold block mt-0.5">
+                  ✓ कस्टमर के सेल्समैन ({selectedCustomer.salesmanName}) से ऑटो-लिंक
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">
+                ऑर्डर नोट / विशेष निर्देश (वैकल्पिक)
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="उदा. दोपहर 3 बजे तक डिलीवरी, दुकान पर अनलोडिंग"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
+              />
+            </div>
           </div>
 
           {/* Action Buttons */}

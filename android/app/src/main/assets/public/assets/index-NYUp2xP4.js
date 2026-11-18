@@ -11740,7 +11740,14 @@ var INITIAL_CUSTOMERS = [
 		totalPaid: 31e4,
 		currentDue: 35e3,
 		creditLimit: 75e3,
-		lastOrderDate: "2026-11-09"
+		lastOrderDate: "2026-11-09",
+		latitude: 27.1636,
+		longitude: 75.7196,
+		mapAddress: "मुख्य बाजार, चौमूँ, जयपुर (राजस्थान)",
+		googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=27.1636,75.7196",
+		entryByStaffId: "staff-1",
+		entryByName: "श्री तेज प्रकाश (मालिक)",
+		entryByRole: "admin"
 	},
 	{
 		id: "cust-2",
@@ -11756,7 +11763,14 @@ var INITIAL_CUSTOMERS = [
 		totalPaid: 84e4,
 		currentDue: 5e4,
 		creditLimit: 15e4,
-		lastOrderDate: "2026-11-10"
+		lastOrderDate: "2026-11-10",
+		latitude: 26.9177,
+		longitude: 75.8406,
+		mapAddress: "सूरजपोल अनाज मंडी, जयपुर (राजस्थान)",
+		googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=26.9177,75.8406",
+		entryByStaffId: "staff-1",
+		entryByName: "श्री तेज प्रकाश (मालिक)",
+		entryByRole: "admin"
 	},
 	{
 		id: "cust-3",
@@ -11772,7 +11786,14 @@ var INITIAL_CUSTOMERS = [
 		totalPaid: 145e3,
 		currentDue: 2e4,
 		creditLimit: 4e4,
-		lastOrderDate: "2026-11-08"
+		lastOrderDate: "2026-11-08",
+		latitude: 26.9829,
+		longitude: 75.7715,
+		mapAddress: "वी.के.आई. रोड, सीकर रोड, जयपुर",
+		googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=26.9829,75.7715",
+		entryByStaffId: "staff-2",
+		entryByName: "मनोज कुमावत (मैनेजर)",
+		entryByRole: "manager"
 	},
 	{
 		id: "cust-4",
@@ -11788,7 +11809,16 @@ var INITIAL_CUSTOMERS = [
 		totalPaid: 183e3,
 		currentDue: 15e3,
 		creditLimit: 5e4,
-		lastOrderDate: "2026-11-10"
+		lastOrderDate: "2026-11-10",
+		salesmanId: "staff-8",
+		salesmanName: "सुरेश कुमार (सेल्समैन)",
+		latitude: 27.0372,
+		longitude: 75.8878,
+		mapAddress: "कूकस, दिल्ली रोड, जयपुर",
+		googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=27.0372,75.8878",
+		entryByStaffId: "staff-8",
+		entryByName: "सुरेश कुमार (सेल्समैन)",
+		entryByRole: "salesman"
 	},
 	{
 		id: "cust-5",
@@ -11804,7 +11834,16 @@ var INITIAL_CUSTOMERS = [
 		totalPaid: 92e3,
 		currentDue: 0,
 		creditLimit: 3e4,
-		lastOrderDate: "2026-11-05"
+		lastOrderDate: "2026-11-05",
+		salesmanId: "staff-8",
+		salesmanName: "सुरेश कुमार (सेल्समैन)",
+		latitude: 26.9472,
+		longitude: 75.7995,
+		mapAddress: "शास्त्री नगर, जयपुर (राजस्थान)",
+		googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=26.9472,75.7995",
+		entryByStaffId: "staff-8",
+		entryByName: "सुरेश कुमार (सेल्समैन)",
+		entryByRole: "salesman"
 	}
 ];
 var INITIAL_STAFF = [
@@ -11894,7 +11933,10 @@ var INITIAL_STAFF = [
 		password: "suresh@sales",
 		active: true,
 		shift: "मार्केट फील्ड (10 AM - 7 PM)",
-		joinedDate: "2024-05-15"
+		joinedDate: "2024-05-15",
+		baseSalary: 15e3,
+		commissionType: "percent",
+		commissionRate: 2
 	}
 ];
 var INITIAL_ORDERS = [
@@ -12068,7 +12110,9 @@ var INITIAL_ORDERS = [
 		paymentMode: "credit",
 		dueAmount: 9657.5,
 		status: "pending",
-		notes: "ऑर्डर फोन पर नोट किया गया"
+		notes: "ऑर्डर फोन पर नोट किया गया",
+		salesmanId: "staff-8",
+		salesmanName: "सुरेश कुमार (सेल्समैन)"
 	},
 	{
 		id: "ord-100",
@@ -12108,7 +12152,13 @@ var INITIAL_ORDERS = [
 		deliveryStaffId: "staff-7",
 		deliveryStaffName: "सोनू सैनी",
 		vehicleNumber: "RJ-14-GA-4521",
-		notes: "सफलतापूर्वक डिलीवरी पूरी हुई"
+		notes: "सफलतापूर्वक डिलीवरी पूरी हुई",
+		salesmanId: "staff-8",
+		salesmanName: "सुरेश कुमार (सेल्समैन)",
+		salesmanCommissionAmount: 420,
+		salesmanCommissionType: "percent",
+		salesmanCommissionRate: 2,
+		commissionCredited: true
 	}
 ];
 var INITIAL_PRODUCTION = [{
@@ -13318,7 +13368,7 @@ function isEmpty$1(obj) {
 /**
 * Deep equal two objects. Support Arrays and Objects.
 */
-function deepEqual(a, b) {
+function deepEqual$1(a, b) {
 	if (a === b) return true;
 	const aKeys = Object.keys(a);
 	const bKeys = Object.keys(b);
@@ -13327,7 +13377,7 @@ function deepEqual(a, b) {
 		const aProp = a[k];
 		const bProp = b[k];
 		if (isObject(aProp) && isObject(bProp)) {
-			if (!deepEqual(aProp, bProp)) return false;
+			if (!deepEqual$1(aProp, bProp)) return false;
 		} else if (aProp !== bProp) return false;
 	}
 	for (const k of bKeys) if (!aKeys.includes(k)) return false;
@@ -13491,9 +13541,9 @@ var ObserverProxy = class {
 			error,
 			complete
 		};
-		if (observer.next === void 0) observer.next = noop;
-		if (observer.error === void 0) observer.error = noop;
-		if (observer.complete === void 0) observer.complete = noop;
+		if (observer.next === void 0) observer.next = noop$2;
+		if (observer.error === void 0) observer.error = noop$2;
+		if (observer.complete === void 0) observer.complete = noop$2;
 		const unsub = this.unsubscribeOne.bind(this, this.observers.length);
 		if (this.finalized) this.task.then(() => {
 			try {
@@ -13541,7 +13591,7 @@ function implementsAnyMethods(obj, methods) {
 	for (const method of methods) if (method in obj && typeof obj[method] === "function") return true;
 	return false;
 }
-function noop() {}
+function noop$2() {}
 /**
 * @license
 * Copyright 2017 Google LLC
@@ -14674,13 +14724,13 @@ function initializeApp(_options, rawConfig = {}) {
 	if (!options) throw ERROR_FACTORY.create("no-options");
 	const existingApp = _apps.get(name);
 	if (existingApp) {
-		if (!deepEqual(options, existingApp.options)) throw ERROR_FACTORY.create("duplicate-app", {
+		if (!deepEqual$1(options, existingApp.options)) throw ERROR_FACTORY.create("duplicate-app", {
 			appName: name,
 			mismatchedParam: "options",
 			oldValue: JSON.stringify(existingApp.options),
 			newValue: JSON.stringify(options)
 		});
-		else if (!deepEqual(config, existingApp.config)) throw ERROR_FACTORY.create("duplicate-app", {
+		else if (!deepEqual$1(config, existingApp.config)) throw ERROR_FACTORY.create("duplicate-app", {
 			appName: name,
 			mismatchedParam: "config",
 			oldValue: JSON.stringify(existingApp.config),
@@ -17516,7 +17566,7 @@ function initializeAuth(app, deps) {
 	const provider = _getProvider(app, "auth");
 	if (provider.isInitialized()) {
 		const auth = provider.getImmediate();
-		if (deepEqual(provider.getOptions(), deps ?? {})) return auth;
+		if (deepEqual$1(provider.getOptions(), deps ?? {})) return auth;
 		else _fail(auth, "already-initialized");
 	}
 	return provider.initialize({ options: deps });
@@ -17565,7 +17615,7 @@ function connectAuthEmulator(auth, url, options) {
 	});
 	if (!authInternal._canInitEmulator) {
 		_assert(authInternal.config.emulator && authInternal.emulatorConfig, authInternal, "emulator-config-failed");
-		_assert(deepEqual(emulator, authInternal.config.emulator) && deepEqual(emulatorConfig, authInternal.emulatorConfig), authInternal, "emulator-config-failed");
+		_assert(deepEqual$1(emulator, authInternal.config.emulator) && deepEqual$1(emulatorConfig, authInternal.emulatorConfig), authInternal, "emulator-config-failed");
 		return;
 	}
 	authInternal.config.emulator = emulator;
@@ -38776,7 +38826,7 @@ var _n = class Firestore {
 		ssl: i,
 		emulatorOptions: r
 	};
-	if (!deepEqual(a, _) && (e._setSettings(a), r.mockUserToken)) {
+	if (!deepEqual$1(a, _) && (e._setSettings(a), r.mockUserToken)) {
 		let t, n;
 		if ("string" == typeof r.mockUserToken) t = r.mockUserToken, n = User.MOCK_USER;
 		else {
@@ -49567,7 +49617,69 @@ function importDatabaseBackup(file) {
 		reader.readAsText(file);
 	});
 }
+// shared/commission.ts
+function getOrderTotalBags(order) {
+	return (order.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+}
+function calculateSalesmanOrderCommission(order, salesman) {
+	if (!salesman) return 0;
+	const rate = Number(salesman.commissionRate) || 0;
+	if (rate <= 0) return 0;
+	const commType = salesman.commissionType || "percent";
+	if (commType === "percent") {
+		const raw = (Number(order.totalAmount) || 0) * rate / 100;
+		return Math.round(raw * 100) / 100;
+	}
+	if (commType === "per_bag") {
+		const bags = getOrderTotalBags(order);
+		return Math.round(bags * rate * 100) / 100;
+	}
+	if (commType === "fixed_per_order") return Math.round(rate * 100) / 100;
+	return 0;
+}
+function resolveOrderCommission(order, salesman) {
+	if (order.status === "delivered") {
+		const credited = typeof order.salesmanCommissionAmount === "number" && order.commissionCredited ? order.salesmanCommissionAmount : calculateSalesmanOrderCommission(order, salesman);
+		return {
+			creditedAmount: credited,
+			projectedAmount: credited,
+			isDelivered: true
+		};
+	}
+	return {
+		creditedAmount: 0,
+		projectedAmount: calculateSalesmanOrderCommission(order, salesman),
+		isDelivered: false
+	};
+}
+function formatCommissionRuleHindi(salesman) {
+	if (!salesman) return "कमीशन सेट नहीं";
+	const rate = Number(salesman.commissionRate) || 0;
+	if (rate <= 0) return "0% (कमीशन सेट नहीं)";
+	const commType = salesman.commissionType || "percent";
+	if (commType === "percent") return `${rate}% (डिलीवर्ड बिल पर)`;
+	if (commType === "per_bag") return `₹${rate} / बैग (डिलीवर्ड)`;
+	return `₹${rate} / डिलीवर ऑर्डर`;
+}
 // shared/erpSyncReducer.ts
+function applySalesmanDeliveryCommission(order, staffList) {
+	const salesman = order.salesmanId ? staffList.find((s) => s.id === order.salesmanId) : void 0;
+	if (order.status === "delivered" && salesman) {
+		const commissionAmount = calculateSalesmanOrderCommission(order, salesman);
+		return {
+			...order,
+			salesmanCommissionAmount: commissionAmount,
+			salesmanCommissionType: salesman.commissionType || "percent",
+			salesmanCommissionRate: Number(salesman.commissionRate) || 0,
+			commissionCredited: commissionAmount > 0
+		};
+	}
+	return {
+		...order,
+		salesmanCommissionAmount: 0,
+		commissionCredited: false
+	};
+}
 function applyErpMutation(state, action, processedPaymentIds) {
 	const nowIso = (/* @__PURE__ */ new Date()).toISOString();
 	switch (action.type) {
@@ -49577,20 +49689,28 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				nextState: state,
 				applied: false
 			};
-			const nextOrders = [order, ...state.orders];
+			const matchedCustomer = state.customers.find((c) => c.id === order.customerId);
+			const effectiveSalesmanId = order.salesmanId || matchedCustomer?.salesmanId;
+			const effectiveSalesmanName = order.salesmanName || matchedCustomer?.salesmanName;
+			const normalizedOrder = applySalesmanDeliveryCommission(effectiveSalesmanId || effectiveSalesmanName ? {
+				...order,
+				salesmanId: effectiveSalesmanId,
+				salesmanName: effectiveSalesmanName
+			} : order, state.staff);
+			const nextOrders = [normalizedOrder, ...state.orders];
 			const nextCustomers = state.customers.map((c) => {
-				if (c.id === order.customerId) return {
+				if (c.id === normalizedOrder.customerId) return {
 					...c,
 					totalOrders: c.totalOrders + 1,
-					totalPurchased: c.totalPurchased + order.totalAmount,
-					totalPaid: c.totalPaid + order.paidAmount,
-					currentDue: c.currentDue + order.dueAmount,
-					lastOrderDate: order.date
+					totalPurchased: c.totalPurchased + normalizedOrder.totalAmount,
+					totalPaid: c.totalPaid + normalizedOrder.paidAmount,
+					currentDue: c.currentDue + normalizedOrder.dueAmount,
+					lastOrderDate: normalizedOrder.date
 				};
 				return c;
 			});
 			const nextBagStock = state.bagStock.map((b) => {
-				const matchedLine = order.items.find((i) => i.productId === b.productId && i.bagSize === b.bagSize);
+				const matchedLine = normalizedOrder.items.find((i) => i.productId === b.productId && i.bagSize === b.bagSize);
 				if (matchedLine) return {
 					...b,
 					reservedCount: b.reservedCount + matchedLine.quantity
@@ -49608,8 +49728,8 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				applied: true,
 				activityMeta: {
 					category: "order",
-					title: `नया ऑर्डर: ${order.invoiceNumber}`,
-					detail: `${order.customerFirm || order.customerName} • ₹${order.totalAmount.toLocaleString("en-IN")}`
+					title: `नया ऑर्डर: ${normalizedOrder.invoiceNumber}`,
+					detail: `${normalizedOrder.customerFirm || normalizedOrder.customerName} • ₹${normalizedOrder.totalAmount.toLocaleString("en-IN")}${normalizedOrder.salesmanName ? ` (${normalizedOrder.salesmanName})` : ""}`
 				}
 			};
 		}
@@ -49620,10 +49740,11 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				nextState: state,
 				applied: false
 			};
-			const deltaTotal = updatedOrder.totalAmount - existing.totalAmount;
-			const deltaPaid = updatedOrder.paidAmount - existing.paidAmount;
-			const deltaDue = updatedOrder.dueAmount - existing.dueAmount;
-			const nextOrders = state.orders.map((o) => o.id === updatedOrder.id ? updatedOrder : o);
+			const normalizedUpdatedOrder = applySalesmanDeliveryCommission(updatedOrder, state.staff);
+			const deltaTotal = normalizedUpdatedOrder.totalAmount - existing.totalAmount;
+			const deltaPaid = normalizedUpdatedOrder.paidAmount - existing.paidAmount;
+			const deltaDue = normalizedUpdatedOrder.dueAmount - existing.dueAmount;
+			const nextOrders = state.orders.map((o) => o.id === normalizedUpdatedOrder.id ? normalizedUpdatedOrder : o);
 			const nextCustomers = state.customers.map((c) => {
 				if (c.id === updatedOrder.customerId) return {
 					...c,
@@ -49712,14 +49833,16 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				applied: false
 			};
 			const wasDelivered = targetOrder.status === "delivered";
+			const resolvedDeliveredAt = action.newStatus === "delivered" ? action.deliveredAt || (/* @__PURE__ */ new Date()).toISOString().slice(0, 16).replace("T", " ") : targetOrder.deliveredAt;
 			const nextOrders = state.orders.map((o) => {
-				if (o.id === action.orderId) return {
+				if (o.id === action.orderId) return applySalesmanDeliveryCommission({
 					...o,
 					status: action.newStatus,
-					deliveredAt: action.newStatus === "delivered" ? action.deliveredAt || (/* @__PURE__ */ new Date()).toISOString().slice(0, 16).replace("T", " ") : o.deliveredAt
-				};
+					deliveredAt: resolvedDeliveredAt
+				}, state.staff);
 				return o;
 			});
+			const finalizedOrder = nextOrders.find((o) => o.id === action.orderId);
 			let nextBagStock = state.bagStock;
 			if (action.newStatus === "delivered" && !wasDelivered) nextBagStock = state.bagStock.map((b) => {
 				const matched = targetOrder.items.find((i) => i.productId === b.productId && i.bagSize === b.bagSize);
@@ -49730,6 +49853,7 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				};
 				return b;
 			});
+			const commNote = action.newStatus === "delivered" && finalizedOrder?.salesmanCommissionAmount && finalizedOrder.salesmanCommissionAmount > 0 ? ` • सेल्समैन कमीशन +₹${finalizedOrder.salesmanCommissionAmount.toLocaleString("en-IN")}` : "";
 			return {
 				nextState: {
 					...state,
@@ -49741,7 +49865,7 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				activityMeta: {
 					category: "order",
 					title: `ऑर्डर स्टेटस बदला: ${targetOrder.invoiceNumber}`,
-					detail: `${targetOrder.customerFirm || targetOrder.customerName} → ${action.newStatus}`
+					detail: `${targetOrder.customerFirm || targetOrder.customerName} → ${action.newStatus}${commNote}`
 				}
 			};
 		}
@@ -49789,7 +49913,7 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				activityMeta: {
 					category: "customer",
 					title: `नया ग्राहक: ${action.customer.firmName || action.customer.name}`,
-					detail: `फ़ोन: ${action.customer.phone}`
+					detail: `फ़ोन: ${action.customer.phone}${action.customer.salesmanName ? ` • सेल्समैन: ${action.customer.salesmanName}` : ""}`
 				}
 			};
 		case "customer:update": return {
@@ -50706,8 +50830,9 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 			switch (action.type) {
 				case "order:create": {
 					const { order } = action;
-					batch.set(doc(db, "factories", roomId, "orders", order.id), stripUndefinedDeep({
-						...order,
+					const createdOrder = res.nextState.orders.find((o) => o.id === order.id) || order;
+					batch.set(doc(db, "factories", roomId, "orders", createdOrder.id), stripUndefinedDeep({
+						...createdOrder,
 						createdByUid: user.uid,
 						updatedAt: nowIso
 					}));
@@ -50724,11 +50849,12 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 				}
 				case "order:update": {
 					const { updatedOrder } = action;
-					batch.set(doc(db, "factories", roomId, "orders", updatedOrder.id), stripUndefinedDeep({
-						...updatedOrder,
+					const resolvedOrder = res.nextState.orders.find((o) => o.id === updatedOrder.id) || updatedOrder;
+					batch.set(doc(db, "factories", roomId, "orders", resolvedOrder.id), stripUndefinedDeep({
+						...resolvedOrder,
 						updatedAt: nowIso
 					}));
-					const updatedCustomer = res.nextState.customers.find((c) => c.id === updatedOrder.customerId);
+					const updatedCustomer = res.nextState.customers.find((c) => c.id === resolvedOrder.customerId);
 					if (updatedCustomer) batch.set(doc(db, "factories", roomId, "customers", updatedCustomer.id), stripUndefinedDeep({
 						...updatedCustomer,
 						updatedAt: nowIso
@@ -51072,6 +51198,21 @@ var ArrowRight = createLucideIcon("arrow-right", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Award = createLucideIcon("award", [["path", {
+	d: "m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526",
+	key: "1yiouv"
+}], ["circle", {
+	cx: "12",
+	cy: "8",
+	r: "6",
+	key: "1vp47v"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Bell = createLucideIcon("bell", [["path", {
 	d: "M10.268 21a2 2 0 0 0 3.464 0",
 	key: "vwvbt9"
@@ -51141,6 +51282,23 @@ var Boxes = createLucideIcon("boxes", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Briefcase = createLucideIcon("briefcase", [["path", {
+	d: "M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16",
+	key: "jecpp"
+}], ["rect", {
+	width: "20",
+	height: "14",
+	x: "2",
+	y: "6",
+	rx: "2",
+	key: "i6l2r4"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Building2 = createLucideIcon("building-2", [
 	["path", {
 		d: "M10 12h4",
@@ -51191,6 +51349,21 @@ var Calendar = createLucideIcon("calendar", [
 		key: "8toen8"
 	}]
 ]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Camera = createLucideIcon("camera", [["path", {
+	d: "M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z",
+	key: "18u6gg"
+}], ["circle", {
+	cx: "12",
+	cy: "13",
+	r: "3",
+	key: "1vg3eu"
+}]]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -51422,6 +51595,48 @@ var CreditCard = createLucideIcon("credit-card", [["rect", {
 	y2: "10",
 	key: "1b3vmo"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Crosshair = createLucideIcon("crosshair", [
+	["circle", {
+		cx: "12",
+		cy: "12",
+		r: "10",
+		key: "1mglay"
+	}],
+	["line", {
+		x1: "22",
+		x2: "18",
+		y1: "12",
+		y2: "12",
+		key: "l9bcsi"
+	}],
+	["line", {
+		x1: "6",
+		x2: "2",
+		y1: "12",
+		y2: "12",
+		key: "13hhkx"
+	}],
+	["line", {
+		x1: "12",
+		x2: "12",
+		y1: "6",
+		y2: "2",
+		key: "10w3f3"
+	}],
+	["line", {
+		x1: "12",
+		x2: "12",
+		y1: "22",
+		y2: "18",
+		key: "15g9kq"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -51806,6 +52021,36 @@ var HardDrive = createLucideIcon("hard-drive", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ImagePlus = createLucideIcon("image-plus", [
+	["path", {
+		d: "M16 5h6",
+		key: "1vod17"
+	}],
+	["path", {
+		d: "M19 2v6",
+		key: "4bpg5p"
+	}],
+	["path", {
+		d: "M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5",
+		key: "1ue2ih"
+	}],
+	["path", {
+		d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
+		key: "1xmnt7"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "9",
+		r: "2",
+		key: "af1f0g"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Image$1 = createLucideIcon("image", [
 	["rect", {
 		width: "18",
@@ -52107,6 +52352,26 @@ var MapPin = createLucideIcon("map-pin", [["path", {
 	r: "3",
 	key: "ilqhr7"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Map$2 = createLucideIcon("map", [
+	["path", {
+		d: "M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z",
+		key: "169xi5"
+	}],
+	["path", {
+		d: "M15 5.764v15",
+		key: "1pn4in"
+	}],
+	["path", {
+		d: "M9 3.236v15",
+		key: "1uimfh"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -52661,6 +52926,26 @@ var SquareCheckBig = createLucideIcon("square-check-big", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Store = createLucideIcon("store", [
+	["path", {
+		d: "M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5",
+		key: "slp6dd"
+	}],
+	["path", {
+		d: "M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244",
+		key: "o0xfot"
+	}],
+	["path", {
+		d: "M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05",
+		key: "wn3emo"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Terminal = createLucideIcon("terminal", [["path", {
 	d: "M12 19h8",
 	key: "baeox8"
@@ -53136,13 +53421,15 @@ var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCou
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex items-center gap-2.5 sm:gap-3",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "relative",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-xl shadow-md ring-2 ring-amber-300/30",
-						children: "T"
+					className: "relative shrink-0",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+						src: "/logo.png",
+						alt: "TEJ FOOD PRODUCTS Logo",
+						referrerPolicy: "no-referrer",
+						className: "w-10 h-10 rounded-xl object-cover shadow-md ring-2 ring-amber-400/50 bg-[#08172E]"
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-950",
-						title: "लोकल स्टोरेज एक्टिव"
+						title: "Firebase लाइव सिंक एक्टिव"
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-1.5 sm:gap-2",
@@ -53289,12 +53576,29 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, permissions, pendingOrders
 			visible: true
 		},
 		{
-			id: "customers",
-			labelHindi: "ग्राहक खाता (Customers)",
-			labelEn: "Customers",
+			id: "wholesale_dealers",
+			labelHindi: "होलसेल डीलर्स (Wholesale)",
+			labelEn: "Wholesale Dealers",
+			icon: Store,
+			badge: null,
+			visible: perms.viewCustomers
+		},
+		{
+			id: "retail_customers",
+			labelHindi: "रिटेल कस्टमर्स (Retail)",
+			labelEn: "Retail Customers",
 			icon: Users,
 			badge: null,
 			visible: perms.viewCustomers
+		},
+		{
+			id: "salesman_ledger",
+			labelHindi: "सेल्समैन फील्ड लेखा (Salesman)",
+			labelEn: "Salesman Ledger",
+			icon: Briefcase,
+			badge: "मासिक",
+			badgeColor: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+			visible: currentRole === "admin" || currentRole === "manager" || currentRole === "accountant" || currentRole === "salesman" || perms.manageStaff || perms.viewReports
 		},
 		{
 			id: "inventory",
@@ -53469,6 +53773,18 @@ var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrde
 			visible: perms.viewOrders
 		},
 		{
+			id: "wholesale_dealers",
+			label: "होलसेल",
+			icon: Store,
+			visible: perms.viewCustomers
+		},
+		{
+			id: "retail_customers",
+			label: "रिटेल",
+			icon: Users,
+			visible: perms.viewCustomers
+		},
+		{
 			id: "inventory",
 			label: "स्टॉक",
 			icon: Package,
@@ -53481,10 +53797,10 @@ var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrde
 			visible: perms.viewProduction
 		},
 		{
-			id: "customers",
-			label: "ग्राहक",
-			icon: Users,
-			visible: perms.viewCustomers
+			id: "salesman_ledger",
+			label: "सेल्समैन",
+			icon: Briefcase,
+			visible: currentRole === "admin" || currentRole === "manager" || currentRole === "accountant" || currentRole === "salesman" || perms.manageStaff || perms.viewReports
 		},
 		{
 			id: "delivery",
@@ -53506,7 +53822,7 @@ var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrde
 		}
 	].filter((t) => t.visible);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
-		className: "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center select-none shadow-lg no-print",
+		className: "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print",
 		children: [tabs.map((tab) => {
 			const Icon = tab.icon;
 			const isActive = activeTab === tab.id;
@@ -56158,9 +56474,11 @@ var InvoiceModal = ({ order, settings, onSaveSettings, onClose }) => {
 								className: "flex justify-between items-start",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "flex items-center gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xl shadow-xs",
-										children: "T"
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+										src: "/logo.png",
+										alt: "TEJ FOOD PRODUCTS Logo",
+										referrerPolicy: "no-referrer",
+										className: "w-11 h-11 rounded-xl object-cover shadow-xs bg-[#08172E] border border-amber-400/50 shrink-0"
 									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 										className: "text-xl font-bold tracking-tight text-slate-950",
 										children: settings.companyName
@@ -56540,8 +56858,12 @@ var InvoiceModal = ({ order, settings, onSaveSettings, onClose }) => {
 	});
 };
 // src/components/NewOrderModal.tsx
-var NewOrderModal = ({ customers, products, staff, onClose, onSubmit }) => {
-	const [customerId, setCustomerId] = (0, import_react.useState)(customers[0]?.id || "");
+var NewOrderModal = ({ customers, products, staff, activeStaffMember, preselectedCustomerId, onClose, onSubmit }) => {
+	const initialCustId = preselectedCustomerId || customers[0]?.id || "";
+	const initialCustomer = customers.find((c) => c.id === initialCustId);
+	const salesmen = staff.filter((s) => s.role === "salesman" && s.active);
+	const [customerId, setCustomerId] = (0, import_react.useState)(initialCustId);
+	const [salesmanId, setSalesmanId] = (0, import_react.useState)(initialCustomer?.salesmanId || (activeStaffMember?.role === "salesman" ? activeStaffMember.id : ""));
 	const [billType, setBillType] = (0, import_react.useState)("gst");
 	const [deliveryStaffId, setDeliveryStaffId] = (0, import_react.useState)("staff-7");
 	const [vehicleNumber, setVehicleNumber] = (0, import_react.useState)("RJ-14-GA-4521");
@@ -56559,6 +56881,15 @@ var NewOrderModal = ({ customers, products, staff, onClose, onSubmit }) => {
 		totalAmount: (products[1]?.rates[10] || 380) * 20
 	}]);
 	const selectedCustomer = customers.find((c) => c.id === customerId);
+	(0, import_react.useEffect)(() => {
+		if (selectedCustomer?.salesmanId) setSalesmanId(selectedCustomer.salesmanId);
+		else if (activeStaffMember?.role === "salesman") setSalesmanId(activeStaffMember.id);
+		else setSalesmanId("");
+	}, [
+		selectedCustomer?.id,
+		selectedCustomer?.salesmanId,
+		activeStaffMember
+	]);
 	const handleAddItem = () => {
 		const defaultProd = products[0];
 		const defaultSize = 10;
@@ -56613,6 +56944,7 @@ var NewOrderModal = ({ customers, products, staff, onClose, onSubmit }) => {
 		e.preventDefault();
 		if (!selectedCustomer) return;
 		const deliveryStaffMember = staff.find((s) => s.id === deliveryStaffId);
+		const matchedSalesman = staff.find((s) => s.id === salesmanId) || (activeStaffMember?.id === salesmanId ? activeStaffMember : void 0);
 		const invoicePrefix = billType === "gst" ? "TEJ/26-27/" : "TEJ/CH-";
 		const randomSeq = Math.floor(1e3 + Math.random() * 9e3);
 		onSubmit({
@@ -56638,7 +56970,9 @@ var NewOrderModal = ({ customers, products, staff, onClose, onSubmit }) => {
 			deliveryStaffId,
 			deliveryStaffName: deliveryStaffMember?.name || "सोनू सैनी",
 			vehicleNumber: vehicleNumber || "RJ-14-GA-4521",
-			notes
+			notes,
+			salesmanId: salesmanId || void 0,
+			salesmanName: matchedSalesman?.name || selectedCustomer.salesmanName || void 0
 		});
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -56938,16 +57272,45 @@ var NewOrderModal = ({ customers, products, staff, onClose, onSubmit }) => {
 							})] })
 						]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-						className: "block text-xs font-bold text-slate-600 mb-1",
-						children: "ऑर्डर नोट / विशेष निर्देश (वैकल्पिक)"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "text",
-						value: notes,
-						onChange: (e) => setNotes(e.target.value),
-						placeholder: "उदा. दोपहर 3 बजे तक डिलीवरी, दुकान पर अनलोडिंग",
-						className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
-					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "block text-xs font-bold text-slate-600 mb-1 flex items-center gap-1",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-3.5 h-3.5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन / फील्ड क्रेडिट (Salesman)" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+								value: salesmanId,
+								onChange: (e) => setSalesmanId(e.target.value),
+								disabled: activeStaffMember?.role === "salesman",
+								className: "w-full px-3 py-2 bg-amber-50/70 border border-amber-300 rounded-xl text-xs font-bold text-slate-800",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: "",
+									children: "डायरेक्ट ऑर्डर (कोई सेल्समैन नहीं)"
+								}), salesmen.map((sm) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: sm.id,
+									children: sm.name
+								}, sm.id))]
+							}),
+							selectedCustomer?.salesmanName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[10px] text-amber-800 font-semibold block mt-0.5",
+								children: [
+									"✓ कस्टमर के सेल्समैन (",
+									selectedCustomer.salesmanName,
+									") से ऑटो-लिंक"
+								]
+							})
+						] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+							className: "block text-xs font-bold text-slate-600 mb-1",
+							children: "ऑर्डर नोट / विशेष निर्देश (वैकल्पिक)"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "text",
+							value: notes,
+							onChange: (e) => setNotes(e.target.value),
+							placeholder: "उदा. दोपहर 3 बजे तक डिलीवरी, दुकान पर अनलोडिंग",
+							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
+						})] })]
+					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "pt-3 border-t border-slate-200 flex items-center justify-end gap-3",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
@@ -57566,8 +57929,4018 @@ var NewExpenseModal = ({ onClose, onSubmit }) => {
 		})
 	});
 };
+// node_modules/@vis.gl/react-google-maps/dist/chunks/use-map-3d-Bc_q95nK.mjs
+var import_react_dom = require_react_dom();
+/**
+* Internally used to copy values from props into API-Objects
+* whenever they change.
+*
+* A prop the consumer never provided is not written at all. Assigning
+* `undefined` would clobber the default the Maps API set up on the object
+* (see #867) and, for deprecated or channel-gated properties, log a warning
+* the consumer did not cause. Once a value has been written to an object,
+* a later `undefined` still clears it.
+*
+* @example
+*   usePropBinding(marker, 'position', position);
+*
+* @internal
+*/
+function usePropBinding(object, prop, value) {
+	const writtenTo = (0, import_react.useRef)(null);
+	(0, import_react.useEffect)(() => {
+		if (!object) return;
+		if (value === void 0 && writtenTo.current !== object) return;
+		writtenTo.current = object;
+		object[prop] = value;
+	}, [
+		object,
+		prop,
+		value
+	]);
+}
+/**
+* A clone of the React namespace for reading APIs that may be missing in older
+* supported React versions. Bundlers can rewrite direct React.someNewApi reads
+* into named imports, which breaks React 17. Reading from this cloned object
+* keeps those lookups optional.
+*
+* @see https://github.com/mui/material-ui/issues/41190#issuecomment-2040873379
+*/
+var SafeReact = Object.assign({}, import_react);
+var useInsertionEffect = SafeReact.useInsertionEffect;
+var useSafeInsertionEffect = useInsertionEffect && useInsertionEffect !== SafeReact.useLayoutEffect ? useInsertionEffect : (fn) => {
+	fn();
+};
+function forbiddenInRender() {
+	throw new Error("useEffectEvent: invalid call during rendering.");
+}
+function useEffectEventPolyfill(fn) {
+	/**
+	* Initialize the ref with `forbiddenInRender`, to catch illegal calls during
+	* rendering. After the insertion effect ran, the ref will contain the actual
+	* function, so all effects can see the actual value.
+	*/
+	const ref = (0, import_react.useRef)(forbiddenInRender);
+	useSafeInsertionEffect(() => {
+		ref.current = fn;
+	}, [fn]);
+	return ((...args) => ref.current(...args));
+}
+/**
+* Uses a polyfill implementation of `useEffectEvent`. The native useEffectEvent
+* implementation was causing issues that we do not fully understand yet.
+*/
+var useEffectEvent = useEffectEventPolyfill;
+var noop$1 = () => {};
+/**
+* Internally used to bind events to DOM nodes.
+* @internal
+*/
+function useDomEventListener(target, name, callback) {
+	const eventFn = useEffectEvent(callback !== null && callback !== void 0 ? callback : noop$1);
+	const isCallbackDefined = Boolean(callback);
+	(0, import_react.useEffect)(() => {
+		if (!target || !name || !isCallbackDefined) return;
+		const listenerCallback = eventFn;
+		target.addEventListener(name, listenerCallback);
+		return () => target.removeEventListener(name, listenerCallback);
+	}, [
+		target,
+		name,
+		isCallbackDefined
+	]);
+}
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+function __rest(s, e) {
+	var t = {};
+	for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0) t[p] = s[p];
+	if (s != null && typeof Object.getOwnPropertySymbols === "function") {
+		for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i])) t[p[i]] = s[p[i]];
+	}
+	return t;
+}
+function __awaiter(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+}
+var MSG_REPEATED_SET_OPTIONS = (options) => `The setOptions() function should only be called once. The options passed to the additional call (${JSON.stringify(options)}) will be ignored.`;
+var MSG_IMPORT_LIBRARY_EXISTS = (options) => `The google.maps.importLibrary() function is already defined, and @googlemaps/js-api-loader will use the existing function instead of overwriting it. The options passed to setOptions (${JSON.stringify(options)}) will be ignored.`;
+var MSG_TRUSTED_TYPES_POLICY_FAILED = (policyName, error) => `Failed to create Trusted Types policy "${policyName}": ${error instanceof Error ? error.message : String(error)}.\n\nIf your Content Security Policy uses "require-trusted-types-for 'script'", allow this policy with "trusted-types ${policyName} google-maps-api-loader google-maps-api#html lit-html". The "google-maps-api-loader", "lit-html", and "google-maps-api#html" policies are required for full Maps JavaScript API execution. Falling back to a string script URL.`;
+var TRUSTED_TYPES_POLICY_NAME = "@googlemaps/js-api-loader";
+var fallbackPolicy = { createScriptURL: (url) => url };
+var policy;
+function getPolicy() {
+	if (policy) return policy;
+	const trustedTypes = globalThis.trustedTypes;
+	if (!trustedTypes) {
+		policy = fallbackPolicy;
+		return policy;
+	}
+	try {
+		policy = trustedTypes.createPolicy(TRUSTED_TYPES_POLICY_NAME, { createScriptURL: (url) => url });
+	} catch (e) {
+		MSG_TRUSTED_TYPES_POLICY_FAILED(TRUSTED_TYPES_POLICY_NAME, e);
+		policy = fallbackPolicy;
+	}
+	return policy;
+}
+function setScriptSrc(script, src) {
+	script.src = getPolicy().createScriptURL(src);
+}
+var bootstrap = (bootstrapParams) => {
+	var bootstrapPromise;
+	var script;
+	var bootstrapParamsKey;
+	var PRODUCT_NAME = "The Google Maps JavaScript API";
+	var GOOGLE = "google";
+	var IMPORT_API_NAME = "importLibrary";
+	var PENDING_BOOTSTRAP_KEY = "__ib__";
+	var doc = document;
+	var global_ = window;
+	var google_ = global_[GOOGLE] || (global_[GOOGLE] = {});
+	var namespace = google_.maps || (google_.maps = {});
+	var libraries = /* @__PURE__ */ new Set();
+	var searchParams = new URLSearchParams();
+	var triggerBootstrap = () => bootstrapPromise || (bootstrapPromise = new Promise(async (resolve, reject) => {
+		await (script = doc.createElement("script"));
+		searchParams.set("libraries", [...libraries] + "");
+		for (bootstrapParamsKey in bootstrapParams) searchParams.set(bootstrapParamsKey.replace(/[A-Z]/g, (g) => "_" + g[0].toLowerCase()), bootstrapParams[bootstrapParamsKey]);
+		searchParams.set("callback", GOOGLE + ".maps.__ib__");
+		setScriptSrc(script, "https://maps.googleapis.com/maps/api/js?" + searchParams);
+		namespace[PENDING_BOOTSTRAP_KEY] = resolve;
+		script.onerror = () => bootstrapPromise = reject(Error(PRODUCT_NAME + " could not load."));
+		script.nonce = doc.querySelector("script[nonce]")?.nonce || "";
+		doc.head.append(script);
+	}));
+	namespace[IMPORT_API_NAME] ? console.warn(PRODUCT_NAME + " only loads once. Ignoring:", bootstrapParams) : namespace[IMPORT_API_NAME] = (libraryName, ...args) => libraries.add(libraryName) && triggerBootstrap().then(() => namespace[IMPORT_API_NAME](libraryName, ...args));
+};
+var setOptionsWasCalled_ = false;
+/**
+* Sets the options for the Maps JavaScript API.
+*
+* Has to be called before any library is loaded.
+*
+* See https://developers.google.com/maps/documentation/javascript/load-maps-js-api#required_parameters
+* for the full documentation of available options.
+*
+* @param options The options to set.
+*/
+function setOptions(options) {
+	if (setOptionsWasCalled_) {
+		MSG_REPEATED_SET_OPTIONS(options);
+		return;
+	}
+	if (options.apiKey) {
+		if (!options.key) options.key = options.apiKey;
+	}
+	installImportLibrary_(options);
+	setOptionsWasCalled_ = true;
+}
+async function importLibrary(libraryName) {
+	if (!setOptionsWasCalled_);
+	if (!window?.google?.maps?.importLibrary) throw new Error("google.maps.importLibrary is not installed.");
+	return await google.maps.importLibrary(libraryName);
+}
+/**
+* The installImportLibrary_ function makes sure that a usable version of the
+* `google.maps.importLibrary` function exists.
+*/
+function installImportLibrary_(options) {
+	const importLibraryExists = Boolean(window.google?.maps?.importLibrary);
+	if (importLibraryExists) MSG_IMPORT_LIBRARY_EXISTS(options);
+	if (!importLibraryExists) bootstrap(options);
+}
+var APILoadingStatus = {
+	NOT_LOADED: "NOT_LOADED",
+	LOADING: "LOADING",
+	LOADED: "LOADED",
+	FAILED: "FAILED",
+	AUTH_FAILURE: "AUTH_FAILURE"
+};
+var VERSION = "1.10.2";
+var DEFAULT_SOLUTION_CHANNEL = "GMP_visgl_rgmlibrary_v1_default";
+var DEFAULT_INTERNAL_USAGE_ATTRIBUTION_IDS = [`gmp_visgl_reactgooglemaps_v${VERSION}`];
+var APIProviderContext = import_react.createContext(null);
+var loadingStatus = APILoadingStatus.NOT_LOADED;
+var serializedApiParams;
+var listeners = /* @__PURE__ */ new Set();
+/**
+* Called to update the local status and notify the listeners for any mounted
+* components.
+* @internal
+*/
+function updateLoadingStatus(status) {
+	if (status === loadingStatus) return;
+	loadingStatus = status;
+	listeners.forEach((listener) => listener(loadingStatus));
+}
+/**
+* Local hook to set up the map-instance management context.
+* @internal
+*/
+function useMapInstances() {
+	const [mapInstances, setMapInstances] = (0, import_react.useState)({});
+	const addMapInstance = (mapInstance, id = "default") => {
+		setMapInstances((instances) => Object.assign(Object.assign({}, instances), { [id]: mapInstance }));
+	};
+	const removeMapInstance = (id = "default") => {
+		setMapInstances((_a) => {
+			var _b = id;
+			_a[_b];
+			return __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+		});
+	};
+	const clearMapInstances = () => {
+		setMapInstances({});
+	};
+	return {
+		mapInstances,
+		addMapInstance,
+		removeMapInstance,
+		clearMapInstances
+	};
+}
+/**
+* local hook to set up the 3D map-instance management context.
+*/
+function useMap3DInstances() {
+	const [map3dInstances, setMap3DInstances] = (0, import_react.useState)({});
+	const addMap3DInstance = (map3dInstance, id = "default") => {
+		setMap3DInstances((instances) => Object.assign(Object.assign({}, instances), { [id]: map3dInstance }));
+	};
+	const removeMap3DInstance = (id = "default") => {
+		setMap3DInstances((_a) => {
+			var _b = id;
+			_a[_b];
+			return __rest(_a, [typeof _b === "symbol" ? _b : _b + ""]);
+		});
+	};
+	const clearMap3DInstances = () => {
+		setMap3DInstances({});
+	};
+	return {
+		map3dInstances,
+		addMap3DInstance,
+		removeMap3DInstance,
+		clearMap3DInstances
+	};
+}
+/**
+* Local hook to handle the loading of the maps API.
+* @internal
+*/
+function useGoogleMapsApiLoader(props) {
+	const { onLoad, onError, apiKey, version, libraries = [], region, language, authReferrerPolicy, channel, solutionChannel, fetchAppCheckToken } = props;
+	const [status, setStatus] = (0, import_react.useState)(loadingStatus);
+	const [loadedLibraries, addLoadedLibrary] = (0, import_react.useReducer)((loadedLibraries, action) => {
+		return loadedLibraries[action.name] ? loadedLibraries : Object.assign(Object.assign({}, loadedLibraries), { [action.name]: action.value });
+	}, {});
+	const currentSerializedParams = (0, import_react.useMemo)(() => {
+		const params = {
+			apiKey,
+			version,
+			libraries: libraries.join(","),
+			region,
+			language,
+			authReferrerPolicy,
+			channel,
+			solutionChannel
+		};
+		return JSON.stringify(params);
+	}, [
+		apiKey,
+		version,
+		libraries,
+		region,
+		language,
+		authReferrerPolicy,
+		channel,
+		solutionChannel
+	]);
+	const importLibraryCallback = (0, import_react.useCallback)((name) => __awaiter(this, void 0, void 0, function* () {
+		if (loadedLibraries[name]) return loadedLibraries[name];
+		const res = yield importLibrary(name);
+		addLoadedLibrary({
+			name,
+			value: res
+		});
+		return res;
+	}), [loadedLibraries]);
+	(0, import_react.useEffect)(() => {
+		listeners.add(setStatus);
+		setStatus(loadingStatus);
+		return () => {
+			listeners.delete(setStatus);
+		};
+	}, []);
+	(0, import_react.useEffect)(() => {
+		(() => __awaiter(this, void 0, void 0, function* () {
+			var _a, _b;
+			try {
+				if (serializedApiParams && serializedApiParams !== currentSerializedParams) console.warn("The Google Maps JavaScript API has already been loaded with different parameters. The new parameters will be ignored. If you need to use different parameters, please refresh the page.");
+				const librariesToLoad = [
+					"core",
+					"maps",
+					...libraries
+				];
+				const options = Object.fromEntries(Object.entries({
+					key: apiKey,
+					v: version,
+					libraries,
+					region,
+					language,
+					authReferrerPolicy
+				}).filter(([, value]) => value !== void 0));
+				if (channel !== void 0 && channel >= 0 && channel <= 999) options.channel = String(channel);
+				if (solutionChannel === void 0) options.solutionChannel = DEFAULT_SOLUTION_CHANNEL;
+				else if (solutionChannel !== "") options.solutionChannel = solutionChannel;
+				if ((_b = (_a = window.google) === null || _a === void 0 ? void 0 : _a.maps) === null || _b === void 0 ? void 0 : _b.importLibrary) {
+					const shouldUpdateLoadingStatus = !serializedApiParams;
+					if (shouldUpdateLoadingStatus) {
+						serializedApiParams = currentSerializedParams;
+						setOptions(options);
+					}
+					yield Promise.all(librariesToLoad.map((name) => importLibraryCallback(name)));
+					if (shouldUpdateLoadingStatus) updateLoadingStatus(APILoadingStatus.LOADED);
+					if (onLoad) onLoad();
+					return;
+				}
+				if (loadingStatus === APILoadingStatus.LOADING || loadingStatus === APILoadingStatus.LOADED) {
+					if (loadingStatus === APILoadingStatus.LOADED && onLoad) onLoad();
+					return;
+				}
+				serializedApiParams = currentSerializedParams;
+				updateLoadingStatus(APILoadingStatus.LOADING);
+				setOptions(options);
+				yield Promise.all(librariesToLoad.map((name) => importLibraryCallback(name)));
+				updateLoadingStatus(APILoadingStatus.LOADED);
+				if (onLoad) onLoad();
+			} catch (error) {
+				updateLoadingStatus(APILoadingStatus.FAILED);
+				if (onError) onError(error);
+				else console.error("The Google Maps JavaScript API failed to load.", error);
+			}
+		}))();
+	}, [
+		currentSerializedParams,
+		onLoad,
+		onError,
+		importLibraryCallback,
+		libraries
+	]);
+	(0, import_react.useEffect)(() => {
+		if (status !== APILoadingStatus.LOADED) return;
+		const settings = google.maps.Settings.getInstance();
+		if (fetchAppCheckToken) settings.fetchAppCheckToken = fetchAppCheckToken;
+	}, [status, fetchAppCheckToken]);
+	return {
+		status,
+		loadedLibraries,
+		importLibrary: importLibraryCallback
+	};
+}
+function useInternalUsageAttributionIds(props) {
+	return (0, import_react.useMemo)(() => props.disableUsageAttribution ? null : DEFAULT_INTERNAL_USAGE_ATTRIBUTION_IDS, [props.disableUsageAttribution]);
+}
+/**
+* Component to wrap the components from this library and load the Google Maps JavaScript API
+*/
+var APIProvider = (props) => {
+	const { children } = props, loaderProps = __rest(props, ["children"]);
+	const { mapInstances, addMapInstance, removeMapInstance, clearMapInstances } = useMapInstances();
+	const { map3dInstances, addMap3DInstance, removeMap3DInstance, clearMap3DInstances } = useMap3DInstances();
+	const { status, loadedLibraries, importLibrary } = useGoogleMapsApiLoader(loaderProps);
+	const internalUsageAttributionIds = useInternalUsageAttributionIds(loaderProps);
+	const contextValue = (0, import_react.useMemo)(() => ({
+		mapInstances,
+		addMapInstance,
+		removeMapInstance,
+		clearMapInstances,
+		map3dInstances,
+		addMap3DInstance,
+		removeMap3DInstance,
+		clearMap3DInstances,
+		status,
+		loadedLibraries,
+		importLibrary,
+		internalUsageAttributionIds
+	}), [
+		mapInstances,
+		addMapInstance,
+		removeMapInstance,
+		clearMapInstances,
+		map3dInstances,
+		addMap3DInstance,
+		removeMap3DInstance,
+		clearMap3DInstances,
+		status,
+		loadedLibraries,
+		importLibrary,
+		internalUsageAttributionIds
+	]);
+	return import_react.createElement(APIProviderContext.Provider, { value: contextValue }, children);
+};
+function useCallbackRef() {
+	const [el, setEl] = (0, import_react.useState)(null);
+	return [el, (0, import_react.useCallback)((value) => setEl(value), [setEl])];
+}
+function useApiLoadingStatus() {
+	var _a;
+	return ((_a = (0, import_react.useContext)(APIProviderContext)) === null || _a === void 0 ? void 0 : _a.status) || APILoadingStatus.NOT_LOADED;
+}
+/**
+* Hook to check if the Maps JavaScript API is loaded
+*/
+function useApiIsLoaded() {
+	return useApiLoadingStatus() === APILoadingStatus.LOADED;
+}
+function useMapsLibrary(name) {
+	var _a;
+	const apiIsLoaded = useApiIsLoaded();
+	const ctx = (0, import_react.useContext)(APIProviderContext);
+	(0, import_react.useEffect)(() => {
+		if (!apiIsLoaded || !ctx) return;
+		ctx.importLibrary(name);
+	}, [
+		apiIsLoaded,
+		ctx,
+		name
+	]);
+	return (_a = ctx === null || ctx === void 0 ? void 0 : ctx.loadedLibraries[name]) !== null && _a !== void 0 ? _a : null;
+}
+function useForceUpdate() {
+	const [, forceUpdate] = (0, import_react.useReducer)((x) => x + 1, 0);
+	return forceUpdate;
+}
+var DEFAULT_CAMERA_STATE = {
+	center: {
+		lat: 0,
+		lng: 0,
+		altitude: 0
+	},
+	range: 0,
+	heading: 0,
+	tilt: 0,
+	roll: 0
+};
+/**
+* Camera property names that correspond to gmp-*change events.
+*/
+var CAMERA_PROPS = [
+	"center",
+	"range",
+	"heading",
+	"tilt",
+	"roll"
+];
+/**
+* Updates the camera state ref with values from the map element.
+*/
+function updateCameraState(map3d, ref, prop) {
+	const value = map3d[prop];
+	if (value == null) return;
+	if (prop === "center") {
+		const center = value;
+		ref.current.center = center.toJSON ? center.toJSON() : center;
+	} else ref.current[prop] = value;
+}
+/**
+* Creates a mutable ref object to track the last known state of the 3D map camera.
+* This is used in `useMap3DCameraParams` to reduce stuttering by avoiding updates
+* of the map camera with values that have already been processed.
+*
+* @internal
+*/
+function useTrackedCameraStateRef3D(map3d) {
+	const forceUpdate = useForceUpdate();
+	const ref = (0, import_react.useRef)(Object.assign({}, DEFAULT_CAMERA_STATE));
+	(0, import_react.useEffect)(() => {
+		if (!map3d) return;
+		const listeners = [];
+		for (const prop of CAMERA_PROPS) {
+			const eventName = `gmp-${prop}change`;
+			const handler = () => {
+				updateCameraState(map3d, ref, prop);
+				forceUpdate();
+			};
+			map3d.addEventListener(eventName, handler);
+			listeners.push(() => map3d.removeEventListener(eventName, handler));
+		}
+		return () => {
+			for (const removeListener of listeners) removeListener();
+		};
+	}, [map3d, forceUpdate]);
+	return ref;
+}
+/**
+* Hook to manage the Map3DElement instance lifecycle.
+*
+* Handles:
+* - Waiting for the 'maps3d' library to load
+* - Waiting for the 'gmp-map-3d' custom element to be defined
+* - Creating a callback ref for the element
+* - Applying initial options when the element is ready
+* - Tracking camera state
+*
+* @internal
+*/
+function useMap3DInstance(props) {
+	const maps3dLib = useMapsLibrary("maps3d");
+	const [customElementReady, setCustomElementReady] = (0, import_react.useState)(false);
+	const [, containerRef] = useCallbackRef();
+	const [map3d, map3dRef] = useCallbackRef();
+	const cameraStateRef = useTrackedCameraStateRef3D(map3d);
+	(0, import_react.useEffect)(() => {
+		customElements.whenDefined("gmp-map-3d").then(() => {
+			setCustomElementReady(true);
+		});
+	}, []);
+	(0, import_react.useEffect)(() => {
+		if (!map3d) return;
+		const { center, heading, tilt, range, roll, defaultCenter, defaultHeading, defaultTilt, defaultRange, defaultRoll, id, style, className, children, onCenterChanged, onHeadingChanged, onTiltChanged, onRangeChanged, onRollChanged, onCameraChanged, onClick, onSteadyChange, onAnimationEnd, onError, mode, gestureHandling } = props, elementOptions = __rest(props, [
+			"center",
+			"heading",
+			"tilt",
+			"range",
+			"roll",
+			"defaultCenter",
+			"defaultHeading",
+			"defaultTilt",
+			"defaultRange",
+			"defaultRoll",
+			"id",
+			"style",
+			"className",
+			"children",
+			"onCenterChanged",
+			"onHeadingChanged",
+			"onTiltChanged",
+			"onRangeChanged",
+			"onRollChanged",
+			"onCameraChanged",
+			"onClick",
+			"onSteadyChange",
+			"onAnimationEnd",
+			"onError",
+			"mode",
+			"gestureHandling"
+		]);
+		const initialCenter = center !== null && center !== void 0 ? center : defaultCenter;
+		const initialHeading = heading !== null && heading !== void 0 ? heading : defaultHeading;
+		const initialTilt = tilt !== null && tilt !== void 0 ? tilt : defaultTilt;
+		const initialRange = range !== null && range !== void 0 ? range : defaultRange;
+		const initialRoll = roll !== null && roll !== void 0 ? roll : defaultRoll;
+		const initialOptions = Object.assign({}, elementOptions);
+		if (initialCenter) initialOptions.center = initialCenter;
+		if (initialHeading !== void 0) initialOptions.heading = initialHeading;
+		if (initialTilt !== void 0) initialOptions.tilt = initialTilt;
+		if (initialRange !== void 0) initialOptions.range = initialRange;
+		if (initialRoll !== void 0) initialOptions.roll = initialRoll;
+		Object.assign(map3d, initialOptions);
+	}, [map3d]);
+	return [
+		map3d,
+		containerRef,
+		map3dRef,
+		cameraStateRef,
+		!!maps3dLib && customElementReady
+	];
+}
+/**
+* Converts a LatLngAltitude or LatLngAltitudeLiteral to a literal object.
+*/
+function toLatLngAltitudeLiteral(value) {
+	if (!value) return null;
+	if ("toJSON" in value && typeof value.toJSON === "function") return value.toJSON();
+	return value;
+}
+/**
+* Hook to update Map3D camera parameters when props change.
+* Compares the current camera state with props and updates only when there are differences.
+*
+* @internal
+*/
+function useMap3DCameraParams(map3d, cameraStateRef, props) {
+	var _a, _b, _c, _d, _e, _f, _g;
+	const centerLiteral = toLatLngAltitudeLiteral(props.center);
+	const lat = (_a = centerLiteral === null || centerLiteral === void 0 ? void 0 : centerLiteral.lat) !== null && _a !== void 0 ? _a : null;
+	const lng = (_b = centerLiteral === null || centerLiteral === void 0 ? void 0 : centerLiteral.lng) !== null && _b !== void 0 ? _b : null;
+	const altitude = (_c = centerLiteral === null || centerLiteral === void 0 ? void 0 : centerLiteral.altitude) !== null && _c !== void 0 ? _c : null;
+	const range = (_d = props.range) !== null && _d !== void 0 ? _d : null;
+	const heading = (_e = props.heading) !== null && _e !== void 0 ? _e : null;
+	const tilt = (_f = props.tilt) !== null && _f !== void 0 ? _f : null;
+	const roll = (_g = props.roll) !== null && _g !== void 0 ? _g : null;
+	(0, import_react.useLayoutEffect)(() => {
+		var _a;
+		if (!map3d) return;
+		const currentState = cameraStateRef.current;
+		if (lat !== null && lng !== null && (currentState.center.lat !== lat || currentState.center.lng !== lng || altitude !== null && currentState.center.altitude !== altitude)) map3d.center = {
+			lat,
+			lng,
+			altitude: (_a = altitude !== null && altitude !== void 0 ? altitude : currentState.center.altitude) !== null && _a !== void 0 ? _a : 0
+		};
+		if (range !== null && currentState.range !== range) map3d.range = range;
+		if (heading !== null && currentState.heading !== heading) map3d.heading = heading;
+		if (tilt !== null && currentState.tilt !== tilt) map3d.tilt = tilt;
+		if (roll !== null && currentState.roll !== roll) map3d.roll = roll;
+	});
+}
+/**
+* Camera-related event types for the aggregated onCameraChanged handler.
+*/
+var CAMERA_EVENTS = [
+	"gmp-centerchange",
+	"gmp-headingchange",
+	"gmp-tiltchange",
+	"gmp-rangechange",
+	"gmp-rollchange"
+];
+/**
+* Creates a camera changed event with current camera state.
+*/
+function createCameraEvent(map3d, type) {
+	const center = map3d.center;
+	let centerLiteral;
+	if (center && "toJSON" in center && typeof center.toJSON === "function") centerLiteral = center.toJSON();
+	else if (center) centerLiteral = center;
+	else centerLiteral = {
+		lat: 0,
+		lng: 0,
+		altitude: 0
+	};
+	return {
+		type,
+		map3d,
+		detail: {
+			center: centerLiteral,
+			range: map3d.range || 0,
+			heading: map3d.heading || 0,
+			tilt: map3d.tilt || 0,
+			roll: map3d.roll || 0
+		}
+	};
+}
+/**
+* Creates a click event from a LocationClickEvent or PlaceClickEvent.
+*/
+function createClickEvent(map3d, srcEvent) {
+	const placeClickEvent = srcEvent;
+	return {
+		type: "gmp-click",
+		map3d,
+		detail: {
+			position: srcEvent.position || null,
+			placeId: placeClickEvent.placeId
+		}
+	};
+}
+/**
+* Creates a steady change event.
+*/
+function createSteadyChangeEvent(map3d, srcEvent) {
+	return {
+		type: "gmp-steadychange",
+		map3d,
+		detail: { isSteady: srcEvent.isSteady }
+	};
+}
+/**
+* Hook to set up event handlers for Map3D events.
+*
+* @internal
+*/
+function useMap3DEvents(map3d, props) {
+	const { onCenterChanged, onHeadingChanged, onTiltChanged, onRangeChanged, onRollChanged, onCameraChanged, onClick, onSteadyChange, onAnimationEnd, onError } = props;
+	useMap3DEvent(map3d, "gmp-centerchange", onCenterChanged, createCameraEvent);
+	useMap3DEvent(map3d, "gmp-headingchange", onHeadingChanged, createCameraEvent);
+	useMap3DEvent(map3d, "gmp-tiltchange", onTiltChanged, createCameraEvent);
+	useMap3DEvent(map3d, "gmp-rangechange", onRangeChanged, createCameraEvent);
+	useMap3DEvent(map3d, "gmp-rollchange", onRollChanged, createCameraEvent);
+	(0, import_react.useEffect)(() => {
+		if (!map3d || !onCameraChanged) return;
+		const handler = () => {
+			onCameraChanged(createCameraEvent(map3d, "camerachange"));
+		};
+		for (const eventName of CAMERA_EVENTS) map3d.addEventListener(eventName, handler);
+		return () => {
+			for (const eventName of CAMERA_EVENTS) map3d.removeEventListener(eventName, handler);
+		};
+	}, [map3d, onCameraChanged]);
+	(0, import_react.useEffect)(() => {
+		if (!map3d || !onClick) return;
+		const handler = (ev) => {
+			onClick(createClickEvent(map3d, ev));
+		};
+		map3d.addEventListener("gmp-click", handler);
+		return () => map3d.removeEventListener("gmp-click", handler);
+	}, [map3d, onClick]);
+	(0, import_react.useEffect)(() => {
+		if (!map3d || !onSteadyChange) return;
+		const handler = (ev) => {
+			onSteadyChange(createSteadyChangeEvent(map3d, ev));
+		};
+		map3d.addEventListener("gmp-steadychange", handler);
+		return () => map3d.removeEventListener("gmp-steadychange", handler);
+	}, [map3d, onSteadyChange]);
+	useMap3DEvent(map3d, "gmp-animationend", onAnimationEnd, (map3d, type) => ({
+		type,
+		map3d
+	}));
+	useMap3DEvent(map3d, "gmp-error", onError, (map3d, type) => ({
+		type,
+		map3d
+	}));
+}
+/**
+* Helper hook for individual events.
+*/
+function useMap3DEvent(map3d, eventName, handler, createEvent) {
+	(0, import_react.useEffect)(() => {
+		if (!map3d || !handler) return;
+		const listener = () => {
+			handler(createEvent(map3d, eventName));
+		};
+		map3d.addEventListener(eventName, listener);
+		return () => map3d.removeEventListener(eventName, listener);
+	}, [
+		map3d,
+		eventName,
+		handler,
+		createEvent
+	]);
+}
+function useMemoized(value, isEqual) {
+	const ref = (0, import_react.useRef)(value);
+	if (!isEqual(value, ref.current)) ref.current = value;
+	return ref.current;
+}
+function useCustomCompareEffect(effect, dependencies, isEqual) {
+	(0, import_react.useEffect)(effect, [useMemoized(dependencies, isEqual)]);
+}
+var { getOwnPropertyDescriptor, getOwnPropertyNames, getOwnPropertySymbols } = Object;
+var { hasOwnProperty, toString: toString$1 } = Object.prototype;
+var OBJECT_TAG = "[object Object]";
+/**
+* Whether the own properties from `end` onward are equal with strict property checking, where the
+* caller has already verified that both objects have the same number of own properties.
+*/
+function areStrictPropertiesEqual(a, b, state, properties, end) {
+	let index = properties.length;
+	let property;
+	let descriptorA;
+	let descriptorB;
+	while (index-- > end) {
+		property = properties[index];
+		if (!isReactProperty(a, b, property) && (!hasOwn$1(b, property) || !state.equals(a[property], b[property], property, property, a, b, state))) return false;
+		descriptorA = getOwnPropertyDescriptor(a, property);
+		descriptorB = getOwnPropertyDescriptor(b, property);
+		if ((descriptorA || descriptorB) && (!descriptorA || !descriptorB || descriptorA.configurable !== descriptorB.configurable || descriptorA.enumerable !== descriptorB.enumerable || descriptorA.writable !== descriptorB.writable)) return false;
+	}
+	return true;
+}
+/**
+* Combine two comparators into a single comparators.
+*/
+function combineComparators(comparatorA, comparatorB) {
+	return function isEqual(a, b, state) {
+		return comparatorA(a, b, state) && comparatorB(a, b, state);
+	};
+}
+/**
+* Wrap the provided `areItemsEqual` method to manage the circular state, allowing
+* for circular references to be safely included in the comparison without creating
+* stack overflows.
+*/
+function createIsCircular(areItemsEqual) {
+	return function isCircular(a, b, state) {
+		if (!a || !b || typeof a !== "object" || typeof b !== "object") return areItemsEqual(a, b, state);
+		const { cache } = state;
+		const cachedA = cache.get(a);
+		const cachedB = cache.get(b);
+		if (cachedA && cachedB) return cachedA === b && cachedB === a;
+		cache.set(a, b);
+		cache.set(b, a);
+		const result = areItemsEqual(a, b, state);
+		cache.delete(a);
+		cache.delete(b);
+		return result;
+	};
+}
+/**
+* Get the properties to strictly examine, which include both own properties that are
+* not enumerable and symbol properties.
+*/
+function getStrictProperties(object) {
+	const symbols = getOwnPropertySymbols(object);
+	return symbols.length ? getOwnPropertyNames(object).concat(symbols) : getOwnPropertyNames(object);
+}
+/**
+* Identify the element type of TypedArrays across realms and subclasses.
+*/
+var getTypedArrayTag = getOwnPropertyDescriptor(Object.getPrototypeOf(Int8Array.prototype), Symbol.toStringTag).get;
+/**
+* Whether the object contains the property passed as an own property.
+*/
+var hasOwn$1 = Object.hasOwn || ((object, property) => hasOwnProperty.call(object, property));
+/**
+* Whether a null-prototype object is being compared with a plain object. Only one side can be
+* null-prototype when the constructors differ. The other side must be a plain object by
+* constructor, or by tag when it comes from another realm.
+*/
+function isNullPrototypeComparable(a, b) {
+	const aConstructor = a.constructor;
+	const bConstructor = b.constructor;
+	if (aConstructor == null) return bConstructor === Object || toString$1.call(b) === OBJECT_TAG;
+	if (bConstructor == null) return aConstructor === Object || toString$1.call(a) === OBJECT_TAG;
+	return false;
+}
+/**
+* Whether the property passed is a property specific to React/Preact elements. These are ignored in comparison, as they
+* are deeply circular and will return frequent false negatives for the comparison that matters, which is often the
+* React element's aspects (`props`, `type`, etc.).
+*/
+function isReactProperty(a, b, property) {
+	return (property === "_owner" || property === "__o" || property === "__v") && !!(a.$$typeof || b.$$typeof);
+}
+/**
+* Reorder a serialized query string so that params holding the same pairs compare as equal
+* regardless of the order they appear in.
+*
+* @note
+* The serializer percent-encodes `&` and `=` wherever they appear inside a name or a value, so
+* splitting on `&` recovers exactly the pairs and nothing else.
+*/
+function sortSearchParams(serialized) {
+	return serialized.split("&").sort().join("&");
+}
+/**
+* Above this many keys, out-of-position keys are checked with `propertyIsEnumerable` rather than by
+* scanning the other object's keys. Measured in V8: scanning wins up to 50 keys and loses from 100.
+*/
+var MAX_SCANNED_PROPERTIES = 64;
+var { keys: keys$1 } = Object;
+var { propertyIsEnumerable } = Object.prototype;
+/**
+* Whether the values passed are equal based on a [SameValue](https://262.ecma-international.org/7.0/#sec-samevalue) basis.
+* Simplified, this maps to if the two values are referentially equal to one another (`a === b`) or both are `NaN`.
+*
+* @note
+* When available in the environment, this is just a re-export of the global
+* [`Object.is`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is) method.
+*/
+var sameValueEqual = Object.is || function sameValueEqual(a, b) {
+	return a === b ? a !== 0 || 1 / a === 1 / b : a !== a && b !== b;
+};
+/**
+* Whether the values passed are equal based on a
+* [Strict Equality Comparison](https://262.ecma-international.org/7.0/#sec-strict-equality-comparison) basis.
+* Simplified, this maps to if the two values are referentially equal to one another (`a === b`).
+*
+* @note
+* This is mainly available as a convenience function, such as being a default when a function to determine equality between
+* two objects is used.
+*/
+function strictEqual(a, b) {
+	return a === b;
+}
+/**
+* Whether the array buffers are equal in value.
+*/
+function areArrayBuffersEqual(a, b) {
+	return a.byteLength === b.byteLength && areTypedArraysEqual(new Uint8Array(a), new Uint8Array(b));
+}
+/**
+* Whether the arrays are equal in value.
+*/
+function areArraysEqual(a, b, state) {
+	let index = a.length;
+	if (b.length !== index) return false;
+	while (index-- > 0) if (!state.equals(a[index], b[index], index, index, a, b, state)) return false;
+	return true;
+}
+/**
+* Whether the dataviews are equal in value.
+*/
+function areDataViewsEqual(a, b) {
+	return a.byteLength === b.byteLength && areTypedArraysEqual(new Uint8Array(a.buffer, a.byteOffset, a.byteLength), new Uint8Array(b.buffer, b.byteOffset, b.byteLength));
+}
+/**
+* Whether the dates passed are equal in value.
+*/
+function areDatesEqual(a, b) {
+	return sameValueEqual(a.getTime(), b.getTime());
+}
+/**
+* Whether the errors passed are equal in value.
+*
+* @note
+* `name`, `message` and `stack` are own properties but are not enumerable, so they are compared
+* explicitly. `cause` and `errors` are compared by value rather than by reference, matching how
+* every other nested value in the comparison is treated. They are compared exactly once, regardless
+* of whether they were assigned (enumerable) or set by the constructor (non-enumerable). Other own
+* enumerable properties (which custom `Error` subclasses commonly add) are compared afterward.
+*
+* The own property comparison is inlined rather than extracted, which measured faster in V8 when
+* recursing through `cause`. Keep the bytecode under V8's 460-byte TurboFan inlining limit (383 bytes
+* at time of writing; check with `node --print-bytecode --print-bytecode-filter=areErrorsEqual`), or
+* this stops being inlined into its callers.
+*/
+function areErrorsEqual(a, b, state) {
+	if (a.name !== b.name || a.message !== b.message || a.stack !== b.stack) return false;
+	const causeA = a.cause;
+	const causeB = b.cause;
+	if (causeA !== causeB && !state.equals(causeA, causeB, "cause", "cause", a, b, state)) return false;
+	const errorsA = a.errors;
+	const errorsB = b.errors;
+	if (errorsA !== errorsB && !state.equals(errorsA, errorsB, "errors", "errors", a, b, state)) return false;
+	const propertiesA = keys$1(a);
+	const propertiesB = keys$1(b);
+	let index = propertiesA.length;
+	if (!index && !propertiesB.length) return true;
+	let compared = 0;
+	let property;
+	while (index-- > 0) {
+		property = propertiesA[index];
+		if (property === "cause" || property === "errors") continue;
+		if (property !== propertiesB[index] && !propertyIsEnumerable.call(b, property) || !state.equals(a[property], b[property], property, property, a, b, state)) return false;
+		++compared;
+	}
+	const remaining = propertiesB.length - compared;
+	return !remaining || remaining === (propertyIsEnumerable.call(b, "cause") ? 1 : 0) + (propertyIsEnumerable.call(b, "errors") ? 1 : 0);
+}
+/**
+* Whether the errors passed are equal in value.
+*
+* @note
+* `name`, `message` and `stack` are own properties but are not enumerable, so they are compared
+* explicitly. `cause` and `errors` are own properties, so `areObjectsEqualStrict` compares them along
+* with every other own property; they are not compared explicitly to avoid comparing them twice.
+*/
+function areErrorsEqualStrict(a, b, state) {
+	return a.name === b.name && a.message === b.message && a.stack === b.stack && areObjectsEqualStrict(a, b, state);
+}
+/**
+* Whether the `Map`s are equal in value.
+*/
+function areMapsEqual(a, b, state) {
+	const size = a.size;
+	if (size !== b.size) return false;
+	if (!size) return true;
+	const matchedIndices = new Array(size);
+	const aIterable = a.entries();
+	let aResult;
+	let bResult;
+	let index = 0;
+	while (aResult = aIterable.next()) {
+		if (aResult.done) break;
+		const bIterable = b.entries();
+		let hasMatch = false;
+		let matchIndex = 0;
+		while (bResult = bIterable.next()) {
+			if (bResult.done) break;
+			if (matchedIndices[matchIndex]) {
+				matchIndex++;
+				continue;
+			}
+			const aEntry = aResult.value;
+			const bEntry = bResult.value;
+			if (state.equals(aEntry[0], bEntry[0], index, matchIndex, a, b, state) && state.equals(aEntry[1], bEntry[1], aEntry[0], bEntry[0], a, b, state)) {
+				hasMatch = matchedIndices[matchIndex] = true;
+				break;
+			}
+			matchIndex++;
+		}
+		if (!hasMatch) return false;
+		index++;
+	}
+	return true;
+}
+/**
+* Whether the objects are equal in value.
+*/
+function areObjectsEqual(a, b, state) {
+	const properties = keys$1(a);
+	const propertiesB = keys$1(b);
+	let index = properties.length;
+	if (propertiesB.length !== index) return false;
+	const isScannable = index <= MAX_SCANNED_PROPERTIES;
+	let property;
+	while (index-- > 0) {
+		property = properties[index];
+		if (isReactProperty(a, b, property)) continue;
+		if (property !== propertiesB[index] && !(isScannable ? propertiesB.includes(property) : propertyIsEnumerable.call(b, property)) || !state.equals(a[property], b[property], property, property, a, b, state)) return false;
+	}
+	return true;
+}
+/**
+* Whether the objects are equal in value with strict property checking.
+*/
+function areObjectsEqualStrict(a, b, state) {
+	const properties = getStrictProperties(a);
+	return getStrictProperties(b).length === properties.length && areStrictPropertiesEqual(a, b, state, properties, 0);
+}
+/**
+* Whether the primitive wrappers passed are equal in value.
+*/
+function arePrimitiveWrappersEqual(a, b) {
+	return sameValueEqual(a.valueOf(), b.valueOf());
+}
+/**
+* Whether the regexps passed are equal in value.
+*/
+function areRegExpsEqual(a, b) {
+	return a.source === b.source && a.flags === b.flags;
+}
+/**
+* Whether the search params passed are equal in value.
+*
+* @note
+* Order is not significant, matching how the other unordered collections in the library are
+* compared. Repeated keys are, so this is a comparison of multisets rather than of sets:
+* `a=1&a=2` is equal to `a=2&a=1`, but not to `a=1&a=1`.
+*/
+function areSearchParamsEqual(a, b) {
+	const serializedA = a.toString();
+	const serializedB = b.toString();
+	return serializedA === serializedB || sortSearchParams(serializedA) === sortSearchParams(serializedB);
+}
+/**
+* Whether the `Set`s are equal in value.
+*/
+function areSetsEqual(a, b, state) {
+	const size = a.size;
+	if (size !== b.size) return false;
+	if (!size) return true;
+	const matchedIndices = new Array(size);
+	const aIterable = a.values();
+	let aResult;
+	let bResult;
+	while (aResult = aIterable.next()) {
+		if (aResult.done) break;
+		const bIterable = b.values();
+		let hasMatch = false;
+		let matchIndex = 0;
+		while (bResult = bIterable.next()) {
+			if (bResult.done) break;
+			if (!matchedIndices[matchIndex] && state.equals(aResult.value, bResult.value, aResult.value, bResult.value, a, b, state)) {
+				hasMatch = matchedIndices[matchIndex] = true;
+				break;
+			}
+			matchIndex++;
+		}
+		if (!hasMatch) return false;
+	}
+	return true;
+}
+/**
+* Whether the TypedArray instances are equal in value.
+*/
+function areTypedArraysEqual(a, b) {
+	let index = a.length;
+	if (b.length !== index || a.byteOffset !== b.byteOffset) return false;
+	const tag = getTypedArrayTag.call(a);
+	if (tag === "Float64Array" || tag === "Float32Array" || tag === "Float16Array") {
+		while (index-- > 0) if (a[index] !== b[index] && (a[index] === a[index] || b[index] === b[index])) return false;
+		return true;
+	}
+	while (index-- > 0) if (a[index] !== b[index]) return false;
+	return true;
+}
+/**
+* Whether the TypedArray instances are equal in value with strict property checking.
+*
+* @note
+* Indexed elements are also own properties, listed first and in order, with descriptors fixed by the
+* spec. They are compared once by `areTypedArraysEqual`, so only the own properties after them
+* (including symbols) are compared with strict property checking.
+*/
+function areTypedArraysEqualStrict(a, b, state) {
+	if (!areTypedArraysEqual(a, b)) return false;
+	const properties = getStrictProperties(a);
+	return getStrictProperties(b).length === properties.length && areStrictPropertiesEqual(a, b, state, properties, a.length);
+}
+/**
+* Whether the URL instances are equal in value.
+*/
+function areUrlsEqual(a, b) {
+	if (a.href === b.href) return true;
+	return a.protocol === b.protocol && a.username === b.username && a.password === b.password && a.host === b.host && a.pathname === b.pathname && a.hash === b.hash && areSearchParamsEqual(a.searchParams, b.searchParams);
+}
+var { toString } = Object.prototype;
+/**
+* Create a comparator method based on the type-specific equality comparators passed.
+*/
+function createEqualityComparator(config) {
+	const supportedComparatorMap = createSupportedComparatorMap(config);
+	const { areArraysEqual, areDatesEqual, areFunctionsEqual, areMapsEqual, areNumbersEqual, areObjectsEqual, areRegExpsEqual, areSetsEqual, getUnsupportedCustomComparator, strictNullPrototypeComparison } = config;
+	/**
+	* Whether the custom objects are equal in value, based on their string tag. If not matching any tags
+	* that require a specific type of comparison, then we hard-code false because the only thing remaining
+	* is strict equality, which has already been compared. This is for a few reasons:
+	*   - Certain types that cannot be introspected (e.g., `WeakMap`). For these types, this is the only
+	*     comparison that can be made.
+	*   - For types that can be introspected but do not have an objective definition of what
+	*     equality is (`Error`, etc.), the subjective decision is to be conservative and strictly compare.
+	* In all cases, these decisions should be reevaluated based on changes to the language and
+	* common development practices.
+	*
+	* Capturing the tag is reasonably performant in modern environments like v8 and SpiderMonkey. This is
+	* kept out of the main comparator so that it stays within the engine's bytecode budget for inlining.
+	* See [#207](https://github.com/planttheidea/fast-equals/pull/207) for more details.
+	*/
+	const areTaggedObjectsEqual = getUnsupportedCustomComparator ? function areTaggedObjectsEqual(a, b, state) {
+		const tag = toString.call(a);
+		const supportedComparator = supportedComparatorMap[tag];
+		if (supportedComparator) return supportedComparator(a, b, state);
+		const unsupportedCustomComparator = getUnsupportedCustomComparator(a, b, state, tag);
+		return unsupportedCustomComparator ? unsupportedCustomComparator(a, b, state) : false;
+	} : function areTaggedObjectsEqual(a, b, state) {
+		const supportedComparator = supportedComparatorMap[toString.call(a)];
+		return supportedComparator ? supportedComparator(a, b, state) : false;
+	};
+	/**
+	* compare the value of the two objects and return true if they are equivalent in values
+	*/
+	return function comparator(a, b, state) {
+		if (a === b) return true;
+		if (a == null || b == null) return false;
+		const type = typeof a;
+		if (type !== typeof b) return false;
+		if (type !== "object") {
+			if (type === "number" || type === "bigint") return areNumbersEqual(a, b, state);
+			if (type === "function") return areFunctionsEqual(a, b, state);
+			return false;
+		}
+		const constructor = a.constructor;
+		if (constructor !== b.constructor) return strictNullPrototypeComparison ? false : isNullPrototypeComparable(a, b) && areObjectsEqual(a, b, state);
+		if (constructor === Object) return areObjectsEqual(a, b, state);
+		if (constructor === Array) return areArraysEqual(a, b, state);
+		if (constructor === Date) return areDatesEqual(a, b, state);
+		if (constructor === RegExp) return areRegExpsEqual(a, b, state);
+		if (constructor === Map) return areMapsEqual(a, b, state);
+		if (constructor === Set) return areSetsEqual(a, b, state);
+		if (constructor == null) return areObjectsEqual(a, b, state);
+		if (constructor === Promise) return false;
+		if (Array.isArray(a)) return areArraysEqual(a, b, state);
+		return areTaggedObjectsEqual(a, b, state);
+	};
+}
+/**
+* Create the configuration object used for building comparators.
+*/
+function createEqualityComparatorConfig({ circular, createCustomConfig, strict, strictNullPrototypeComparison = true }) {
+	let config = {
+		areArrayBuffersEqual,
+		areArraysEqual: strict ? areObjectsEqualStrict : areArraysEqual,
+		areDataViewsEqual,
+		areDatesEqual: strict ? combineComparators(areDatesEqual, areObjectsEqualStrict) : areDatesEqual,
+		areErrorsEqual: strict ? areErrorsEqualStrict : areErrorsEqual,
+		areFunctionsEqual: strictEqual,
+		areMapsEqual: strict ? combineComparators(areMapsEqual, areObjectsEqualStrict) : areMapsEqual,
+		areNumbersEqual: sameValueEqual,
+		areObjectsEqual: strict ? areObjectsEqualStrict : areObjectsEqual,
+		arePrimitiveWrappersEqual,
+		areRegExpsEqual,
+		areSetsEqual: strict ? combineComparators(areSetsEqual, areObjectsEqualStrict) : areSetsEqual,
+		areTypedArraysEqual: strict ? areTypedArraysEqualStrict : areTypedArraysEqual,
+		areUrlsEqual,
+		getUnsupportedCustomComparator: void 0,
+		strictNullPrototypeComparison
+	};
+	if (createCustomConfig) config = Object.assign({}, config, createCustomConfig(config));
+	if (circular) {
+		const areArraysEqual = createIsCircular(config.areArraysEqual);
+		const areDatesEqual = strict ? createIsCircular(config.areDatesEqual) : config.areDatesEqual;
+		const areErrorsEqual = createIsCircular(config.areErrorsEqual);
+		const areMapsEqual = createIsCircular(config.areMapsEqual);
+		const areObjectsEqual = createIsCircular(config.areObjectsEqual);
+		const areSetsEqual = createIsCircular(config.areSetsEqual);
+		config = Object.assign({}, config, {
+			areArraysEqual,
+			areDatesEqual,
+			areErrorsEqual,
+			areMapsEqual,
+			areObjectsEqual,
+			areSetsEqual
+		});
+	}
+	return config;
+}
+/**
+* Default equality comparator pass-through, used as the standard `isEqual` creator for
+* use inside the built comparator.
+*/
+function createInternalEqualityComparator(compare) {
+	return function(a, b, _indexOrKeyA, _indexOrKeyB, _parentA, _parentB, state) {
+		return compare(a, b, state);
+	};
+}
+/**
+* Create the `isEqual` function used by the consuming application.
+*/
+function createIsEqual({ circular, comparator, createState, equals, strict }) {
+	if (createState) return function isEqual(a, b) {
+		const { cache = circular ? /* @__PURE__ */ new WeakMap() : void 0, meta } = createState();
+		return comparator(a, b, {
+			cache,
+			equals,
+			meta,
+			strict
+		});
+	};
+	if (circular) return function isEqual(a, b) {
+		return comparator(a, b, {
+			cache: /* @__PURE__ */ new WeakMap(),
+			equals,
+			meta: void 0,
+			strict
+		});
+	};
+	const state = {
+		cache: void 0,
+		equals,
+		meta: void 0,
+		strict
+	};
+	return function isEqual(a, b) {
+		return comparator(a, b, state);
+	};
+}
+/**
+* Create a map of `toString()` values to their respective handlers for `tag`-based lookups.
+*/
+function createSupportedComparatorMap({ areArrayBuffersEqual, areArraysEqual, areDataViewsEqual, areDatesEqual, areErrorsEqual, areFunctionsEqual, areMapsEqual, areObjectsEqual, arePrimitiveWrappersEqual, areRegExpsEqual, areSetsEqual, areTypedArraysEqual, areUrlsEqual }) {
+	return {
+		"[object Arguments]": areObjectsEqual,
+		"[object Array]": areArraysEqual,
+		"[object ArrayBuffer]": areArrayBuffersEqual,
+		"[object AsyncGeneratorFunction]": areFunctionsEqual,
+		"[object BigInt]": arePrimitiveWrappersEqual,
+		"[object BigInt64Array]": areTypedArraysEqual,
+		"[object BigUint64Array]": areTypedArraysEqual,
+		"[object Boolean]": arePrimitiveWrappersEqual,
+		"[object DataView]": areDataViewsEqual,
+		"[object Date]": areDatesEqual,
+		"[object Error]": areErrorsEqual,
+		"[object Float16Array]": areTypedArraysEqual,
+		"[object Float32Array]": areTypedArraysEqual,
+		"[object Float64Array]": areTypedArraysEqual,
+		"[object Function]": areFunctionsEqual,
+		"[object GeneratorFunction]": areFunctionsEqual,
+		"[object Int8Array]": areTypedArraysEqual,
+		"[object Int16Array]": areTypedArraysEqual,
+		"[object Int32Array]": areTypedArraysEqual,
+		"[object Map]": areMapsEqual,
+		"[object Number]": arePrimitiveWrappersEqual,
+		"[object Object]": (a, b, state) => typeof a.then !== "function" && typeof b.then !== "function" && areObjectsEqual(a, b, state),
+		"[object RegExp]": areRegExpsEqual,
+		"[object Set]": areSetsEqual,
+		"[object String]": arePrimitiveWrappersEqual,
+		"[object URL]": areUrlsEqual,
+		"[object Uint8Array]": areTypedArraysEqual,
+		"[object Uint8ClampedArray]": areTypedArraysEqual,
+		"[object Uint16Array]": areTypedArraysEqual,
+		"[object Uint32Array]": areTypedArraysEqual
+	};
+}
+/**
+* Whether the items passed are deeply-equal in value.
+*/
+var deepEqual = createCustomEqual();
+/**
+* Whether the items passed are deeply-equal in value based on strict comparison.
+*/
+createCustomEqual({ strict: true });
+/**
+* Whether the items passed are deeply-equal in value, including circular references.
+*/
+createCustomEqual({ circular: true });
+/**
+* Whether the items passed are deeply-equal in value, including circular references,
+* based on strict comparison.
+*/
+createCustomEqual({
+	circular: true,
+	strict: true
+});
+/**
+* Whether the items passed are shallowly-equal in value.
+*/
+createCustomEqual({ createInternalComparator: () => sameValueEqual });
+/**
+* Whether the items passed are shallowly-equal in value based on strict comparison
+*/
+createCustomEqual({
+	strict: true,
+	createInternalComparator: () => sameValueEqual
+});
+/**
+* Whether the items passed are shallowly-equal in value, including circular references.
+*/
+createCustomEqual({
+	circular: true,
+	createInternalComparator: () => sameValueEqual
+});
+/**
+* Whether the items passed are shallowly-equal in value, including circular references,
+* based on strict comparison.
+*/
+createCustomEqual({
+	circular: true,
+	createInternalComparator: () => sameValueEqual,
+	strict: true
+});
+/**
+* Create a custom equality comparison method.
+*
+* This can be done to create very targeted comparisons in extreme hot-path scenarios
+* where the standard methods are not performant enough, but can also be used to provide
+* support for legacy environments that do not support expected features like
+* `RegExp.prototype.flags` out of the box.
+*/
+function createCustomEqual(options = {}) {
+	const { circular = false, createInternalComparator: createCustomInternalComparator, createState, strict = false } = options;
+	const comparator = createEqualityComparator(createEqualityComparatorConfig(options));
+	return createIsEqual({
+		circular,
+		comparator,
+		createState,
+		equals: createCustomInternalComparator ? createCustomInternalComparator(comparator) : createInternalEqualityComparator(comparator),
+		strict
+	});
+}
+function useDeepCompareEffect(effect, dependencies) {
+	useCustomCompareEffect(effect, dependencies, deepEqual);
+}
+/**
+* Set of option keys that can be updated on Map3DElement.
+* Camera props (center, heading, tilt, range, roll) are handled separately.
+*/
+var MAP_3D_OPTION_KEYS = /* @__PURE__ */ new Set([
+	"bounds",
+	"defaultUIHidden",
+	"gestureHandling",
+	"internalUsageAttributionIds",
+	"maxAltitude",
+	"maxHeading",
+	"maxTilt",
+	"minAltitude",
+	"minHeading",
+	"minTilt",
+	"mode"
+]);
+/**
+* Hook to update Map3D options when props change.
+*
+* @internal
+*/
+function useMap3DOptions(map3d, props) {
+	const options = (0, import_react.useMemo)(() => {
+		var _a;
+		const result = { mode: (_a = props.mode) !== null && _a !== void 0 ? _a : "ROADMAP" };
+		const keys = Object.keys(props);
+		for (const key of keys) {
+			if (!MAP_3D_OPTION_KEYS.has(key)) continue;
+			const value = props[key];
+			if (value === void 0) continue;
+			result[key] = value;
+		}
+		return result;
+	}, [props]);
+	useDeepCompareEffect(() => {
+		if (!map3d) return;
+		Object.assign(map3d, options);
+	}, [map3d, options]);
+}
+/**
+* React context for accessing the Map3D instance from child components.
+*/
+var GoogleMaps3DContext = import_react.createContext(null);
+/**
+* Default styles for the map container.
+*/
+var DEFAULT_CONTAINER_STYLE = {
+	width: "100%",
+	height: "100%",
+	position: "relative"
+};
+/**
+* A React component that renders a 3D map using the Google Maps JavaScript API.
+*
+* @example
+* ```tsx
+* <APIProvider apiKey={API_KEY}>
+*   <Map3D
+*     defaultCenter={{ lat: 37.7749, lng: -122.4194, altitude: 1000 }}
+*     defaultRange={5000}
+*     defaultHeading={0}
+*     defaultTilt={45}
+*   />
+* </APIProvider>
+* ```
+*/
+var Map3D = (0, import_react.forwardRef)((props, ref) => {
+	const { children, id, className, style } = props;
+	const context = (0, import_react.useContext)(APIProviderContext);
+	if (!context) throw new Error("<Map3D> can only be used inside an <APIProvider> component.");
+	const { addMap3DInstance, removeMap3DInstance } = context;
+	const [map3d, containerRef, map3dRef, cameraStateRef, isReady] = useMap3DInstance(props);
+	useMap3DCameraParams(map3d, cameraStateRef, props);
+	useMap3DEvents(map3d, props);
+	useMap3DOptions(map3d, props);
+	(0, import_react.useEffect)(() => {
+		if (!map3d) return;
+		const instanceId = id !== null && id !== void 0 ? id : "default";
+		addMap3DInstance(map3d, instanceId);
+		return () => {
+			removeMap3DInstance(instanceId);
+		};
+	}, [map3d, id]);
+	(0, import_react.useImperativeHandle)(ref, () => ({
+		map3d,
+		flyCameraAround: (options) => {
+			map3d === null || map3d === void 0 || map3d.flyCameraAround(options);
+		},
+		flyCameraTo: (options) => {
+			map3d === null || map3d === void 0 || map3d.flyCameraTo(options);
+		},
+		stopCameraAnimation: () => {
+			map3d === null || map3d === void 0 || map3d.stopCameraAnimation();
+		}
+	}), [map3d]);
+	const combinedStyle = (0, import_react.useMemo)(() => Object.assign(Object.assign({}, DEFAULT_CONTAINER_STYLE), style), [style]);
+	const contextValue = (0, import_react.useMemo)(() => ({ map3d }), [map3d]);
+	if (!isReady) return import_react.createElement("div", Object.assign({
+		ref: containerRef,
+		"data-testid": "map-3d",
+		style: className ? void 0 : combinedStyle,
+		className
+	}, id ? { id } : {}));
+	return import_react.createElement("div", Object.assign({
+		ref: containerRef,
+		"data-testid": "map-3d",
+		style: className ? void 0 : combinedStyle,
+		className
+	}, id ? { id } : {}), import_react.createElement("gmp-map-3d", {
+		ref: map3dRef,
+		style: {
+			width: "100%",
+			height: "100%"
+		}
+	}, map3d && import_react.createElement(GoogleMaps3DContext.Provider, { value: contextValue }, children)));
+});
+Map3D.displayName = "Map3D";
+var Marker3DContext = (0, import_react.createContext)(null);
+/**
+* Marker3D component for displaying markers on a Map3D.
+*
+* Automatically uses Marker3DInteractiveElement when onClick is provided,
+* otherwise uses Marker3DElement.
+*
+* Children can include:
+* - `<img>` elements (automatically wrapped in <template>)
+* - `<svg>` elements (automatically wrapped in <template>)
+* - PinElement instances (passed through directly)
+*
+* @example
+* ```tsx
+* // Basic marker
+* <Marker3D position={{ lat: 37.7749, lng: -122.4194 }} label="SF" />
+*
+* // Interactive marker
+* <Marker3D
+*   position={{ lat: 37.7749, lng: -122.4194 }}
+*   onClick={() => console.log('clicked')}
+*   title="Click me"
+* />
+*
+* // Custom marker with image
+* <Marker3D position={{ lat: 37.7749, lng: -122.4194 }}>
+*   <img src="/icon.png" width={32} height={32} />
+* </Marker3D>
+* ```
+*/
+var Marker3D = (0, import_react.forwardRef)(function Marker3D(props, ref) {
+	const { children, onClick, position, altitudeMode, collisionBehavior, drawsWhenOccluded, extruded, label, sizePreserved, zIndex, title } = props;
+	const isInteractive = Boolean(onClick);
+	const [marker, setMarker] = (0, import_react.useState)(null);
+	const [contentHandledExternally, setContentHandledExternally] = (0, import_react.useState)(false);
+	const contentContainer = (0, import_react.useMemo)(() => {
+		const container = document.createElement("div");
+		container.style.display = "none";
+		document.body.appendChild(container);
+		return container;
+	}, []);
+	(0, import_react.useEffect)(() => {
+		return () => contentContainer.remove();
+	}, [contentContainer]);
+	const markerRef = (0, import_react.useCallback)((node) => {
+		setMarker(node);
+		if (typeof ref === "function") ref(node);
+		else if (ref) ref.current = node;
+	}, [ref]);
+	useDomEventListener(marker, "gmp-click", onClick);
+	(0, import_react.useLayoutEffect)(() => {
+		if (contentHandledExternally) return;
+		if (!marker || !contentContainer) return;
+		while (marker.firstChild) marker.removeChild(marker.firstChild);
+		const childNodes = Array.from(contentContainer.childNodes);
+		for (const node of childNodes) {
+			if (node.nodeType !== Node.ELEMENT_NODE) continue;
+			const element = node;
+			const tagName = element.tagName.toLowerCase();
+			if (tagName === "img" || tagName === "svg") {
+				const template = document.createElement("template");
+				template.content.appendChild(element.cloneNode(true));
+				marker.appendChild(template);
+			} else marker.appendChild(element.cloneNode(true));
+		}
+	}, [
+		marker,
+		contentContainer,
+		children,
+		contentHandledExternally
+	]);
+	const contextValue = (0, import_react.useMemo)(() => ({
+		marker,
+		setContentHandledExternally
+	}), [marker]);
+	usePropBinding(marker, "position", position);
+	usePropBinding(marker, "altitudeMode", altitudeMode);
+	usePropBinding(marker, "collisionBehavior", collisionBehavior);
+	usePropBinding(marker, "drawsWhenOccluded", drawsWhenOccluded);
+	usePropBinding(marker, "extruded", extruded);
+	usePropBinding(marker, "label", label);
+	usePropBinding(marker, "sizePreserved", sizePreserved);
+	usePropBinding(marker, "zIndex", zIndex);
+	usePropBinding(marker, "title", title !== null && title !== void 0 ? title : "");
+	return import_react.createElement(Marker3DContext.Provider, { value: contextValue }, isInteractive ? import_react.createElement("gmp-marker-3d-interactive", { ref: markerRef }) : import_react.createElement("gmp-marker-3d", { ref: markerRef }), (0, import_react_dom.createPortal)(children, contentContainer));
+});
+Marker3D.displayName = "Marker3D";
+function setValueForStyles(element, styles, prevStyles) {
+	if (styles != null && typeof styles !== "object") throw new Error("The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.");
+	const elementStyle = element.style;
+	if (prevStyles == null) {
+		if (styles == null) return;
+		for (const styleName in styles) {
+			if (!styles.hasOwnProperty(styleName)) continue;
+			setValueForStyle(elementStyle, styleName, styles[styleName]);
+		}
+		return;
+	}
+	for (const styleName in prevStyles) if (prevStyles.hasOwnProperty(styleName) && (styles == null || !styles.hasOwnProperty(styleName))) {
+		if (styleName.indexOf("--") === 0) elementStyle.setProperty(styleName, "");
+		else if (styleName === "float") elementStyle.cssFloat = "";
+		else elementStyle[styleName] = "";
+	}
+	if (styles == null) return;
+	for (const styleName in styles) {
+		const value = styles[styleName];
+		if (styles.hasOwnProperty(styleName) && prevStyles[styleName] !== value) setValueForStyle(elementStyle, styleName, value);
+	}
+}
+function setValueForStyle(elementStyle, styleName, value) {
+	const isCustomProperty = styleName.indexOf("--") === 0;
+	if (value == null || typeof value === "boolean" || value === "") {
+		if (isCustomProperty) elementStyle.setProperty(styleName, "");
+		else if (styleName === "float") elementStyle.cssFloat = "";
+		else elementStyle[styleName] = "";
+	} else if (isCustomProperty) elementStyle.setProperty(styleName, value);
+	else if (typeof value === "number" && value !== 0 && !isUnitlessNumber(styleName)) elementStyle[styleName] = value + "px";
+	else if (styleName === "float") elementStyle.cssFloat = value;
+	else elementStyle[styleName] = ("" + value).trim();
+}
+var unitlessNumbers = /* @__PURE__ */ new Set([
+	"animationIterationCount",
+	"aspectRatio",
+	"borderImageOutset",
+	"borderImageSlice",
+	"borderImageWidth",
+	"boxFlex",
+	"boxFlexGroup",
+	"boxOrdinalGroup",
+	"columnCount",
+	"columns",
+	"flex",
+	"flexGrow",
+	"flexPositive",
+	"flexShrink",
+	"flexNegative",
+	"flexOrder",
+	"gridArea",
+	"gridRow",
+	"gridRowEnd",
+	"gridRowSpan",
+	"gridRowStart",
+	"gridColumn",
+	"gridColumnEnd",
+	"gridColumnSpan",
+	"gridColumnStart",
+	"fontWeight",
+	"lineClamp",
+	"lineHeight",
+	"opacity",
+	"order",
+	"orphans",
+	"scale",
+	"tabSize",
+	"widows",
+	"zIndex",
+	"zoom",
+	"fillOpacity",
+	"floodOpacity",
+	"stopOpacity",
+	"strokeDasharray",
+	"strokeDashoffset",
+	"strokeMiterlimit",
+	"strokeOpacity",
+	"strokeWidth"
+]);
+function isUnitlessNumber(name) {
+	return unitlessNumbers.has(name);
+}
+/**
+* Popover component for displaying info windows on a Map3D.
+*
+* Similar to InfoWindow for 2D maps, Popover provides a way to show
+* contextual information at a specific location or attached to a marker
+* on a 3D map.
+*
+* @example
+* ```tsx
+* // Basic popover at position
+* <Popover
+*   position={{ lat: 37.7749, lng: -122.4194 }}
+*   open={isOpen}
+* >
+*   <div>Hello from San Francisco!</div>
+* </Popover>
+*
+* // Popover anchored to a marker (place as sibling, use anchor prop)
+* <Marker3D
+*   ref={markerRef}
+*   position={{ lat: 37.7749, lng: -122.4194 }}
+*   onClick={() => setOpen(true)}
+* />
+* <Popover
+*   anchor={markerRef.current}
+*   open={isOpen}
+*   onClose={() => setOpen(false)}
+* >
+*   <div>Marker info</div>
+* </Popover>
+* ```
+*/
+var Popover = (0, import_react.forwardRef)(function Popover(props, ref) {
+	var _a;
+	const { children, headerContent, style, className, open = true, position, anchor, anchorId, altitudeMode, lightDismissDisabled, autoPanDisabled, onClose } = props;
+	const [popover, setPopover] = (0, import_react.useState)(null);
+	const prevStyleRef = (0, import_react.useRef)(null);
+	(0, import_react.useImperativeHandle)(ref, () => popover, [popover]);
+	usePopoverCloseObserver(popover, open, onClose);
+	usePropBinding(popover, "open", open !== null && open !== void 0 ? open : false);
+	usePropBinding(popover, "altitudeMode", altitudeMode);
+	usePropBinding(popover, "lightDismissDisabled", lightDismissDisabled);
+	usePropBinding(popover, "autoPanDisabled", autoPanDisabled);
+	usePropBinding(popover, "positionAnchor", (_a = anchor !== null && anchor !== void 0 ? anchor : anchorId) !== null && _a !== void 0 ? _a : position);
+	(0, import_react.useLayoutEffect)(() => {
+		if (!popover) return;
+		setValueForStyles(popover, style || null, prevStyleRef.current);
+		prevStyleRef.current = style || null;
+	}, [popover, style]);
+	return import_react.createElement("gmp-popover", {
+		ref: setPopover,
+		className
+	}, headerContent && import_react.createElement("div", { slot: "header" }, headerContent), children);
+});
+Popover.displayName = "Popover";
+/**
+* Custom hook to observe the open attribute of a popover element
+* and call onClose when it transitions from open to closed due to light dismiss.
+* Does not call onClose when the open prop changes programmatically.
+*/
+function usePopoverCloseObserver(popover, open, onClose) {
+	const previousOpenState = (0, import_react.useRef)(void 0);
+	const openPropRef = (0, import_react.useRef)(open);
+	(0, import_react.useEffect)(() => {
+		openPropRef.current = open;
+	}, [open]);
+	(0, import_react.useEffect)(() => {
+		if (!popover || !onClose) return;
+		const observer = new MutationObserver((mutations) => {
+			for (const mutation of mutations) if (mutation.type === "attributes" && mutation.attributeName === "open") {
+				const isOpen = popover.hasAttribute("open");
+				if (previousOpenState.current === true && !isOpen && openPropRef.current !== false) onClose();
+				previousOpenState.current = isOpen;
+			}
+		});
+		observer.observe(popover, {
+			attributes: true,
+			attributeFilter: ["open"]
+		});
+		previousOpenState.current = popover.hasAttribute("open");
+		return () => {
+			observer.disconnect();
+		};
+	}, [popover, onClose]);
+}
+var shownMessages = /* @__PURE__ */ new Set();
+function logErrorOnce(...args) {
+	const key = JSON.stringify(args);
+	if (!shownMessages.has(key)) {
+		shownMessages.add(key);
+		console.error(...args);
+	}
+}
+// node_modules/@vis.gl/react-google-maps/dist/index.modern.mjs
+/**
+* Sets up effects to bind event-handlers for all event-props in MapEventProps.
+* @internal
+*/
+function useMapEvents(map, props) {
+	for (const propName of eventPropNames) {
+		const handler = props[propName];
+		const eventType = propNameToEventType[propName];
+		(0, import_react.useEffect)(() => {
+			if (!map) return;
+			if (!handler) return;
+			const listener = google.maps.event.addListener(map, eventType, (ev) => {
+				const mapEvent = createMapEvent(eventType, map, ev);
+				if (mapEvent) handler(mapEvent);
+			});
+			return () => listener.remove();
+		}, [
+			map,
+			eventType,
+			handler
+		]);
+	}
+}
+/**
+* Create the wrapped map-events used for the event-props.
+* @param type the event type as it is specified to the maps api
+* @param map the map instance the event originates from
+* @param srcEvent the source-event if there is one.
+*/
+function createMapEvent(type, map, srcEvent) {
+	var _a;
+	const ev = {
+		type,
+		map,
+		detail: {},
+		stoppable: false,
+		stop: () => {}
+	};
+	if (cameraEventTypes.includes(type)) {
+		const camEvent = ev;
+		const center = map.getCenter();
+		const zoom = map.getZoom();
+		const heading = map.getHeading() || 0;
+		const tilt = map.getTilt() || 0;
+		const bounds = map.getBounds();
+		if (!center || !bounds || !Number.isFinite(zoom)) {
+			console.warn("[createEvent] at least one of the values from the map returned undefined. This is not expected to happen. Please report an issue at https://github.com/visgl/react-google-maps/issues/new");
+			return null;
+		}
+		camEvent.detail = {
+			center: center.toJSON(),
+			zoom,
+			heading,
+			tilt,
+			bounds: bounds.toJSON()
+		};
+		return camEvent;
+	} else if (mouseEventTypes.includes(type)) {
+		if (!srcEvent) throw new Error("[createEvent] mouse events must provide a srcEvent");
+		const mouseEvent = ev;
+		mouseEvent.domEvent = srcEvent.domEvent;
+		mouseEvent.stoppable = true;
+		mouseEvent.stop = () => srcEvent.stop();
+		mouseEvent.detail = {
+			latLng: ((_a = srcEvent.latLng) === null || _a === void 0 ? void 0 : _a.toJSON()) || null,
+			placeId: srcEvent.placeId
+		};
+		return mouseEvent;
+	}
+	return ev;
+}
+/**
+* maps the camelCased names of event-props to the corresponding event-types
+* used in the maps API.
+*/
+var propNameToEventType = {
+	onBoundsChanged: "bounds_changed",
+	onCenterChanged: "center_changed",
+	onClick: "click",
+	onContextmenu: "contextmenu",
+	onDblclick: "dblclick",
+	onDrag: "drag",
+	onDragend: "dragend",
+	onDragstart: "dragstart",
+	onHeadingChanged: "heading_changed",
+	onIdle: "idle",
+	onIsFractionalZoomEnabledChanged: "isfractionalzoomenabled_changed",
+	onMapCapabilitiesChanged: "mapcapabilities_changed",
+	onMapTypeIdChanged: "maptypeid_changed",
+	onMousemove: "mousemove",
+	onMouseout: "mouseout",
+	onMouseover: "mouseover",
+	onProjectionChanged: "projection_changed",
+	onRenderingTypeChanged: "renderingtype_changed",
+	onTilesLoaded: "tilesloaded",
+	onTiltChanged: "tilt_changed",
+	onZoomChanged: "zoom_changed",
+	onCameraChanged: "bounds_changed"
+};
+var cameraEventTypes = [
+	"bounds_changed",
+	"center_changed",
+	"heading_changed",
+	"tilt_changed",
+	"zoom_changed"
+];
+var mouseEventTypes = [
+	"click",
+	"contextmenu",
+	"dblclick",
+	"mousemove",
+	"mouseout",
+	"mouseover"
+];
+var eventPropNames = Object.keys(propNameToEventType);
+var mapOptionKeys = /* @__PURE__ */ new Set([
+	"backgroundColor",
+	"clickableIcons",
+	"controlSize",
+	"disableDefaultUI",
+	"disableDoubleClickZoom",
+	"draggable",
+	"draggableCursor",
+	"draggingCursor",
+	"fullscreenControl",
+	"fullscreenControlOptions",
+	"gestureHandling",
+	"headingInteractionEnabled",
+	"isFractionalZoomEnabled",
+	"keyboardShortcuts",
+	"mapTypeControl",
+	"mapTypeControlOptions",
+	"mapTypeId",
+	"maxZoom",
+	"minZoom",
+	"noClear",
+	"panControl",
+	"panControlOptions",
+	"restriction",
+	"rotateControl",
+	"rotateControlOptions",
+	"scaleControl",
+	"scaleControlOptions",
+	"scrollwheel",
+	"streetView",
+	"streetViewControl",
+	"streetViewControlOptions",
+	"styles",
+	"tiltInteractionEnabled",
+	"zoomControl",
+	"zoomControlOptions"
+]);
+/**
+* Internal hook to update the map-options when props are changed.
+*
+* @param map the map instance
+* @param mapProps the props to update the map-instance with
+* @internal
+*/
+function useMapOptions(map, mapProps) {
+	const mapOptions = {};
+	const keys = Object.keys(mapProps);
+	for (const key of keys) {
+		if (!mapOptionKeys.has(key)) continue;
+		mapOptions[key] = mapProps[key];
+	}
+	useDeepCompareEffect(() => {
+		if (!map) return;
+		map.setOptions(mapOptions);
+	}, [mapOptions]);
+}
+/**
+* Internal hook that updates the camera when deck.gl viewState changes.
+* @internal
+*/
+function useDeckGLCameraUpdate(map, props) {
+	const { viewport, viewState } = props;
+	const isDeckGlControlled = !!viewport;
+	(0, import_react.useLayoutEffect)(() => {
+		if (!map || !viewState) return;
+		const { latitude, longitude, bearing: heading, pitch: tilt, zoom } = viewState;
+		map.moveCamera({
+			center: {
+				lat: latitude,
+				lng: longitude
+			},
+			heading,
+			tilt,
+			zoom: zoom + 1
+		});
+	}, [map, viewState]);
+	return isDeckGlControlled;
+}
+function isLatLngLiteral(obj) {
+	if (!obj || typeof obj !== "object") return false;
+	if (!("lat" in obj && "lng" in obj)) return false;
+	return Number.isFinite(obj.lat) && Number.isFinite(obj.lng);
+}
+function latLngEquals(a, b) {
+	if (!a || !b) return false;
+	const A = toLatLngLiteral(a);
+	const B = toLatLngLiteral(b);
+	if (A.lat !== B.lat || A.lng !== B.lng) return false;
+	return true;
+}
+function toLatLngLiteral(obj) {
+	if (isLatLngLiteral(obj)) return obj;
+	return obj.toJSON();
+}
+function toLatLngBoundsLiteral(obj) {
+	if ("north" in obj && "south" in obj && "east" in obj && "west" in obj) return obj;
+	const ne = obj.getNorthEast().toJSON();
+	const sw = obj.getSouthWest().toJSON();
+	return {
+		north: ne.lat,
+		east: ne.lng,
+		south: sw.lat,
+		west: sw.lng
+	};
+}
+function boundsEquals(a, b) {
+	if (!a || !b) return false;
+	const A = toLatLngBoundsLiteral(a);
+	const B = toLatLngBoundsLiteral(b);
+	return A.north === B.north && A.south === B.south && A.east === B.east && A.west === B.west;
+}
+/**
+* Compares two paths (arrays of LatLng points) for equality.
+*/
+function pathEquals(a, b) {
+	if (!a || !b) return a === b;
+	const arrayB = "getArray" in b ? b.getArray() : b;
+	if (a.length !== arrayB.length) return false;
+	for (let i = 0; i < a.length; i++) if (!latLngEquals(a[i], arrayB[i])) return false;
+	return true;
+}
+/**
+* Compares two arrays of paths (for Polygon) for equality.
+*/
+function pathsEquals(a, b) {
+	if (!a || !b) return a === b;
+	const arrayB = "getArray" in b ? b.getArray().map((inner) => inner.getArray()) : b;
+	if (a.length !== arrayB.length) return false;
+	for (let i = 0; i < a.length; i++) if (!pathEquals(a[i], arrayB[i])) return false;
+	return true;
+}
+function useMapCameraParams(map, cameraStateRef, mapProps) {
+	const center = mapProps.center ? toLatLngLiteral(mapProps.center) : null;
+	let lat = null;
+	let lng = null;
+	if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) {
+		lat = center.lat;
+		lng = center.lng;
+	}
+	const zoom = Number.isFinite(mapProps.zoom) ? mapProps.zoom : null;
+	const heading = Number.isFinite(mapProps.heading) ? mapProps.heading : null;
+	const tilt = Number.isFinite(mapProps.tilt) ? mapProps.tilt : null;
+	(0, import_react.useLayoutEffect)(() => {
+		if (!map) return;
+		const nextCamera = {};
+		let needsUpdate = false;
+		if (lat !== null && lng !== null && (cameraStateRef.current.center.lat !== lat || cameraStateRef.current.center.lng !== lng)) {
+			nextCamera.center = {
+				lat,
+				lng
+			};
+			needsUpdate = true;
+		}
+		if (zoom !== null && cameraStateRef.current.zoom !== zoom) {
+			nextCamera.zoom = zoom;
+			needsUpdate = true;
+		}
+		if (heading !== null && cameraStateRef.current.heading !== heading) {
+			nextCamera.heading = heading;
+			needsUpdate = true;
+		}
+		if (tilt !== null && cameraStateRef.current.tilt !== tilt) {
+			nextCamera.tilt = tilt;
+			needsUpdate = true;
+		}
+		if (needsUpdate) {
+			map.moveCamera(nextCamera);
+			Object.assign(cameraStateRef.current, nextCamera);
+		}
+	});
+}
+var AuthFailureMessage = () => {
+	return import_react.createElement("div", { style: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		bottom: 0,
+		right: 0,
+		zIndex: 999,
+		display: "flex",
+		flexFlow: "column nowrap",
+		textAlign: "center",
+		justifyContent: "center",
+		fontSize: ".8rem",
+		color: "rgba(0,0,0,0.6)",
+		background: "#dddddd",
+		padding: "1rem 1.5rem"
+	} }, import_react.createElement("h2", null, "Error: AuthFailure"), import_react.createElement("p", null, "A problem with your API key prevents the map from rendering correctly. Please make sure the value of the ", import_react.createElement("code", null, "APIProvider.apiKey"), " prop is correct. Check the error-message in the console for further details."));
+};
+function handleBoundsChange(map, ref) {
+	const center = map.getCenter();
+	const zoom = map.getZoom();
+	const heading = map.getHeading() || 0;
+	const tilt = map.getTilt() || 0;
+	if (!center || !Number.isFinite(zoom)) {
+		console.warn("[useTrackedCameraState] at least one of the values from the map returned undefined. This is not expected to happen. Please report an issue at https://github.com/visgl/react-google-maps/issues/new");
+		return;
+	}
+	Object.assign(ref.current, {
+		center: center.toJSON(),
+		zoom,
+		heading,
+		tilt
+	});
+}
+/**
+* Creates a mutable ref object to track the last known state of the map camera.
+* This is used in `useMapCameraParams` to reduce stuttering in normal operation
+* by avoiding updates of the map camera with values that have already been processed.
+*/
+function useTrackedCameraStateRef(map) {
+	const forceUpdate = useForceUpdate();
+	const ref = (0, import_react.useRef)({
+		center: {
+			lat: 0,
+			lng: 0
+		},
+		heading: 0,
+		tilt: 0,
+		zoom: 0
+	});
+	(0, import_react.useEffect)(() => {
+		if (!map) return;
+		const listener = google.maps.event.addListener(map, "bounds_changed", () => {
+			handleBoundsChange(map, ref);
+			forceUpdate();
+		});
+		return () => listener.remove();
+	}, [map, forceUpdate]);
+	return ref;
+}
+/**
+* Stores a stack of map-instances for each mapId. Whenever an
+* instance is used, it is removed from the stack while in use,
+* and returned to the stack when the component unmounts.
+* This allows us to correctly implement caching for multiple
+* maps om the same page, while reusing as much as possible.
+*
+* FIXME: while it should in theory be possible to reuse maps solely
+*   based on mapId/renderingType/colorScheme (as all other parameters can be
+*   changed at runtime), we don't yet have good enough tracking of options to
+*   reliably unset all the options that have been set.
+*/
+var CachedMapStack = class {
+	static has(key) {
+		return this.entries[key] && this.entries[key].length > 0;
+	}
+	static pop(key) {
+		if (!this.entries[key]) return null;
+		return this.entries[key].pop() || null;
+	}
+	static push(key, value) {
+		if (!this.entries[key]) this.entries[key] = [];
+		this.entries[key].push(value);
+	}
+};
+CachedMapStack.entries = {};
+/**
+* The main hook takes care of creating map-instances and registering them in
+* the api-provider context.
+* @return a tuple of the map-instance created (or null) and the callback
+*   ref that will be used to pass the map-container into this hook.
+* @internal
+*/
+function useMapInstance(props, context) {
+	const apiIsLoaded = useApiIsLoaded();
+	const [map, setMap] = (0, import_react.useState)(null);
+	const [container, containerRef] = useCallbackRef();
+	const cameraStateRef = useTrackedCameraStateRef(map);
+	const { id, defaultBounds, defaultCenter, defaultZoom, defaultHeading, defaultTilt, reuseMaps, renderingType, colorScheme } = props, mapOptions = __rest(props, [
+		"id",
+		"defaultBounds",
+		"defaultCenter",
+		"defaultZoom",
+		"defaultHeading",
+		"defaultTilt",
+		"reuseMaps",
+		"renderingType",
+		"colorScheme"
+	]);
+	const hasZoom = props.zoom !== void 0 || props.defaultZoom !== void 0;
+	const hasCenter = props.center !== void 0 || props.defaultCenter !== void 0;
+	if (!defaultBounds && (!hasZoom || !hasCenter)) console.warn("<Map> component is missing configuration. You have to provide zoom and center (via the `zoom`/`defaultZoom` and `center`/`defaultCenter` props) or specify the region to show using `defaultBounds`. See https://visgl.github.io/react-google-maps/docs/api-reference/components/map#required");
+	if (!mapOptions.center && defaultCenter) mapOptions.center = defaultCenter;
+	if (!mapOptions.zoom && Number.isFinite(defaultZoom)) mapOptions.zoom = defaultZoom;
+	if (!mapOptions.heading && Number.isFinite(defaultHeading)) mapOptions.heading = defaultHeading;
+	if (!mapOptions.tilt && Number.isFinite(defaultTilt)) mapOptions.tilt = defaultTilt;
+	const customIds = mapOptions.internalUsageAttributionIds;
+	if (customIds == null) mapOptions.internalUsageAttributionIds = context.internalUsageAttributionIds;
+	else mapOptions.internalUsageAttributionIds = [...context.internalUsageAttributionIds || [], ...customIds];
+	for (const key of Object.keys(mapOptions)) if (mapOptions[key] === void 0) delete mapOptions[key];
+	const savedMapStateRef = (0, import_react.useRef)(void 0);
+	const reuseMapsRef = (0, import_react.useRef)(reuseMaps);
+	(0, import_react.useEffect)(() => {
+		reuseMapsRef.current = reuseMaps;
+	}, [reuseMaps]);
+	(0, import_react.useEffect)(() => {
+		if (!container || !apiIsLoaded) return;
+		const { addMapInstance, removeMapInstance } = context;
+		const { mapId } = props;
+		const cacheKey = `${mapId || "default"}:${renderingType || "default"}:${colorScheme || "LIGHT"}`;
+		let mapDiv;
+		let map;
+		const cachedMap = reuseMapsRef.current && CachedMapStack.has(cacheKey) ? CachedMapStack.pop(cacheKey) : null;
+		const cachedMapDiv = cachedMap === null || cachedMap === void 0 ? void 0 : cachedMap.getDiv();
+		const reusedMap = cachedMap && cachedMapDiv instanceof Node ? cachedMap : null;
+		if (reusedMap) {
+			map = reusedMap;
+			mapDiv = cachedMapDiv;
+			container.appendChild(mapDiv);
+			map.setOptions(mapOptions);
+			setTimeout(() => map.moveCamera({}), 0);
+		} else {
+			if (cachedMap) google.maps.event.clearInstanceListeners(cachedMap);
+			mapDiv = document.createElement("div");
+			mapDiv.style.height = "100%";
+			container.appendChild(mapDiv);
+			map = new google.maps.Map(mapDiv, Object.assign(Object.assign(Object.assign({}, mapOptions), renderingType ? { renderingType } : {}), colorScheme ? { colorScheme } : {}));
+		}
+		setMap(map);
+		addMapInstance(map, id);
+		if (defaultBounds) {
+			const { padding } = defaultBounds, defBounds = __rest(defaultBounds, ["padding"]);
+			map.fitBounds(defBounds, padding);
+		} else if (!hasZoom || !hasCenter) map.fitBounds({
+			east: 180,
+			west: -180,
+			south: -90,
+			north: 90
+		});
+		if (savedMapStateRef.current) {
+			const { mapId: savedMapId, cameraState: savedCameraState } = savedMapStateRef.current;
+			if (savedMapId !== mapId) map.moveCamera(savedCameraState);
+		}
+		return () => {
+			savedMapStateRef.current = {
+				mapId,
+				cameraState: cameraStateRef.current
+			};
+			mapDiv.remove();
+			if (reuseMapsRef.current) CachedMapStack.push(cacheKey, map);
+			else google.maps.event.clearInstanceListeners(map);
+			setMap(null);
+			removeMapInstance(id);
+		};
+	}, [
+		container,
+		apiIsLoaded,
+		id,
+		props.mapId,
+		props.renderingType,
+		props.colorScheme
+	]);
+	return [
+		map,
+		containerRef,
+		cameraStateRef
+	];
+}
+var GoogleMapsContext = import_react.createContext(null);
+var Map$1 = (props) => {
+	const { children, id, className, style } = props;
+	const context = (0, import_react.useContext)(APIProviderContext);
+	const loadingStatus = useApiLoadingStatus();
+	if (!context) throw new Error("<Map> can only be used inside an <ApiProvider> component.");
+	const [map, mapRef, cameraStateRef] = useMapInstance(props, context);
+	useMapCameraParams(map, cameraStateRef, props);
+	useMapEvents(map, props);
+	useMapOptions(map, props);
+	const isDeckGlControlled = useDeckGLCameraUpdate(map, props);
+	const isControlledExternally = !!props.controlled;
+	(0, import_react.useEffect)(() => {
+		if (!map) return;
+		if (isDeckGlControlled) map.setOptions({ disableDefaultUI: true });
+		if (isDeckGlControlled || isControlledExternally) map.setOptions({
+			gestureHandling: "none",
+			keyboardShortcuts: false
+		});
+		return () => {
+			map.setOptions({
+				gestureHandling: props.gestureHandling,
+				keyboardShortcuts: props.keyboardShortcuts
+			});
+		};
+	}, [
+		map,
+		isDeckGlControlled,
+		isControlledExternally,
+		props.gestureHandling,
+		props.keyboardShortcuts
+	]);
+	const center = props.center ? toLatLngLiteral(props.center) : null;
+	let lat = null;
+	let lng = null;
+	if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) {
+		lat = center.lat;
+		lng = center.lng;
+	}
+	const cameraOptions = (0, import_react.useMemo)(() => {
+		var _a, _b, _c;
+		return {
+			center: {
+				lat: lat !== null && lat !== void 0 ? lat : 0,
+				lng: lng !== null && lng !== void 0 ? lng : 0
+			},
+			zoom: (_a = props.zoom) !== null && _a !== void 0 ? _a : 0,
+			heading: (_b = props.heading) !== null && _b !== void 0 ? _b : 0,
+			tilt: (_c = props.tilt) !== null && _c !== void 0 ? _c : 0
+		};
+	}, [
+		lat,
+		lng,
+		props.zoom,
+		props.heading,
+		props.tilt
+	]);
+	(0, import_react.useLayoutEffect)(() => {
+		if (!map || !isControlledExternally) return;
+		map.moveCamera(cameraOptions);
+		const listener = map.addListener("bounds_changed", () => {
+			map.moveCamera(cameraOptions);
+		});
+		return () => listener.remove();
+	}, [
+		map,
+		isControlledExternally,
+		cameraOptions
+	]);
+	const combinedStyle = (0, import_react.useMemo)(() => Object.assign({
+		width: "100%",
+		height: "100%",
+		position: "relative",
+		zIndex: isDeckGlControlled ? -1 : 0
+	}, style), [style, isDeckGlControlled]);
+	const contextValue = (0, import_react.useMemo)(() => ({ map }), [map]);
+	if (loadingStatus === APILoadingStatus.AUTH_FAILURE) return import_react.createElement("div", {
+		style: Object.assign({ position: "relative" }, className ? {} : combinedStyle),
+		className
+	}, import_react.createElement(AuthFailureMessage, null));
+	return import_react.createElement("div", Object.assign({
+		ref: mapRef,
+		"data-testid": "map",
+		style: className ? void 0 : combinedStyle,
+		className
+	}, id ? { id } : {}), map ? import_react.createElement(GoogleMapsContext.Provider, { value: contextValue }, children) : null);
+};
+Map$1.deckGLViewProps = true;
+/**
+* Retrieves a map-instance from the context. This is either an instance
+* identified by id or the parent map instance if no id is specified.
+* Returns null if neither can be found.
+*/
+var useMap = (id = null) => {
+	const ctx = (0, import_react.useContext)(APIProviderContext);
+	const { map } = (0, import_react.useContext)(GoogleMapsContext) || {};
+	if (ctx === null) {
+		logErrorOnce("useMap(): failed to retrieve APIProviderContext. Make sure that the <APIProvider> component exists and that the component you are calling `useMap()` from is a sibling of the <APIProvider>.");
+		return null;
+	}
+	const { mapInstances } = ctx;
+	if (id !== null) return mapInstances[id] || null;
+	if (map) return map;
+	return mapInstances["default"] || null;
+};
+var noop = () => {};
+/**
+* Internally used to bind events to Maps JavaScript API objects.
+* @internal
+*/
+function useMapsEventListener(target, name, callback) {
+	const eventFn = useEffectEvent(callback !== null && callback !== void 0 ? callback : noop);
+	const isCallbackDefined = Boolean(callback);
+	(0, import_react.useEffect)(() => {
+		if (!target || !name || !isCallbackDefined) return;
+		const listener = google.maps.event.addListener(target, name, eventFn);
+		return () => listener.remove();
+	}, [
+		target,
+		name,
+		isCallbackDefined
+	]);
+}
+var GlobalStyleManager = class {
+	constructor() {
+		this.renderedStyles = /* @__PURE__ */ new Set();
+		this.styleElement = null;
+	}
+	getStyleElement() {
+		if (!this.styleElement) {
+			this.styleElement = document.createElement("style");
+			this.styleElement.setAttribute("data-rgm-anchor-styles", "");
+			document.head.appendChild(this.styleElement);
+		}
+		return this.styleElement;
+	}
+	addAdvancedMarkerPointerEventsOverwrite() {
+		if (this.renderedStyles.has("marker-pointer-events")) return;
+		const styleElement = this.getStyleElement();
+		styleElement.textContent += `
+      gmp-advanced-marker[data-origin='rgm'] {
+        pointer-events: none !important;
+      }
+    `;
+		this.renderedStyles.add("marker-pointer-events");
+	}
+	cleanup() {
+		if (this.styleElement) {
+			this.styleElement.remove();
+			this.styleElement = null;
+			this.renderedStyles.clear();
+		}
+	}
+};
+var globalStyleManager = new GlobalStyleManager();
+function isVersionGreaterEqual(major, minor) {
+	var _a;
+	if (!((_a = google === null || google === void 0 ? void 0 : google.maps) === null || _a === void 0 ? void 0 : _a.version)) return void 0;
+	const version = google.maps.version.split(".");
+	const currentMajor = parseInt(version[0], 10);
+	const currentMinor = parseInt(version[1], 10);
+	return currentMajor > major || currentMajor === major && currentMinor >= minor;
+}
+var AdvancedMarkerContext = import_react.createContext(null);
+/**
+* @deprecated Using `anchorPosition` is deprecated.
+*   Use `anchorLeft` and `anchorTop` instead.
+*/
+var AdvancedMarkerAnchorPoint = {
+	TOP_LEFT: ["0%", "0%"],
+	TOP_CENTER: ["50%", "0%"],
+	TOP: ["50%", "0%"],
+	TOP_RIGHT: ["100%", "0%"],
+	LEFT_CENTER: ["0%", "50%"],
+	LEFT_TOP: ["0%", "0%"],
+	LEFT: ["0%", "50%"],
+	LEFT_BOTTOM: ["0%", "100%"],
+	RIGHT_TOP: ["100%", "0%"],
+	RIGHT: ["100%", "50%"],
+	RIGHT_CENTER: ["100%", "50%"],
+	RIGHT_BOTTOM: ["100%", "100%"],
+	BOTTOM_LEFT: ["0%", "100%"],
+	BOTTOM_CENTER: ["50%", "100%"],
+	BOTTOM: ["50%", "100%"],
+	BOTTOM_RIGHT: ["100%", "100%"],
+	CENTER: ["50%", "50%"]
+};
+var AdvancedMarker = (0, import_react.forwardRef)((props, ref) => {
+	const { children, style, className, anchorPoint } = props;
+	const [marker, contentContainer] = useAdvancedMarker(props);
+	const advancedMarkerContextValue = (0, import_react.useMemo)(() => marker ? { marker } : null, [marker]);
+	(0, import_react.useImperativeHandle)(ref, () => marker, [marker]);
+	if (!contentContainer) return null;
+	return import_react.createElement(AdvancedMarkerContext.Provider, { value: advancedMarkerContextValue }, (0, import_react_dom.createPortal)(import_react.createElement(MarkerContent, {
+		anchorPoint,
+		styles: style,
+		className
+	}, children), contentContainer));
+});
+AdvancedMarker.displayName = "AdvancedMarker";
+function useAdvancedMarkerRef() {
+	const [marker, setMarker] = (0, import_react.useState)(null);
+	return [(0, import_react.useCallback)((m) => {
+		setMarker(m);
+	}, []), marker];
+}
+function isAdvancedMarker(marker) {
+	return marker.content !== void 0;
+}
+function isElementNode(node) {
+	return node.nodeType === Node.ELEMENT_NODE;
+}
+var MarkerContent = ({ children, styles, className }) => {
+	return import_react.createElement("div", {
+		className,
+		style: styles
+	}, children);
+};
+function useAdvancedMarker(props) {
+	const [marker, setMarker] = (0, import_react.useState)(null);
+	const [contentContainer, setContentContainer] = (0, import_react.useState)(null);
+	const map = useMap();
+	const markerLibrary = useMapsLibrary("marker");
+	const { children, onClick, onKeyDown, onKeyUp, className, onMouseEnter, onMouseLeave, onDrag, onDragStart, onDragEnd, collisionBehavior, clickable, draggable, position, title, zIndex, anchorPoint, anchorLeft, anchorTop } = props;
+	const numChildren = import_react.Children.count(children);
+	(0, import_react.useEffect)(() => {
+		if (!map || !markerLibrary) return;
+		const newMarker = new markerLibrary.AdvancedMarkerElement();
+		newMarker.map = map;
+		setMarker(newMarker);
+		let contentElement = null;
+		if (numChildren > 0) {
+			contentElement = document.createElement("div");
+			newMarker.content = contentElement;
+			setContentContainer(contentElement);
+		}
+		return () => {
+			newMarker.map = null;
+			contentElement === null || contentElement === void 0 || contentElement.remove();
+			setMarker(null);
+			setContentContainer(null);
+		};
+	}, [
+		map,
+		markerLibrary,
+		numChildren
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!(marker === null || marker === void 0 ? void 0 : marker.content) || !isElementNode(marker.content) || numChildren > 0) return;
+		marker.content.className = className !== null && className !== void 0 ? className : "";
+	}, [
+		marker,
+		className,
+		numChildren
+	]);
+	useAdvancedMarkerAnchoring(marker, anchorPoint, anchorLeft, anchorTop, numChildren > 0);
+	usePropBinding(marker, "position", position);
+	usePropBinding(marker, "title", title !== null && title !== void 0 ? title : "");
+	usePropBinding(marker, "zIndex", zIndex);
+	usePropBinding(marker, "collisionBehavior", collisionBehavior);
+	(0, import_react.useEffect)(() => {
+		if (!marker) return;
+		if (draggable !== void 0) marker.gmpDraggable = draggable;
+		else if (onDrag || onDragStart || onDragEnd) marker.gmpDraggable = true;
+		else marker.gmpDraggable = false;
+	}, [
+		marker,
+		draggable,
+		onDrag,
+		onDragEnd,
+		onDragStart
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!marker) return;
+		const gmpClickable = clickable !== void 0 ? clickable : Boolean(onClick) || Boolean(onKeyDown) || Boolean(onKeyUp) || Boolean(onMouseEnter) || Boolean(onMouseLeave);
+		marker.gmpClickable = gmpClickable;
+		if ((marker === null || marker === void 0 ? void 0 : marker.content) && isElementNode(marker.content)) {
+			marker.content.style.pointerEvents = gmpClickable ? "all" : "none";
+			marker.content.style.cursor = gmpClickable && onClick ? "pointer" : "";
+		}
+	}, [
+		marker,
+		clickable,
+		onClick,
+		onKeyDown,
+		onKeyUp,
+		onMouseEnter,
+		onMouseLeave
+	]);
+	useMapsEventListener(marker, "drag", onDrag);
+	useMapsEventListener(marker, "dragstart", onDragStart);
+	useMapsEventListener(marker, "dragend", onDragEnd);
+	useDomEventListener(marker, "gmp-click", onClick);
+	useDomEventListener(marker, "keydown", onKeyDown);
+	useDomEventListener(marker, "keyup", onKeyUp);
+	useDomEventListener(marker, "mouseenter", onMouseEnter);
+	useDomEventListener(marker, "mouseleave", onMouseLeave);
+	return [marker, contentContainer];
+}
+function useAdvancedMarkerAnchoring(marker, anchorPoint, anchorLeft, anchorTop, hasChildren) {
+	(0, import_react.useEffect)(() => {
+		if (!marker || !hasChildren) return;
+		const anchorOptionsSupported = isVersionGreaterEqual(3, 62);
+		const contentElement = marker.content;
+		if (!contentElement || !isElementNode(contentElement)) return;
+		if (anchorLeft !== void 0 || anchorTop !== void 0) {
+			if (!anchorOptionsSupported) console.warn(`AdvancedMarker: The anchorLeft and anchorTop props are only supported in Google Maps API version 3.62 and above. The current version is ${google.maps.version}.`);
+			marker.anchorLeft = anchorLeft;
+			marker.anchorTop = anchorTop;
+			if (anchorPoint !== void 0) console.warn("AdvancedMarker: the anchorPoint prop is ignored when anchorLeft and/or anchorTop are set.");
+			return;
+		}
+		if (anchorPoint !== void 0) {
+			const [x, y] = anchorPoint !== null && anchorPoint !== void 0 ? anchorPoint : AdvancedMarkerAnchorPoint["BOTTOM"];
+			const translateX = `calc(-1 * ${x})`;
+			const translateY = `calc(-1 * ${y})`;
+			if (anchorOptionsSupported) {
+				marker.anchorLeft = translateX;
+				marker.anchorTop = translateY;
+				contentElement.style.transform = "";
+			} else {
+				contentElement.style.transform = `translate(50%, 100%) translate(${translateX}, ${translateY})`;
+				marker.dataset.origin = "rgm";
+				globalStyleManager.addAdvancedMarkerPointerEventsOverwrite();
+			}
+		}
+	}, [
+		marker,
+		anchorPoint,
+		anchorLeft,
+		anchorTop,
+		hasChildren
+	]);
+}
+var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+/**
+* The value written to unset an option that is no longer present.
+*
+* Every property of the maps API option types is declared as `T | null`, so
+* `null` is the value the API sanctions for "back to the default". `undefined`
+* only appears via the optional marker and has no documented meaning.
+*
+* @internal
+*/
+var UNSET = null;
+/**
+* Returns the options that have to be written to bring an instance from
+* `trackedOptions` to `nextOptions`, or `null` when nothing changed.
+*
+* `trackedOptions` is what the caller believes is currently applied to the
+* instance, not the previous render's props. That distinction is what makes
+* removal work: a key that was applied earlier and is missing from
+* `nextOptions` is explicitly unset rather than silently left behind.
+*
+* The result is always a fresh object, so the caller's tracked state is never
+* handed on to the maps API.
+*
+* @internal
+*/
+function getChangedOptions(nextOptions, trackedOptions) {
+	let changedOptions = null;
+	const keys = /* @__PURE__ */ new Set([...Object.keys(trackedOptions), ...Object.keys(nextOptions)]);
+	for (const key of keys) {
+		if (!hasOwn(nextOptions, key)) {
+			changedOptions !== null && changedOptions !== void 0 || (changedOptions = Object.create(null));
+			changedOptions[key] = UNSET;
+			continue;
+		}
+		if (hasOwn(trackedOptions, key) && deepEqual(trackedOptions[key], nextOptions[key])) continue;
+		changedOptions !== null && changedOptions !== void 0 || (changedOptions = Object.create(null));
+		changedOptions[key] = nextOptions[key];
+	}
+	return changedOptions;
+}
+/**
+* Copies an options object deeply enough that nested values are not aliased by
+* the caller's.
+*
+* A shallow copy shares nested values with the props, so an `icons` array
+* mutated in place is compared against itself and reported unchanged. That only
+* matters once some other option also changes, since `useMemoized` otherwise
+* masks an in-place mutation before the hook runs at all.
+*
+* Plain objects and arrays are copied; anything else, including maps API
+* instances, is kept by reference.
+*
+* @internal
+*/
+function snapshotOptions(value) {
+	if (Array.isArray(value)) return value.map((entry) => snapshotOptions(entry));
+	if (value === null || typeof value !== "object") return value;
+	if (Object.getPrototypeOf(value) !== Object.prototype) return value;
+	const copy = {};
+	for (const key of Object.keys(value)) copy[key] = snapshotOptions(value[key]);
+	return copy;
+}
+/**
+* The options believed to be applied to each object, keyed weakly so a
+* torn-down maps object is not kept alive and no cleanup is needed.
+*/
+var appliedOptionsByObject = /* @__PURE__ */ new WeakMap();
+/**
+* A drop-in replacement for `object.setOptions(options)` that writes only the
+* values that changed since the last call.
+*
+* `setOptions` is not a cheap setter. It applies every key it is given without
+* comparing against the current value, and on an editable shape each stroke or
+* fill key costs a redraw of the vertex handles, so re-sending an unchanged
+* option bag is measurably expensive on shapes with many vertices. Sending only
+* the changed subset is equivalent, since the API leaves unspecified options
+* untouched.
+*
+* Pass `alreadyApplied` when the object was just created with these options, so
+* they are recorded without being written a second time. The caller has to say
+* so: parent effects run after child effects, so an option can change in the
+* same commit that creates the object, and inferring that the current options
+* were applied would drop that change permanently.
+*
+* An object with nothing recorded is treated as having no options applied and
+* receives the full set, so a forgotten `alreadyApplied` costs a redundant
+* write rather than a missing one.
+*
+* @internal
+*/
+function setMapObjectOptions(object, options, { alreadyApplied = false } = {}) {
+	var _a;
+	if (alreadyApplied) {
+		appliedOptionsByObject.set(object, snapshotOptions(options));
+		return;
+	}
+	const changedOptions = getChangedOptions(options, (_a = appliedOptionsByObject.get(object)) !== null && _a !== void 0 ? _a : {});
+	if (!changedOptions) return;
+	object.setOptions(changedOptions);
+	appliedOptionsByObject.set(object, snapshotOptions(options));
+}
+function useCircle(props) {
+	var _a, _b, _c;
+	const { onClick, onDrag, onDragStart, onDragEnd, onMouseOver, onMouseOut, onRadiusChanged, onCenterChanged, center, defaultCenter, radius, defaultRadius } = props, destructuredOptions = __rest(props, [
+		"onClick",
+		"onDrag",
+		"onDragStart",
+		"onDragEnd",
+		"onMouseOver",
+		"onMouseOut",
+		"onRadiusChanged",
+		"onCenterChanged",
+		"center",
+		"defaultCenter",
+		"radius",
+		"defaultRadius"
+	]);
+	const [circle, setCircle] = (0, import_react.useState)(null);
+	const map = useMap();
+	const circleOptions = useMemoized(Object.assign(Object.assign({}, destructuredOptions), {
+		clickable: (_a = destructuredOptions.clickable) !== null && _a !== void 0 ? _a : Boolean(onClick),
+		draggable: (_b = destructuredOptions.draggable) !== null && _b !== void 0 ? _b : Boolean(onDrag || onDragStart || onDragEnd || onCenterChanged),
+		editable: (_c = destructuredOptions.editable) !== null && _c !== void 0 ? _c : Boolean(onRadiusChanged)
+	}), deepEqual);
+	(0, import_react.useEffect)(() => {
+		if (!map) {
+			if (map === void 0) console.error("<Circle> has to be inside a Map component.");
+			return;
+		}
+		const newCircle = new google.maps.Circle(Object.assign(Object.assign({}, circleOptions), {
+			center: center !== null && center !== void 0 ? center : defaultCenter,
+			radius: radius !== null && radius !== void 0 ? radius : defaultRadius
+		}));
+		setMapObjectOptions(newCircle, circleOptions, { alreadyApplied: true });
+		newCircle.setMap(map);
+		setCircle(newCircle);
+		return () => {
+			newCircle.setMap(null);
+			setCircle(null);
+		};
+	}, [map]);
+	useMapsEventListener(circle, "click", onClick);
+	useMapsEventListener(circle, "drag", onDrag);
+	useMapsEventListener(circle, "dragstart", onDragStart);
+	useMapsEventListener(circle, "dragend", onDragEnd);
+	useMapsEventListener(circle, "mouseover", onMouseOver);
+	useMapsEventListener(circle, "mouseout", onMouseOut);
+	useMapsEventListener(circle, "radius_changed", onRadiusChanged ? () => {
+		const newRadius = circle === null || circle === void 0 ? void 0 : circle.getRadius();
+		if (newRadius !== void 0) onRadiusChanged(newRadius);
+	} : null);
+	useMapsEventListener(circle, "center_changed", onCenterChanged ? () => {
+		onCenterChanged(circle === null || circle === void 0 ? void 0 : circle.getCenter());
+	} : null);
+	(0, import_react.useEffect)(() => {
+		if (!circle) return;
+		setMapObjectOptions(circle, circleOptions);
+	}, [circle, circleOptions]);
+	(0, import_react.useEffect)(() => {
+		if (!circle || !center) return;
+		if (!latLngEquals(center, circle.getCenter())) circle.setCenter(center);
+	}, [circle, center]);
+	(0, import_react.useEffect)(() => {
+		if (!circle || radius === void 0) return;
+		if (radius !== circle.getRadius()) circle.setRadius(radius);
+	}, [circle, radius]);
+	return circle;
+}
+var Circle = (0, import_react.forwardRef)((props, ref) => {
+	const circle = useCircle(props);
+	(0, import_react.useImperativeHandle)(ref, () => circle, [circle]);
+	return import_react.createElement(import_react.Fragment, null);
+});
+Circle.displayName = "Circle";
+/**
+* Component to render an Info Window with the Maps JavaScript API
+*/
+var InfoWindow = (props) => {
+	const { children, headerContent, style, className, pixelOffset, anchor, shouldFocus, onClose, onCloseClick } = props, volatileInfoWindowOptions = __rest(props, [
+		"children",
+		"headerContent",
+		"style",
+		"className",
+		"pixelOffset",
+		"anchor",
+		"shouldFocus",
+		"onClose",
+		"onCloseClick"
+	]);
+	const mapsLibrary = useMapsLibrary("maps");
+	const [infoWindow, setInfoWindow] = (0, import_react.useState)(null);
+	const contentContainerRef = (0, import_react.useRef)(null);
+	const headerContainerRef = (0, import_react.useRef)(null);
+	const infoWindowOptions = useMemoized(volatileInfoWindowOptions, deepEqual);
+	(0, import_react.useEffect)(() => {
+		if (!mapsLibrary) return;
+		contentContainerRef.current = document.createElement("div");
+		headerContainerRef.current = document.createElement("div");
+		const opts = Object.assign({}, infoWindowOptions);
+		if (pixelOffset) opts.pixelOffset = new google.maps.Size(pixelOffset[0], pixelOffset[1]);
+		if (headerContent) opts.headerContent = typeof headerContent === "string" ? headerContent : headerContainerRef.current;
+		const infoWindow = new google.maps.InfoWindow(opts);
+		infoWindow.setContent(contentContainerRef.current);
+		setInfoWindow(infoWindow);
+		return () => {
+			var _a, _b;
+			infoWindow.setContent(null);
+			(_a = contentContainerRef.current) === null || _a === void 0 || _a.remove();
+			(_b = headerContainerRef.current) === null || _b === void 0 || _b.remove();
+			contentContainerRef.current = null;
+			headerContainerRef.current = null;
+			setInfoWindow(null);
+		};
+	}, [mapsLibrary]);
+	const prevStyleRef = (0, import_react.useRef)(null);
+	(0, import_react.useLayoutEffect)(() => {
+		if (!infoWindow || !contentContainerRef.current) return;
+		setValueForStyles(contentContainerRef.current, style || null, prevStyleRef.current);
+		prevStyleRef.current = style || null;
+		if (className !== contentContainerRef.current.className) contentContainerRef.current.className = className || "";
+	}, [
+		infoWindow,
+		className,
+		style
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!infoWindow) return;
+		const opts = Object.assign({}, infoWindowOptions);
+		if (!pixelOffset) opts.pixelOffset = null;
+		else opts.pixelOffset = new google.maps.Size(pixelOffset[0], pixelOffset[1]);
+		if (!headerContent) opts.headerContent = null;
+		else opts.headerContent = typeof headerContent === "string" ? headerContent : headerContainerRef.current;
+		infoWindow.setOptions(opts);
+	}, [
+		infoWindowOptions,
+		pixelOffset,
+		headerContent
+	]);
+	useMapsEventListener(infoWindow, "close", onClose);
+	useMapsEventListener(infoWindow, "closeclick", onCloseClick);
+	const map = useMap();
+	(0, import_react.useEffect)(() => {
+		var _a;
+		if (!map || !infoWindow || anchor === null) return;
+		const isOpenedWithAnchor = !!anchor;
+		const openOptions = { map };
+		if (anchor) {
+			openOptions.anchor = anchor;
+			if (isAdvancedMarker(anchor) && anchor.content instanceof Element) {
+				const anchorBcr = anchor === null || anchor === void 0 ? void 0 : anchor.getBoundingClientRect();
+				if (anchorBcr && anchor.dataset.origin === "rgm") {
+					const anchorDomContent = (_a = anchor.content.firstElementChild) === null || _a === void 0 ? void 0 : _a.firstElementChild;
+					const contentBcr = anchorDomContent === null || anchorDomContent === void 0 ? void 0 : anchorDomContent.getBoundingClientRect();
+					const anchorOffsetX = contentBcr.x - anchorBcr.x + (contentBcr.width - anchorBcr.width) / 2;
+					const anchorOffsetY = contentBcr.y - anchorBcr.y;
+					const opts = Object.assign({}, infoWindowOptions);
+					opts.pixelOffset = new google.maps.Size(pixelOffset ? pixelOffset[0] + anchorOffsetX : anchorOffsetX, pixelOffset ? pixelOffset[1] + anchorOffsetY : anchorOffsetY);
+					infoWindow.setOptions(opts);
+				}
+			}
+		}
+		if (shouldFocus !== void 0) openOptions.shouldFocus = shouldFocus;
+		infoWindow.open(openOptions);
+		return () => {
+			if (isOpenedWithAnchor) infoWindow.set("anchor", null);
+			infoWindow.close();
+		};
+	}, [
+		infoWindow,
+		anchor,
+		map,
+		shouldFocus,
+		infoWindowOptions,
+		pixelOffset
+	]);
+	return import_react.createElement(import_react.Fragment, null, contentContainerRef.current && (0, import_react_dom.createPortal)(children, contentContainerRef.current), headerContainerRef.current !== null && (0, import_react_dom.createPortal)(headerContent, headerContainerRef.current));
+};
+/**
+* Extracts paths as a nested array from a Polygon instance.
+*/
+function getPathsArray(polygon) {
+	const mvcPaths = polygon.getPaths();
+	const result = [];
+	for (let i = 0; i < mvcPaths.getLength(); i++) result.push(mvcPaths.getAt(i).getArray());
+	return result;
+}
+function usePolygon(props) {
+	var _a, _b, _c;
+	const { onClick, onDrag, onDragStart, onDragEnd, onMouseOver, onMouseOut, onPathsChanged, polygon: externalPolygon, encodedPaths, paths, defaultPaths } = props, destructuredOptions = __rest(props, [
+		"onClick",
+		"onDrag",
+		"onDragStart",
+		"onDragEnd",
+		"onMouseOver",
+		"onMouseOut",
+		"onPathsChanged",
+		"polygon",
+		"encodedPaths",
+		"paths",
+		"defaultPaths"
+	]);
+	const [polygon, setPolygon] = (0, import_react.useState)(null);
+	const map = useMap();
+	const geometryLibrary = useMapsLibrary("geometry");
+	const isUpdatingRef = (0, import_react.useRef)(false);
+	const polygonOptions = useMemoized(Object.assign(Object.assign({}, destructuredOptions), {
+		clickable: (_a = destructuredOptions.clickable) !== null && _a !== void 0 ? _a : Boolean(onClick),
+		draggable: (_b = destructuredOptions.draggable) !== null && _b !== void 0 ? _b : Boolean(onDrag || onDragStart || onDragEnd || onPathsChanged),
+		editable: (_c = destructuredOptions.editable) !== null && _c !== void 0 ? _c : Boolean(onPathsChanged)
+	}), deepEqual);
+	(0, import_react.useEffect)(() => {
+		if (!map) {
+			if (map === void 0) console.error("<Polygon> has to be inside a Map component.");
+			return;
+		}
+		let instance;
+		if (externalPolygon) {
+			instance = externalPolygon;
+			const initialPaths = paths !== null && paths !== void 0 ? paths : defaultPaths;
+			if (initialPaths && Array.isArray(initialPaths)) instance.setPaths(initialPaths);
+			instance.setOptions(polygonOptions);
+		} else {
+			const initialPaths = paths !== null && paths !== void 0 ? paths : defaultPaths;
+			const polygonOptionsWithPaths = Object.assign({}, polygonOptions);
+			if (initialPaths && Array.isArray(initialPaths)) polygonOptionsWithPaths.paths = initialPaths;
+			instance = new google.maps.Polygon(polygonOptionsWithPaths);
+		}
+		setMapObjectOptions(instance, polygonOptions, { alreadyApplied: true });
+		instance.setMap(map);
+		setPolygon(instance);
+		return () => {
+			instance.setMap(null);
+			setPolygon(null);
+		};
+	}, [map, externalPolygon]);
+	useMapsEventListener(polygon, "click", onClick);
+	useMapsEventListener(polygon, "drag", onDrag);
+	useMapsEventListener(polygon, "dragstart", onDragStart);
+	useMapsEventListener(polygon, "mouseover", onMouseOver);
+	useMapsEventListener(polygon, "mouseout", onMouseOut);
+	useMapsEventListener(polygon, "dragend", (e) => {
+		onDragEnd === null || onDragEnd === void 0 || onDragEnd(e);
+		if (onPathsChanged && polygon && !isUpdatingRef.current) onPathsChanged(getPathsArray(polygon));
+	});
+	(0, import_react.useEffect)(() => {
+		if (!polygon || !onPathsChanged) return;
+		const listeners = [];
+		const mvcPaths = polygon.getPaths();
+		if (typeof mvcPaths.getLength !== "function" || typeof mvcPaths.getAt !== "function") return;
+		const handlePathsChange = () => {
+			if (!isUpdatingRef.current) onPathsChanged(getPathsArray(polygon));
+		};
+		const subscribeToInnerPath = (innerPath) => {
+			listeners.push(google.maps.event.addListener(innerPath, "insert_at", handlePathsChange));
+			listeners.push(google.maps.event.addListener(innerPath, "remove_at", handlePathsChange));
+			listeners.push(google.maps.event.addListener(innerPath, "set_at", handlePathsChange));
+		};
+		for (let i = 0; i < mvcPaths.getLength(); i++) subscribeToInnerPath(mvcPaths.getAt(i));
+		listeners.push(google.maps.event.addListener(mvcPaths, "insert_at", (index) => {
+			subscribeToInnerPath(mvcPaths.getAt(index));
+			handlePathsChange();
+		}));
+		listeners.push(google.maps.event.addListener(mvcPaths, "set_at", (index) => {
+			subscribeToInnerPath(mvcPaths.getAt(index));
+			handlePathsChange();
+		}));
+		listeners.push(google.maps.event.addListener(mvcPaths, "remove_at", handlePathsChange));
+		return () => {
+			listeners.forEach((listener) => listener.remove());
+		};
+	}, [
+		polygon,
+		onPathsChanged,
+		paths,
+		encodedPaths,
+		polygonOptions.editable,
+		polygonOptions.draggable
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!polygon) return;
+		setMapObjectOptions(polygon, polygonOptions);
+	}, [polygon, polygonOptions]);
+	(0, import_react.useEffect)(() => {
+		if (!polygon || !paths) return;
+		if (!Array.isArray(paths)) return;
+		const firstPath = paths[0];
+		if (!pathsEquals(Array.isArray(firstPath) ? paths : [paths], polygon.getPaths())) {
+			isUpdatingRef.current = true;
+			polygon.setPaths(paths);
+			isUpdatingRef.current = false;
+		}
+	}, [polygon, paths]);
+	(0, import_react.useEffect)(() => {
+		if (!polygon || !encodedPaths || !geometryLibrary) return;
+		isUpdatingRef.current = true;
+		const decodedPaths = encodedPaths.map((encodedPath) => geometryLibrary.encoding.decodePath(encodedPath));
+		polygon.setPaths(decodedPaths);
+		isUpdatingRef.current = false;
+	}, [
+		polygon,
+		encodedPaths,
+		geometryLibrary
+	]);
+	return polygon;
+}
+var Polygon = (0, import_react.forwardRef)((props, ref) => {
+	const polygon = usePolygon(props);
+	(0, import_react.useImperativeHandle)(ref, () => polygon, [polygon]);
+	return import_react.createElement(import_react.Fragment, null);
+});
+Polygon.displayName = "Polygon";
+function usePolyline(props) {
+	var _a, _b, _c;
+	const { onClick, onDrag, onDragStart, onDragEnd, onMouseOver, onMouseOut, onPathChanged, polyline: externalPolyline, encodedPath, path, defaultPath } = props, destructuredOptions = __rest(props, [
+		"onClick",
+		"onDrag",
+		"onDragStart",
+		"onDragEnd",
+		"onMouseOver",
+		"onMouseOut",
+		"onPathChanged",
+		"polyline",
+		"encodedPath",
+		"path",
+		"defaultPath"
+	]);
+	const [polyline, setPolyline] = (0, import_react.useState)(null);
+	const map = useMap();
+	const geometryLibrary = useMapsLibrary("geometry");
+	const isUpdatingRef = (0, import_react.useRef)(false);
+	const polylineOptions = useMemoized(Object.assign(Object.assign({}, destructuredOptions), {
+		clickable: (_a = destructuredOptions.clickable) !== null && _a !== void 0 ? _a : Boolean(onClick),
+		draggable: (_b = destructuredOptions.draggable) !== null && _b !== void 0 ? _b : Boolean(onDrag || onDragStart || onDragEnd || onPathChanged),
+		editable: (_c = destructuredOptions.editable) !== null && _c !== void 0 ? _c : Boolean(onPathChanged)
+	}), deepEqual);
+	(0, import_react.useEffect)(() => {
+		if (!map) {
+			if (map === void 0) console.error("<Polyline> has to be inside a Map component.");
+			return;
+		}
+		let instance;
+		if (externalPolyline) {
+			instance = externalPolyline;
+			const initialPath = path !== null && path !== void 0 ? path : defaultPath;
+			if (initialPath && Array.isArray(initialPath)) instance.setPath(initialPath);
+			instance.setOptions(polylineOptions);
+		} else {
+			const initialPath = path !== null && path !== void 0 ? path : defaultPath;
+			const polylineOptionsWithPath = Object.assign({}, polylineOptions);
+			if (initialPath && Array.isArray(initialPath)) polylineOptionsWithPath.path = initialPath;
+			instance = new google.maps.Polyline(polylineOptionsWithPath);
+		}
+		setMapObjectOptions(instance, polylineOptions, { alreadyApplied: true });
+		instance.setMap(map);
+		setPolyline(instance);
+		return () => {
+			instance.setMap(null);
+			setPolyline(null);
+		};
+	}, [map, externalPolyline]);
+	useMapsEventListener(polyline, "click", onClick);
+	useMapsEventListener(polyline, "drag", onDrag);
+	useMapsEventListener(polyline, "dragstart", onDragStart);
+	useMapsEventListener(polyline, "mouseover", onMouseOver);
+	useMapsEventListener(polyline, "mouseout", onMouseOut);
+	useMapsEventListener(polyline, "dragend", (e) => {
+		onDragEnd === null || onDragEnd === void 0 || onDragEnd(e);
+		if (onPathChanged && polyline && !isUpdatingRef.current) onPathChanged(polyline.getPath().getArray());
+	});
+	(0, import_react.useEffect)(() => {
+		if (!polyline || !onPathChanged) return;
+		const mvcPath = polyline.getPath();
+		if (!mvcPath) return;
+		const handlePathChange = () => {
+			if (!isUpdatingRef.current) onPathChanged(mvcPath.getArray());
+		};
+		const listeners = [
+			google.maps.event.addListener(mvcPath, "insert_at", handlePathChange),
+			google.maps.event.addListener(mvcPath, "remove_at", handlePathChange),
+			google.maps.event.addListener(mvcPath, "set_at", handlePathChange)
+		];
+		return () => {
+			listeners.forEach((listener) => listener.remove());
+		};
+	}, [
+		polyline,
+		onPathChanged,
+		path,
+		encodedPath,
+		polylineOptions.editable,
+		polylineOptions.draggable
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!polyline) return;
+		setMapObjectOptions(polyline, polylineOptions);
+	}, [polyline, polylineOptions]);
+	(0, import_react.useEffect)(() => {
+		if (!polyline || !path) return;
+		const currentPath = polyline.getPath();
+		if (!pathEquals(path, currentPath)) {
+			isUpdatingRef.current = true;
+			polyline.setPath(path);
+			isUpdatingRef.current = false;
+		}
+	}, [polyline, path]);
+	(0, import_react.useEffect)(() => {
+		if (!polyline || !encodedPath || !geometryLibrary) return;
+		isUpdatingRef.current = true;
+		const decodedPath = geometryLibrary.encoding.decodePath(encodedPath);
+		polyline.setPath(decodedPath);
+		isUpdatingRef.current = false;
+	}, [
+		polyline,
+		encodedPath,
+		geometryLibrary
+	]);
+	return polyline;
+}
+var Polyline = (0, import_react.forwardRef)((props, ref) => {
+	const polyline = usePolyline(props);
+	(0, import_react.useImperativeHandle)(ref, () => polyline, [polyline]);
+	return import_react.createElement(import_react.Fragment, null);
+});
+Polyline.displayName = "Polyline";
+function useMarker(props) {
+	const [marker, setMarker] = (0, import_react.useState)(null);
+	const map = useMap();
+	const { onClick, onDrag, onDragStart, onDragEnd, onMouseOver, onMouseOut } = props, markerOptions = __rest(props, [
+		"onClick",
+		"onDrag",
+		"onDragStart",
+		"onDragEnd",
+		"onMouseOver",
+		"onMouseOut"
+	]);
+	const { position, draggable } = markerOptions;
+	(0, import_react.useEffect)(() => {
+		if (!map) {
+			if (map === void 0) console.error("<Marker> has to be inside a Map component.");
+			return;
+		}
+		const newMarker = new google.maps.Marker(markerOptions);
+		newMarker.setMap(map);
+		setMarker(newMarker);
+		return () => {
+			newMarker.setMap(null);
+			setMarker(null);
+		};
+	}, [map]);
+	(0, import_react.useEffect)(() => {
+		if (!marker) return;
+		const m = marker;
+		const gme = google.maps.event;
+		if (onClick) gme.addListener(m, "click", onClick);
+		if (onDrag) gme.addListener(m, "drag", onDrag);
+		if (onDragStart) gme.addListener(m, "dragstart", onDragStart);
+		if (onDragEnd) gme.addListener(m, "dragend", onDragEnd);
+		if (onMouseOver) gme.addListener(m, "mouseover", onMouseOver);
+		if (onMouseOut) gme.addListener(m, "mouseout", onMouseOut);
+		marker.setDraggable(Boolean(draggable));
+		return () => {
+			gme.clearInstanceListeners(m);
+		};
+	}, [
+		marker,
+		draggable,
+		onClick,
+		onDrag,
+		onDragStart,
+		onDragEnd,
+		onMouseOver,
+		onMouseOut
+	]);
+	(0, import_react.useEffect)(() => {
+		if (!marker) return;
+		if (markerOptions) marker.setOptions(markerOptions);
+	}, [marker, markerOptions]);
+	(0, import_react.useEffect)(() => {
+		if (draggable || !position || !marker) return;
+		marker.setPosition(position);
+	}, [
+		draggable,
+		position,
+		marker
+	]);
+	return marker;
+}
+/**
+* Component to render a marker on a map
+*/
+var Marker = (0, import_react.forwardRef)((props, ref) => {
+	const marker = useMarker(props);
+	(0, import_react.useImperativeHandle)(ref, () => marker, [marker]);
+	return import_react.createElement(import_react.Fragment, null);
+});
+Marker.displayName = "Marker";
+/**
+* Legacy implementation of Pin component for Maps API < 3.62
+* Component to configure the appearance of an AdvancedMarker or Marker3D
+*/
+var PinLegacy = (props) => {
+	const advancedMarkerContext = (0, import_react.useContext)(AdvancedMarkerContext);
+	const marker3dContext = (0, import_react.useContext)(Marker3DContext);
+	const advancedMarker = advancedMarkerContext === null || advancedMarkerContext === void 0 ? void 0 : advancedMarkerContext.marker;
+	const marker3d = marker3dContext === null || marker3dContext === void 0 ? void 0 : marker3dContext.marker;
+	const setContentHandledExternally = marker3dContext === null || marker3dContext === void 0 ? void 0 : marker3dContext.setContentHandledExternally;
+	const glyphContainer = (0, import_react.useMemo)(() => document.createElement("div"), []);
+	const markerLibrary = useMapsLibrary("marker");
+	(0, import_react.useEffect)(() => {
+		if (marker3d && setContentHandledExternally) {
+			setContentHandledExternally(true);
+			return () => setContentHandledExternally(false);
+		}
+	}, [marker3d, setContentHandledExternally]);
+	(0, import_react.useEffect)(() => {
+		if (!marker3d || !markerLibrary) return;
+		const pinViewOptions = Object.assign({}, props);
+		const pinElement = new markerLibrary.PinElement(pinViewOptions);
+		if (props.children) pinElement.glyph = glyphContainer;
+		while (marker3d.firstChild) marker3d.removeChild(marker3d.firstChild);
+		marker3d.append(pinElement);
+		return () => {};
+	}, [
+		marker3d,
+		markerLibrary,
+		glyphContainer,
+		props
+	]);
+	(0, import_react.useEffect)(() => {
+		var _a;
+		if (marker3d) return;
+		if (!advancedMarker) {
+			if (advancedMarker === void 0 && marker3d === void 0) console.error("The <Pin> component can only be used inside <AdvancedMarker> or <Marker3D>.");
+			return;
+		}
+		if (props.glyph && props.children) logErrorOnce("The <Pin> component only uses children to render the glyph if both the glyph property and children are present.");
+		if (import_react.Children.count(props.children) > 1) logErrorOnce("Passing multiple children to the <Pin> component might lead to unexpected results.");
+		const pinViewOptions = Object.assign({}, props);
+		const pinElement = new google.maps.marker.PinElement(pinViewOptions);
+		if (props.children) pinElement.glyph = glyphContainer;
+		const markerContent = (_a = advancedMarker.content) === null || _a === void 0 ? void 0 : _a.firstChild;
+		while (markerContent === null || markerContent === void 0 ? void 0 : markerContent.firstChild) markerContent.removeChild(markerContent.firstChild);
+		if (markerContent) markerContent.appendChild(pinElement.element);
+	}, [
+		advancedMarker,
+		glyphContainer,
+		marker3d,
+		props
+	]);
+	return (0, import_react_dom.createPortal)(props.children, glyphContainer);
+};
+/**
+* Modern implementation of Pin component for Maps API >= 3.62
+* Uses the new custom element API with glyphSrc/glyphText properties
+* Component to configure the appearance of an AdvancedMarker or Marker3D
+*/
+var PinModern = (props) => {
+	const { children } = props;
+	const advancedMarkerContext = (0, import_react.useContext)(AdvancedMarkerContext);
+	const marker3dContext = (0, import_react.useContext)(Marker3DContext);
+	const advancedMarker = advancedMarkerContext === null || advancedMarkerContext === void 0 ? void 0 : advancedMarkerContext.marker;
+	const marker3d = marker3dContext === null || marker3dContext === void 0 ? void 0 : marker3dContext.marker;
+	const setContentHandledExternally = marker3dContext === null || marker3dContext === void 0 ? void 0 : marker3dContext.setContentHandledExternally;
+	const glyphContainer = (0, import_react.useMemo)(() => document.createElement("div"), []);
+	const markerLibrary = useMapsLibrary("marker");
+	(0, import_react.useEffect)(() => {
+		if (marker3d && setContentHandledExternally) {
+			setContentHandledExternally(true);
+			return () => setContentHandledExternally(false);
+		}
+	}, [marker3d, setContentHandledExternally]);
+	(0, import_react.useEffect)(() => {
+		if (!marker3d || !markerLibrary) return;
+		const pinOptions = Object.assign({}, props);
+		const pinElement = new markerLibrary.PinElement(pinOptions);
+		if (children) pinElement.appendChild(glyphContainer);
+		while (marker3d.firstChild) marker3d.removeChild(marker3d.firstChild);
+		marker3d.appendChild(pinElement);
+		return () => {};
+	}, [
+		marker3d,
+		markerLibrary,
+		glyphContainer,
+		children,
+		props
+	]);
+	(0, import_react.useEffect)(() => {
+		var _a;
+		if (marker3d) return;
+		if (!advancedMarker || !markerLibrary) {
+			if (advancedMarker === void 0 && marker3d === void 0) console.error("The <Pin> component can only be used inside <AdvancedMarker> or <Marker3D>.");
+			return;
+		}
+		if ((props.glyphSrc || props.glyphText) && children) logErrorOnce("The <Pin> component only uses children to render the glyph if both glyphSrc/glyphText and children are present.");
+		if (import_react.Children.count(children) > 1) logErrorOnce("Passing multiple children to the <Pin> component might lead to unexpected results.");
+		const pinOptions = Object.assign({}, props);
+		const pinElement = new markerLibrary.PinElement(pinOptions);
+		if (children) pinElement.appendChild(glyphContainer);
+		const markerContent = (_a = advancedMarker.content) === null || _a === void 0 ? void 0 : _a.firstChild;
+		while (markerContent === null || markerContent === void 0 ? void 0 : markerContent.firstChild) markerContent.removeChild(markerContent.firstChild);
+		if (markerContent) markerContent.appendChild(pinElement);
+	}, [
+		advancedMarker,
+		markerLibrary,
+		glyphContainer,
+		marker3d,
+		children,
+		props
+	]);
+	return (0, import_react_dom.createPortal)(children, glyphContainer);
+};
+/**
+* Component to configure the appearance of an AdvancedMarker or Marker3D.
+*
+* Automatically detects the Maps API version and uses the appropriate implementation:
+* - Legacy implementation (< 3.62): Uses the original PinElement API with glyph property
+* - Modern implementation (≥ 3.62): Uses the new custom element API with glyphSrc/glyphText
+*
+* @example
+* ```tsx
+* // Basic usage
+* <AdvancedMarker position={{lat: 0, lng: 0}}>
+*   <Pin background="#FF0000" glyphColor="#FFFFFF" />
+* </AdvancedMarker>
+*
+* // With custom glyph (legacy)
+* <Pin glyph="📍" />
+*
+* // With custom glyph (modern, recommended for Maps API 3.62+)
+* <Pin glyphText="📍" />
+* <Pin glyphSrc="https://example.com/icon.png" />
+*
+* // With React children as glyph
+* <Pin>
+*   <CustomIcon />
+* </Pin>
+* ```
+*/
+var Pin = (props) => {
+	var _a;
+	const markerLibrary = useMapsLibrary("marker");
+	const isModern = (0, import_react.useMemo)(() => {
+		if (!markerLibrary) return false;
+		return typeof customElements !== "undefined" && customElements.get("gmp-pin") !== void 0;
+	}, [markerLibrary]);
+	if (!markerLibrary) return null;
+	if (isModern) {
+		const { glyph, glyphSrc, glyphText } = props, restProps = __rest(props, [
+			"glyph",
+			"glyphSrc",
+			"glyphText"
+		]);
+		const isUrl = glyph instanceof URL || typeof glyph === "string" && glyph.startsWith("http");
+		const finalGlyphText = glyphText !== null && glyphText !== void 0 ? glyphText : typeof glyph === "string" && !isUrl ? glyph : void 0;
+		const finalGlyphSrc = glyphSrc !== null && glyphSrc !== void 0 ? glyphSrc : isUrl ? String(glyph) : void 0;
+		return import_react.createElement(PinModern, Object.assign({}, restProps, {
+			glyphText: finalGlyphText,
+			glyphSrc: finalGlyphSrc
+		}));
+	} else {
+		const { glyph, glyphSrc, glyphText } = props, restProps = __rest(props, [
+			"glyph",
+			"glyphSrc",
+			"glyphText"
+		]);
+		const finalGlyph = (_a = glyph !== null && glyph !== void 0 ? glyph : glyphSrc) !== null && _a !== void 0 ? _a : glyphText;
+		return import_react.createElement(PinLegacy, Object.assign({}, restProps, { glyph: finalGlyph }));
+	}
+};
+function useRectangle(props) {
+	var _a, _b, _c;
+	const { onClick, onDrag, onDragStart, onDragEnd, onMouseOver, onMouseOut, onBoundsChanged, bounds, defaultBounds } = props, destructuredOptions = __rest(props, [
+		"onClick",
+		"onDrag",
+		"onDragStart",
+		"onDragEnd",
+		"onMouseOver",
+		"onMouseOut",
+		"onBoundsChanged",
+		"bounds",
+		"defaultBounds"
+	]);
+	const [rectangle, setRectangle] = (0, import_react.useState)(null);
+	const map = useMap();
+	const rectangleOptions = useMemoized(Object.assign(Object.assign({}, destructuredOptions), {
+		clickable: (_a = destructuredOptions.clickable) !== null && _a !== void 0 ? _a : Boolean(onClick),
+		draggable: (_b = destructuredOptions.draggable) !== null && _b !== void 0 ? _b : Boolean(onDrag || onDragStart || onDragEnd || onBoundsChanged),
+		editable: (_c = destructuredOptions.editable) !== null && _c !== void 0 ? _c : Boolean(onBoundsChanged)
+	}), deepEqual);
+	(0, import_react.useEffect)(() => {
+		if (!map) {
+			if (map === void 0) console.error("<Rectangle> has to be inside a Map component.");
+			return;
+		}
+		const newRectangle = new google.maps.Rectangle(Object.assign(Object.assign({}, rectangleOptions), { bounds: bounds !== null && bounds !== void 0 ? bounds : defaultBounds }));
+		setMapObjectOptions(newRectangle, rectangleOptions, { alreadyApplied: true });
+		newRectangle.setMap(map);
+		setRectangle(newRectangle);
+		return () => {
+			newRectangle.setMap(null);
+			setRectangle(null);
+		};
+	}, [map]);
+	useMapsEventListener(rectangle, "click", onClick);
+	useMapsEventListener(rectangle, "drag", onDrag);
+	useMapsEventListener(rectangle, "dragstart", onDragStart);
+	useMapsEventListener(rectangle, "dragend", onDragEnd);
+	useMapsEventListener(rectangle, "mouseover", onMouseOver);
+	useMapsEventListener(rectangle, "mouseout", onMouseOut);
+	useMapsEventListener(rectangle, "bounds_changed", onBoundsChanged ? () => {
+		onBoundsChanged(rectangle === null || rectangle === void 0 ? void 0 : rectangle.getBounds());
+	} : null);
+	(0, import_react.useEffect)(() => {
+		if (!rectangle) return;
+		setMapObjectOptions(rectangle, rectangleOptions);
+	}, [rectangle, rectangleOptions]);
+	(0, import_react.useEffect)(() => {
+		if (!rectangle || !bounds) return;
+		if (!boundsEquals(bounds, rectangle.getBounds())) rectangle.setBounds(bounds);
+	}, [rectangle, bounds]);
+	return rectangle;
+}
+var Rectangle = (0, import_react.forwardRef)((props, ref) => {
+	const rectangle = useRectangle(props);
+	(0, import_react.useImperativeHandle)(ref, () => rectangle, [rectangle]);
+	return import_react.createElement(import_react.Fragment, null);
+});
+Rectangle.displayName = "Rectangle";
+// src/utils/mapsConfig.ts
+var cachedConfig = null;
+var inflightPromise = null;
+async function fetchGoogleMapsConfig() {
+	const envKey = "AIzaSyC9eJWSp32rQvBIrw088WOvHWRmAO0uWjc".trim();
+	if (cachedConfig && cachedConfig.loaded && (cachedConfig.apiKey || false)) return cachedConfig;
+	if (!inflightPromise) inflightPromise = (async () => {
+		try {
+			const res = await fetch("/api/maps/config");
+			if (res.ok) {
+				const data = await res.json();
+				const resolvedKey = (data.apiKey || envKey).trim();
+				cachedConfig = {
+					loaded: true,
+					ok: Boolean(resolvedKey),
+					apiKey: resolvedKey,
+					hasGeminiGrounding: Boolean(data.hasGeminiGrounding)
+				};
+				return cachedConfig;
+			}
+		} catch {}
+		cachedConfig = {
+			loaded: true,
+			ok: Boolean(envKey),
+			apiKey: envKey,
+			hasGeminiGrounding: false
+		};
+		return cachedConfig;
+	})().finally(() => {
+		inflightPromise = null;
+	});
+	return inflightPromise;
+}
+function useGoogleMapsConfig() {
+	const envKey = "AIzaSyC9eJWSp32rQvBIrw088WOvHWRmAO0uWjc".trim();
+	const [config, setConfig] = (0, import_react.useState)(() => cachedConfig || {
+		loaded: Boolean(envKey),
+		ok: Boolean(envKey),
+		apiKey: envKey,
+		hasGeminiGrounding: false
+	});
+	(0, import_react.useEffect)(() => {
+		let active = true;
+		fetchGoogleMapsConfig().then((cfg) => {
+			if (active) setConfig(cfg);
+		});
+		return () => {
+			active = false;
+		};
+	}, []);
+	return config;
+}
+function triggerGmpQuotaBannerIfNeeded(statusOrCode) {
+	const text = String(statusOrCode ?? "");
+	if (statusOrCode === 429 || text.includes("429") || text.includes("RESOURCE_EXHAUSTED") || text.includes("OVER_QUERY_LIMIT") || text.includes("OverQuotaMapError") || text.includes("QuotaExceededError")) {
+		if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("gmp-quota-exceeded"));
+		return true;
+	}
+	return false;
+}
+function buildGoogleMapsPlaceUrl(lat, lng, placeId) {
+	if (placeId) return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${encodeURIComponent(placeId)}`;
+	return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+// src/components/LocationPickerMap.tsx
+var DEFAULT_CENTER = {
+	lat: 26.9124,
+	lng: 75.7873
+};
+var LocationPickerMapInner = ({ latitude, longitude, address, city, firmName, hasGeminiGrounding, onLocationChange }) => {
+	const apiStatus = useApiLoadingStatus();
+	const placesLib = useMapsLibrary("places");
+	const hasSavedPin = typeof latitude === "number" && typeof longitude === "number" && Number.isFinite(latitude) && Number.isFinite(longitude);
+	const [markerPos, setMarkerPos] = (0, import_react.useState)(hasSavedPin ? {
+		lat: latitude,
+		lng: longitude
+	} : null);
+	const [mapCenter, setMapCenter] = (0, import_react.useState)(hasSavedPin ? {
+		lat: latitude,
+		lng: longitude
+	} : DEFAULT_CENTER);
+	const [searchInput, setSearchInput] = (0, import_react.useState)("");
+	const [suggestions, setSuggestions] = (0, import_react.useState)([]);
+	const [isSearchingPlaces, setIsSearchingPlaces] = (0, import_react.useState)(false);
+	const sessionTokenRef = (0, import_react.useRef)(null);
+	const [isGeocoding, setIsGeocoding] = (0, import_react.useState)(false);
+	const [isGettingGps, setIsGettingGps] = (0, import_react.useState)(false);
+	const [statusMessage, setStatusMessage] = (0, import_react.useState)(null);
+	const [errorMsg, setErrorMsg] = (0, import_react.useState)(null);
+	const [isGrounding, setIsGrounding] = (0, import_react.useState)(false);
+	const [groundingSummary, setGroundingSummary] = (0, import_react.useState)(null);
+	const [groundingChunks, setGroundingChunks] = (0, import_react.useState)([]);
+	(0, import_react.useEffect)(() => {
+		if (typeof latitude === "number" && typeof longitude === "number" && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+			const next = {
+				lat: latitude,
+				lng: longitude
+			};
+			setMarkerPos(next);
+			setMapCenter(next);
+		}
+	}, [latitude, longitude]);
+	(0, import_react.useEffect)(() => {
+		if (apiStatus === APILoadingStatus.FAILED || apiStatus === APILoadingStatus.AUTH_FAILURE) {
+			triggerGmpQuotaBannerIfNeeded("OverQuotaMapError");
+			setErrorMsg("Google Maps लोड नहीं हो सका। आप नीचे GPS बटन या पते से लोकेशन सेव कर सकते हैं।");
+		}
+	}, [apiStatus]);
+	(0, import_react.useEffect)(() => {
+		if (!placesLib) return;
+		const trimmed = searchInput.trim();
+		if (trimmed.length < 2) {
+			setSuggestions([]);
+			return;
+		}
+		const timer = window.setTimeout(async () => {
+			try {
+				setIsSearchingPlaces(true);
+				setErrorMsg(null);
+				if (!sessionTokenRef.current) sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
+				const res = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+					input: trimmed,
+					sessionToken: sessionTokenRef.current,
+					includedRegionCodes: ["in"]
+				});
+				setSuggestions(res.suggestions || []);
+			} catch (err) {
+				triggerGmpQuotaBannerIfNeeded(err instanceof Error ? err.message : String(err));
+				setSuggestions([]);
+			} finally {
+				setIsSearchingPlaces(false);
+			}
+		}, 300);
+		return () => window.clearTimeout(timer);
+	}, [placesLib, searchInput]);
+	const resetSession = (0, import_react.useCallback)(() => {
+		sessionTokenRef.current = null;
+		setSuggestions([]);
+	}, []);
+	const reverseGeocodeCoords = (0, import_react.useCallback)(async (lat, lng) => {
+		setIsGeocoding(true);
+		setErrorMsg(null);
+		try {
+			const res = await fetch("/api/maps/geocode", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					lat,
+					lng
+				})
+			});
+			const data = await res.json();
+			if (res.status === 429 || triggerGmpQuotaBannerIfNeeded(data.errorCode || data.message)) {
+				setErrorMsg("Google Maps दैनिक कोटा समाप्त हो गया है, लेकिन आपके GPS निर्देशांक सुरक्षित हो गए हैं।");
+				onLocationChange({
+					latitude: lat,
+					longitude: lng,
+					googleMapsUrl: buildGoogleMapsPlaceUrl(lat, lng)
+				});
+				return;
+			}
+			if (data.ok && data.formattedAddress) {
+				setStatusMessage(`मैप पता प्राप्त: ${data.formattedAddress}`);
+				onLocationChange({
+					latitude: lat,
+					longitude: lng,
+					placeId: data.placeId || void 0,
+					mapAddress: data.formattedAddress,
+					address: data.formattedAddress,
+					city: data.city || void 0,
+					googleMapsUrl: data.googleMapsUrl || buildGoogleMapsPlaceUrl(lat, lng, data.placeId || void 0)
+				});
+			} else {
+				setStatusMessage("पिन निर्देशांक सेव हो गए हैं।");
+				onLocationChange({
+					latitude: lat,
+					longitude: lng,
+					googleMapsUrl: buildGoogleMapsPlaceUrl(lat, lng)
+				});
+			}
+		} catch {
+			onLocationChange({
+				latitude: lat,
+				longitude: lng,
+				googleMapsUrl: buildGoogleMapsPlaceUrl(lat, lng)
+			});
+		} finally {
+			setIsGeocoding(false);
+		}
+	}, [onLocationChange]);
+	const handleSelectSuggestion = async (suggestion) => {
+		if (!suggestion.placePrediction) return;
+		try {
+			setIsGeocoding(true);
+			setErrorMsg(null);
+			const place = suggestion.placePrediction.toPlace();
+			await place.fetchFields({ fields: [
+				"displayName",
+				"formattedAddress",
+				"location",
+				"id",
+				"addressComponents"
+			] });
+			resetSession();
+			const loc = place.location;
+			if (!loc) {
+				setErrorMsg("इस स्थान के निर्देशांक उपलब्ध नहीं हैं।");
+				return;
+			}
+			const lat = loc.lat();
+			const lng = loc.lng();
+			const formattedAddress = place.formattedAddress || place.displayName || "";
+			const comps = place.addressComponents || [];
+			const cityComp = comps.find((c) => c.types?.includes("locality")) || comps.find((c) => c.types?.includes("administrative_area_level_2")) || comps.find((c) => c.types?.includes("administrative_area_level_3"));
+			setMarkerPos({
+				lat,
+				lng
+			});
+			setMapCenter({
+				lat,
+				lng
+			});
+			setSearchInput("");
+			setStatusMessage(`स्थान चुना गया: ${formattedAddress}`);
+			onLocationChange({
+				latitude: lat,
+				longitude: lng,
+				placeId: place.id || void 0,
+				mapAddress: formattedAddress,
+				address: formattedAddress,
+				city: cityComp?.longText || cityComp?.shortText || void 0,
+				googleMapsUrl: buildGoogleMapsPlaceUrl(lat, lng, place.id || void 0)
+			});
+		} catch (err) {
+			if (triggerGmpQuotaBannerIfNeeded(err instanceof Error ? err.message : String(err))) setErrorMsg("Google Maps कोटा सीमा पार हो गई है।");
+			else setErrorMsg("चुने गए स्थान की जानकारी लोड नहीं हो सकी।");
+		} finally {
+			setIsGeocoding(false);
+		}
+	};
+	const handleCaptureCurrentGps = () => {
+		if (typeof navigator === "undefined" || !navigator.geolocation) {
+			setErrorMsg("आपके ब्राउज़र/फ़ोन में GPS उपलब्ध नहीं है।");
+			return;
+		}
+		setIsGettingGps(true);
+		setErrorMsg(null);
+		setStatusMessage("GPS से वर्तमान लोकेशन ली जा रही है...");
+		navigator.geolocation.getCurrentPosition((pos) => {
+			const lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
+			const lng = Math.round(pos.coords.longitude * 1e6) / 1e6;
+			setMarkerPos({
+				lat,
+				lng
+			});
+			setMapCenter({
+				lat,
+				lng
+			});
+			setIsGettingGps(false);
+			reverseGeocodeCoords(lat, lng);
+		}, (err) => {
+			setIsGettingGps(false);
+			setStatusMessage(null);
+			setErrorMsg(err.code === err.PERMISSION_DENIED ? "लोकेशन अनुमति अस्वीकार की गई। कृपया ब्राउज़र सेटिंग से Location Allow करें या मैप पर क्लिक करें।" : "GPS सिग्नल नहीं मिला। कृपया मैप पर खोजकर पिन लगाएं।");
+		}, {
+			enableHighAccuracy: true,
+			timeout: 12e3,
+			maximumAge: 5e3
+		});
+	};
+	const handleGeocodeTypedAddress = async () => {
+		const combined = [address, city].filter((v) => Boolean(v && v.trim())).join(", ");
+		if (!combined) {
+			setErrorMsg("कृपया पहले दुकान का पता और शहर लिखें।");
+			return;
+		}
+		setIsGeocoding(true);
+		setErrorMsg(null);
+		try {
+			const res = await fetch("/api/maps/geocode", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ address: combined })
+			});
+			const data = await res.json();
+			if (res.status === 429 || triggerGmpQuotaBannerIfNeeded(data.errorCode || data.message)) {
+				setErrorMsg("Google Maps Geocoding कोटा समाप्त। कृपया मैप पर सीधे क्लिक करके पिन लगाएं।");
+				return;
+			}
+			if (data.ok && typeof data.lat === "number" && typeof data.lng === "number") {
+				const lat = data.lat;
+				const lng = data.lng;
+				setMarkerPos({
+					lat,
+					lng
+				});
+				setMapCenter({
+					lat,
+					lng
+				});
+				setStatusMessage(`पता मैप पर मिला: ${data.formattedAddress || combined}`);
+				onLocationChange({
+					latitude: lat,
+					longitude: lng,
+					placeId: data.placeId || void 0,
+					mapAddress: data.formattedAddress || combined,
+					city: data.city || void 0,
+					googleMapsUrl: data.googleMapsUrl || buildGoogleMapsPlaceUrl(lat, lng, data.placeId || void 0)
+				});
+			} else setErrorMsg(data.message || "यह पता मैप पर नहीं मिला, कृपया ऊपर सर्च बॉक्स से चुनें।");
+		} catch {
+			setErrorMsg("पता खोजने में नेटवर्क त्रुटि हुई।");
+		} finally {
+			setIsGeocoding(false);
+		}
+	};
+	const handleFetchMapsGrounding = async () => {
+		setIsGrounding(true);
+		setErrorMsg(null);
+		try {
+			const pos = markerPos || mapCenter;
+			const res = await fetch("/api/maps/grounding", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					lat: pos.lat,
+					lng: pos.lng,
+					firmName,
+					query: firmName ? `What wholesale grain markets, main roads, or delivery landmarks are near "${firmName}" (${address || ""} ${city || ""})? Give short Hindi/English delivery guidance.` : void 0
+				})
+			});
+			const data = await res.json();
+			if (res.status === 429 || triggerGmpQuotaBannerIfNeeded(data.errorCode || data.message)) {
+				setErrorMsg("Maps Grounding कोटा सीमा पूरी हो गई है।");
+				return;
+			}
+			if (!data.ok) {
+				setErrorMsg(data.message || "आस-पास मार्केट जानकारी नहीं मिल सकी।");
+				return;
+			}
+			setGroundingSummary(data.summary || null);
+			setGroundingChunks(Array.isArray(data.groundingChunks) ? data.groundingChunks : []);
+		} catch {
+			setErrorMsg("Maps Grounding अनुरोध विफल हुआ।");
+		} finally {
+			setIsGrounding(false);
+		}
+	};
+	const handleMapCoordinatePick = (latLng) => {
+		if (!latLng) return;
+		const lat = Math.round(latLng.lat * 1e6) / 1e6;
+		const lng = Math.round(latLng.lng * 1e6) / 1e6;
+		setMarkerPos({
+			lat,
+			lng
+		});
+		setMapCenter({
+			lat,
+			lng
+		});
+		reverseGeocodeCoords(lat, lng);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-2.5 bg-slate-50 border border-slate-200 rounded-xl p-3",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center justify-between gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 font-bold text-slate-800 text-xs",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-4 h-4 text-rose-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Map लोकेशन व GPS पिन" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-wrap items-center gap-1.5",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: handleCaptureCurrentGps,
+							disabled: isGettingGps,
+							className: "px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition cursor-pointer",
+							children: [isGettingGps ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Crosshair, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "GPS से वर्तमान लोकेशन लें" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: handleGeocodeTypedAddress,
+							disabled: isGeocoding,
+							className: "px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-3 h-3 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "पते से खोजें" })]
+						}),
+						hasGeminiGrounding && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: handleFetchMapsGrounding,
+							disabled: isGrounding,
+							className: "px-2.5 py-1.5 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-950 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer",
+							children: [isGrounding ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3 h-3 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "w-3 h-3 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "आस-पास मंडी/मार्ग जांच" })]
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						type: "text",
+						value: searchInput,
+						onChange: (e) => setSearchInput(e.target.value),
+						placeholder: "Google Maps पर दुकान, बाजार या मोहल्ला खोजें (Autocomplete)...",
+						className: "w-full pl-8 pr-8 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+					}),
+					isSearchingPlaces && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 text-amber-600 animate-spin absolute right-3 top-2.5" }),
+					suggestions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+						className: "absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-slate-300 rounded-xl shadow-xl max-h-48 overflow-y-auto divide-y divide-slate-100",
+						children: suggestions.map((suggestion, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => void handleSelectSuggestion(suggestion),
+							className: "w-full text-left px-3 py-2 hover:bg-amber-50 text-xs text-slate-800 flex items-start gap-2 cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: suggestion.placePrediction?.text.text })]
+						}) }, suggestion.placePrediction?.placeId || idx))
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "h-52 w-full rounded-xl overflow-hidden border border-slate-300 relative bg-slate-200",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Map$1, {
+					mapId: "DEMO_MAP_ID",
+					internalUsageAttributionIds: ["gmp_mcp_codeassist_v1_aistudio"],
+					defaultZoom: markerPos ? 15 : 11,
+					center: mapCenter,
+					gestureHandling: "greedy",
+					disableDefaultUI: false,
+					style: {
+						width: "100%",
+						height: "100%"
+					},
+					onClick: (e) => handleMapCoordinatePick(e.detail?.latLng),
+					children: markerPos && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedMarker, {
+						position: markerPos,
+						draggable: true,
+						title: firmName || "चयनित ग्राहक लोकेशन",
+						onDragEnd: (e) => {
+							const ll = e.latLng;
+							if (ll) handleMapCoordinatePick({
+								lat: ll.lat(),
+								lng: ll.lng()
+							});
+						},
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pin, {
+							background: "#d97706",
+							borderColor: "#78350f",
+							glyphColor: "#ffffff"
+						})
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "absolute bottom-1.5 left-1.5 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-700 border border-slate-200 pointer-events-none",
+					children: "पिन लगाने के लिए मैप पर टैप करें या पिन को खिसकाएं"
+				})]
+			}),
+			markerPos && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-[11px] text-emerald-900",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 font-mono font-bold",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3.5 h-3.5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+						"GPS: ",
+						markerPos.lat.toFixed(5),
+						", ",
+						markerPos.lng.toFixed(5)
+					] })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+					href: buildGoogleMapsPlaceUrl(markerPos.lat, markerPos.lng),
+					target: "_blank",
+					rel: "noopener noreferrer",
+					className: "inline-flex items-center gap-1 text-blue-700 hover:underline font-bold",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Maps पर देखें" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3" })]
+				})]
+			}),
+			statusMessage && !errorMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] text-slate-700 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5",
+				children: statusMessage
+			}),
+			errorMsg && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-start gap-1.5 bg-amber-50 border border-amber-300 text-amber-950 rounded-lg px-2.5 py-1.5 text-[11px]",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriangleAlert, { className: "w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: errorMsg })]
+			}),
+			(groundingSummary || groundingChunks.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white border border-amber-200 rounded-xl p-2.5 space-y-2 text-[11px]",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "font-bold text-amber-900 flex items-center gap-1",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "w-3.5 h-3.5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "आस-पास मार्केट व डिलीवरी संदर्भ (Google Maps Grounding):" })]
+					}),
+					groundingSummary && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-slate-700 leading-relaxed whitespace-pre-line",
+						children: groundingSummary
+					}),
+					groundingChunks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex flex-wrap gap-1.5 pt-1 border-t border-slate-100",
+						children: groundingChunks.map((chunk, idx) => chunk.uri ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+							href: chunk.uri,
+							target: "_blank",
+							rel: "noopener noreferrer",
+							className: "inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 font-semibold",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-blue-600" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: chunk.title }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
+							]
+						}, chunk.placeId || idx) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold",
+							children: chunk.title
+						}, chunk.placeId || idx))
+					})
+				]
+			})
+		]
+	});
+};
+var LocationPickerMap = (props) => {
+	const mapsConfig = useGoogleMapsConfig();
+	if (!mapsConfig.loaded) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 flex items-center gap-2",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-4 h-4 animate-spin text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Maps लोड हो रहा है..." })]
+	});
+	if (!mapsConfig.apiKey) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-2",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center justify-between gap-2",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "font-bold flex items-center gap-1.5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-4 h-4 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "GPS लोकेशन कैप्चर (मैप कुंजी प्रतीक्षारत)" })]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => {
+					if (typeof navigator !== "undefined" && navigator.geolocation) navigator.geolocation.getCurrentPosition((pos) => {
+						const lat = Math.round(pos.coords.latitude * 1e6) / 1e6;
+						const lng = Math.round(pos.coords.longitude * 1e6) / 1e6;
+						props.onLocationChange({
+							latitude: lat,
+							longitude: lng,
+							googleMapsUrl: buildGoogleMapsPlaceUrl(lat, lng)
+						});
+					});
+				},
+				className: "px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Crosshair, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "GPS लें" })]
+			})]
+		}), typeof props.latitude === "number" && typeof props.longitude === "number" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+			className: "font-mono text-[11px] text-emerald-800 font-bold",
+			children: [
+				"✓ GPS: ",
+				props.latitude.toFixed(5),
+				", ",
+				props.longitude.toFixed(5)
+			]
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(APIProvider, {
+		apiKey: mapsConfig.apiKey,
+		libraries: ["places", "marker"],
+		language: "hi",
+		region: "IN",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocationPickerMapInner, {
+			...props,
+			hasGeminiGrounding: mapsConfig.hasGeminiGrounding
+		})
+	});
+};
+// src/utils/imageCompress.ts
+/**
+* Compresses a camera or gallery shop photo on client canvas into a compact JPEG/WebP data URL
+* so wholesale dealer shop photos save cleanly inside Firestore document limits (<= 150KB).
+*/
+async function compressShopPhoto(file, options = {}) {
+	const maxWidth = options.maxWidth ?? 720;
+	const maxHeight = options.maxHeight ?? 540;
+	const startQuality = options.quality ?? .72;
+	const dataUrl = await new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (typeof reader.result === "string") resolve(reader.result);
+			else reject(/* @__PURE__ */ new Error("फ़ोटो पढ़ने में त्रुटि हुई।"));
+		};
+		reader.onerror = () => reject(/* @__PURE__ */ new Error("फ़ोटो लोड नहीं हो सकी।"));
+		reader.readAsDataURL(file);
+	});
+	const img = await new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => resolve(image);
+		image.onerror = () => reject(/* @__PURE__ */ new Error("यह इमेज फ़ाइल सपोर्ट नहीं है।"));
+		image.src = dataUrl;
+	});
+	let targetWidth = img.naturalWidth || img.width;
+	let targetHeight = img.naturalHeight || img.height;
+	if (targetWidth > maxWidth || targetHeight > maxHeight) {
+		const ratio = Math.min(maxWidth / targetWidth, maxHeight / targetHeight);
+		targetWidth = Math.max(1, Math.round(targetWidth * ratio));
+		targetHeight = Math.max(1, Math.round(targetHeight * ratio));
+	}
+	const canvas = document.createElement("canvas");
+	canvas.width = targetWidth;
+	canvas.height = targetHeight;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) throw new Error("कैनवास इनिशियलाइज़ नहीं हो सका।");
+	ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+	let q = startQuality;
+	let compressed = canvas.toDataURL("image/jpeg", q);
+	while (compressed.length > 18e4 && q > .35) {
+		q = Math.round((q - .1) * 100) / 100;
+		compressed = canvas.toDataURL("image/jpeg", q);
+	}
+	return compressed;
+}
 // src/components/NewCustomerModal.tsx
-var NewCustomerModal = ({ onClose, onSubmit }) => {
+var NewCustomerModal = ({ staff = [], activeStaffMember, defaultType = "retailer", onClose, onSubmit }) => {
+	const salesmen = staff.filter((s) => s.role === "salesman" && s.active);
+	const isLoggedInSalesman = activeStaffMember?.role === "salesman";
 	const [name, setName] = (0, import_react.useState)("");
 	const [firmName, setFirmName] = (0, import_react.useState)("");
 	const [phone, setPhone] = (0, import_react.useState)("");
@@ -57575,65 +61948,158 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 	const [address, setAddress] = (0, import_react.useState)("");
 	const [city, setCity] = (0, import_react.useState)("जयपुर");
 	const [gstin, setGstin] = (0, import_react.useState)("");
-	const [type, setType] = (0, import_react.useState)("retailer");
-	const [creditLimit, setCreditLimit] = (0, import_react.useState)(5e4);
+	const [type, setType] = (0, import_react.useState)(defaultType === "wholesaler" ? "wholesaler" : "retailer");
+	const [creditLimit, setCreditLimit] = (0, import_react.useState)(defaultType === "wholesaler" ? 15e4 : 5e4);
 	const [openingDue, setOpeningDue] = (0, import_react.useState)(0);
+	const [salesmanId, setSalesmanId] = (0, import_react.useState)(isLoggedInSalesman && activeStaffMember ? activeStaffMember.id : "");
+	const [latitude, setLatitude] = (0, import_react.useState)(void 0);
+	const [longitude, setLongitude] = (0, import_react.useState)(void 0);
+	const [placeId, setPlaceId] = (0, import_react.useState)(void 0);
+	const [mapAddress, setMapAddress] = (0, import_react.useState)(void 0);
+	const [googleMapsUrl, setGoogleMapsUrl] = (0, import_react.useState)(void 0);
+	const [shopPhotoUrl, setShopPhotoUrl] = (0, import_react.useState)("");
+	const [photoLoading, setPhotoLoading] = (0, import_react.useState)(false);
+	const [photoError, setPhotoError] = (0, import_react.useState)(null);
+	const isWholesaler = type === "wholesaler";
+	const handleCategorySwitch = (nextCategory) => {
+		setType(nextCategory);
+		if (nextCategory === "wholesaler" && creditLimit === 5e4) setCreditLimit(15e4);
+		else if (nextCategory === "retailer" && creditLimit === 15e4) setCreditLimit(5e4);
+	};
+	const handleMapLocationCaptured = (loc) => {
+		setLatitude(loc.latitude);
+		setLongitude(loc.longitude);
+		if (loc.placeId) setPlaceId(loc.placeId);
+		if (loc.mapAddress) setMapAddress(loc.mapAddress);
+		setGoogleMapsUrl(loc.googleMapsUrl || buildGoogleMapsPlaceUrl(loc.latitude, loc.longitude, loc.placeId));
+		if (loc.address && (!address.trim() || address.trim().length < 5)) setAddress(loc.address);
+		if (loc.city) setCity(loc.city);
+	};
+	const handleShopPhotoFile = async (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setPhotoLoading(true);
+		setPhotoError(null);
+		try {
+			const compressed = await compressShopPhoto(file);
+			setShopPhotoUrl(compressed);
+		} catch (err) {
+			setPhotoError(err instanceof Error ? err.message : "फ़ोटो अपलोड नहीं हो सकी।");
+		} finally {
+			setPhotoLoading(false);
+			e.target.value = "";
+		}
+	};
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		const matchedSalesman = salesmen.find((s) => s.id === salesmanId) || (isLoggedInSalesman && activeStaffMember?.id === salesmanId ? activeStaffMember : void 0);
 		onSubmit({
 			id: `cust-${Date.now()}`,
-			name,
-			firmName: firmName || name,
-			phone,
+			name: name.trim(),
+			firmName: firmName.trim() || name.trim(),
+			phone: phone.trim(),
 			email: email.trim() || void 0,
-			address,
-			city,
-			gstin: gstin.toUpperCase(),
+			address: address.trim(),
+			city: city.trim(),
+			gstin: gstin.trim() ? gstin.trim().toUpperCase() : void 0,
 			type,
 			totalOrders: 0,
 			totalPurchased: openingDue,
 			totalPaid: 0,
 			currentDue: openingDue,
-			creditLimit: Number(creditLimit) || 5e4,
-			lastOrderDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)
+			creditLimit: Number(creditLimit) || (isWholesaler ? 15e4 : 5e4),
+			lastOrderDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+			salesmanId: salesmanId || void 0,
+			salesmanName: matchedSalesman?.name || void 0,
+			latitude,
+			longitude,
+			placeId,
+			mapAddress,
+			googleMapsUrl: googleMapsUrl || (typeof latitude === "number" && typeof longitude === "number" ? buildGoogleMapsPlaceUrl(latitude, longitude, placeId) : void 0),
+			shopPhotoUrl: isWholesaler && shopPhotoUrl ? shopPhotoUrl : void 0,
+			entryByStaffId: activeStaffMember?.id || void 0,
+			entryByName: activeStaffMember?.name || void 0,
+			entryByRole: activeStaffMember?.role || void 0
 		});
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200",
+			className: "bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 max-h-[94vh] flex flex-col",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-4 flex items-center justify-between",
+				className: `text-white px-6 py-4 flex items-center justify-between shrink-0 ${isWholesaler ? "bg-gradient-to-r from-blue-700 to-indigo-800" : "bg-gradient-to-r from-amber-600 to-amber-700"}`,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-5 h-5 text-amber-200" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+					children: [isWholesaler ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Store, { className: "w-5 h-5 text-blue-200" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-5 h-5 text-amber-200" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 						className: "font-bold text-base",
-						children: "नया ग्राहक / फर्म जोड़ें (Add Customer)"
-					})]
+						children: isWholesaler ? "नया होलसेल डीलर खाता जोड़ें (Wholesale Dealer)" : "नया रिटेल कस्टमर खाता जोड़ें (Retail Customer)"
+					}), activeStaffMember && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "text-[11px] text-white/85",
+						children: [
+							"Entry By: ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: activeStaffMember.name }),
+							" (",
+							activeStaffMember.roleHindi,
+							")"
+						]
+					})] })]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
 					onClick: onClose,
-					className: "p-1 hover:bg-white/10 rounded-lg text-white/80 hover:text-white",
+					className: "p-1 hover:bg-white/10 rounded-lg text-white/80 hover:text-white cursor-pointer",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
 				})]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
 				onSubmit: handleSubmit,
-				className: "p-6 space-y-4 text-xs text-slate-800",
+				className: "p-5 sm:p-6 space-y-4 text-xs text-slate-800 overflow-y-auto",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "grid grid-cols-2 gap-3",
+						className: "grid grid-cols-2 gap-2.5",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => handleCategorySwitch("wholesaler"),
+							className: `p-3 rounded-xl border-2 text-left transition flex items-center gap-2.5 cursor-pointer ${isWholesaler ? "bg-blue-50 border-blue-600 text-blue-950 shadow-xs" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-300"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: `p-2 rounded-lg shrink-0 ${isWholesaler ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Store, { className: "w-4 h-4" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-black text-xs block",
+								children: "होलसेल डीलर (Wholesale)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] opacity-80 block",
+								children: "मंडी आढ़तिया • दुकान फोटो + मैप पिन"
+							})] })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => handleCategorySwitch("retailer"),
+							className: `p-3 rounded-xl border-2 text-left transition flex items-center gap-2.5 cursor-pointer ${!isWholesaler ? "bg-amber-50 border-amber-600 text-amber-950 shadow-xs" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-amber-300"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: `p-2 rounded-lg shrink-0 ${!isWholesaler ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-600"}`,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-4 h-4" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-black text-xs block",
+								children: "रिटेल कस्टमर (Retail)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] opacity-80 block",
+								children: "किराना दुकान / कैटरर्स / सीधा ग्राहक"
+							})] })]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 							className: "block font-bold text-slate-700 mb-1",
-							children: "दुकान / फर्म का नाम *"
+							children: isWholesaler ? "डीलर फर्म / मंडी दुकान का नाम *" : "दुकान / फर्म का नाम *"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 							type: "text",
 							required: true,
 							value: firmName,
 							onChange: (e) => setFirmName(e.target.value),
-							placeholder: "उदा. श्री श्याम किराना स्टोर्स",
+							placeholder: isWholesaler ? "उदा. गोयल ट्रेडर्स व आढ़तिया" : "उदा. श्री श्याम किराना स्टोर्स",
 							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium"
 						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 							className: "block font-bold text-slate-700 mb-1",
-							children: "व्यापारी / संपर्क व्यक्ति *"
+							children: "व्यापारी / मालिक का नाम *"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 							type: "text",
 							required: true,
@@ -57644,86 +62110,161 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 						})] })]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "grid grid-cols-2 gap-3",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-							className: "block font-bold text-slate-700 mb-1",
-							children: "मोबाइल नंबर (WhatsApp) *"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-							type: "tel",
-							required: true,
-							maxLength: 10,
-							value: phone,
-							onChange: (e) => setPhone(e.target.value.replace(/\D/g, "")),
-							placeholder: "98290XXXXX",
-							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono"
-						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-							className: "block font-bold text-slate-700 mb-1",
-							children: "ग्राहक प्रकार *"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
-							value: type,
-							onChange: (e) => setType(e.target.value),
-							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-									value: "retailer",
-									children: "किराना दुकानदार (Retailer)"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-									value: "wholesaler",
-									children: "होलसेलर / मंडी आढ़तिया (Wholesaler)"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-									value: "caterer",
-									children: "हलवाई / कैटरर्स / होटल (Caterer)"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-									value: "direct",
-									children: "सीधा ग्राहक (Direct Consumer)"
-								})
-							]
-						})] })]
+						className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "मोबाइल नंबर (WhatsApp) *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "tel",
+								required: true,
+								maxLength: 10,
+								value: phone,
+								onChange: (e) => setPhone(e.target.value.replace(/\D/g, "")),
+								placeholder: "98290XXXXX",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono"
+							})] }),
+							!isWholesaler ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "रिटेल उप-श्रेणी *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+								value: type,
+								onChange: (e) => setType(e.target.value),
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "retailer",
+										children: "किराना दुकानदार (Retailer)"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "caterer",
+										children: "हलवाई / कैटरर्स / होटल"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "direct",
+										children: "सीधा ग्राहक (Direct)"
+									})
+								]
+							})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "GSTIN नंबर (वैकल्पिक)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "text",
+								value: gstin,
+								onChange: (e) => setGstin(e.target.value.toUpperCase()),
+								placeholder: "08XXXXX0000X1ZX",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "ईमेल पता (वैकल्पिक)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "email",
+								value: email,
+								onChange: (e) => setEmail(e.target.value),
+								placeholder: "party@gmail.com",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+							})] })
+						]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-						className: "block font-bold text-slate-700 mb-1",
-						children: "ईमेल पता (Email - वैकल्पिक)"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "email",
-						value: email,
-						onChange: (e) => setEmail(e.target.value),
-						placeholder: "उदा. partyname@gmail.com",
-						className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-					})] }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-						className: "block font-bold text-slate-700 mb-1",
-						children: "दुकान का पूरा पता *"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "text",
-						required: true,
-						value: address,
-						onChange: (e) => setAddress(e.target.value),
-						placeholder: "दुकान नं., बाजार का नाम, लैंडमार्क",
-						className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-					})] }),
+					isWholesaler && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-blue-50/70 border-2 border-blue-200 rounded-xl p-3.5 space-y-2.5",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-wrap items-center justify-between gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-black text-blue-950 text-xs flex items-center gap-1.5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "w-4 h-4 text-blue-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "होलसेल दुकान की फोटो (Wholesale Shop Photo)" })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[10px] text-blue-800 block",
+									children: "कैमरे से फोटो खींचें या गैलरी से चुनें (डिलीवरी व वेरिफिकेशन के लिए खाता में सेव होगी)"
+								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+										className: "px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "w-3.5 h-3.5" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फोटो खींचें" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "file",
+												accept: "image/*",
+												capture: "environment",
+												onChange: handleShopPhotoFile,
+												className: "hidden"
+											})
+										]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+										className: "px-2.5 py-1.5 bg-white hover:bg-blue-50 border border-blue-300 text-blue-900 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ImagePlus, { className: "w-3.5 h-3.5" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "गैलरी से चुनें" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "file",
+												accept: "image/*",
+												onChange: handleShopPhotoFile,
+												className: "hidden"
+											})
+										]
+									})]
+								})]
+							}),
+							photoLoading && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2 text-blue-800 text-[11px]",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-4 h-4 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "दुकान की फोटो कम्प्रेस व तैयार की जा रही है..." })]
+							}),
+							photoError && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-rose-600 font-semibold text-[11px]",
+								children: photoError
+							}),
+							shopPhotoUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative inline-block",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: shopPhotoUrl,
+									alt: "Wholesale Shop",
+									className: "h-32 w-48 object-cover rounded-xl border-2 border-blue-300 shadow-xs"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => setShopPhotoUrl(""),
+									className: "absolute top-1.5 right-1.5 p-1 bg-rose-600 text-white rounded-lg shadow-md hover:bg-rose-700 cursor-pointer",
+									title: "फ़ोटो हटाएं",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5" })
+								})]
+							})
+						]
+					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "grid grid-cols-2 gap-3",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "sm:col-span-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "दुकान / प्रतिष्ठान का पूरा पता *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "text",
+								required: true,
+								value: address,
+								onChange: (e) => setAddress(e.target.value),
+								placeholder: "दुकान नं., बाजार का नाम, लैंडमार्क",
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 							className: "block font-bold text-slate-700 mb-1",
 							children: "शहर / कस्बा *"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 							type: "text",
+							required: true,
 							value: city,
 							onChange: (e) => setCity(e.target.value),
 							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-							className: "block font-bold text-slate-700 mb-1",
-							children: "GSTIN नंबर (वैकल्पिक)"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-							type: "text",
-							value: gstin,
-							onChange: (e) => setGstin(e.target.value),
-							placeholder: "08XXXXX0000X1ZX",
-							className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase"
 						})] })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocationPickerMap, {
+						latitude,
+						longitude,
+						address,
+						city,
+						firmName,
+						onLocationChange: handleMapLocationCaptured
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200",
@@ -57747,16 +62288,72 @@ var NewCustomerModal = ({ onClose, onSubmit }) => {
 						})] })]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "pt-2 flex justify-end gap-2 border-t border-slate-200",
+						className: "bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2",
+						children: [
+							activeStaffMember && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-between gap-2 pb-1.5 border-b border-amber-200/80 text-[11px]",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "inline-flex items-center gap-1 font-bold text-slate-800",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-3.5 h-3.5 text-emerald-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Entry By (खाता जोड़ने वाला):" })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "px-2 py-0.5 bg-white border border-amber-300 rounded-lg font-black text-amber-950",
+									children: [
+										activeStaffMember.name,
+										" (",
+										activeStaffMember.roleHindi,
+										")"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex items-center gap-1.5 font-bold text-amber-950 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लिंक्ड सेल्समैन (Salesman Ledger Mapping)" })]
+							}),
+							isLoggedInSalesman && activeStaffMember ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "px-3 py-2 bg-white border border-amber-300 rounded-xl text-xs font-bold text-amber-900",
+								children: [
+									"✓ यह खाता सीधे आपके नाम (",
+									activeStaffMember.name,
+									") में जुड़ेगा — इसके सभी ऑर्डर व डिलीवर कमीशन आपके सेल्समैन खाते में स्वतः जुड़ेंगे।"
+								]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+								value: salesmanId,
+								onChange: (e) => setSalesmanId(e.target.value),
+								className: "w-full px-3 py-2 bg-white border border-amber-300 rounded-xl font-semibold text-slate-800",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: "",
+									children: "डायरेक्ट फैक्ट्री खाता (कोई सेल्समैन नहीं)"
+								}), salesmen.map((sm) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+									value: sm.id,
+									children: [
+										"सेल्समैन: ",
+										sm.name,
+										" (",
+										sm.phone,
+										")"
+									]
+								}, sm.id))]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-[10px] text-amber-900/80",
+								children: [
+									"सेल्समैन चुनने पर इस ",
+									isWholesaler ? "डीलर" : "कस्टमर",
+									" के सभी ऑर्डर व डिलीवरी कमीशन उस सेल्समैन के खाते में अपने-आप जुड़ेंगे।"
+								]
+							})] })
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pt-2 flex justify-end gap-2 border-t border-slate-200 sticky bottom-0 bg-white",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: onClose,
-							className: "px-4 py-2 border border-slate-300 rounded-xl hover:bg-slate-100 font-semibold",
+							className: "px-4 py-2 border border-slate-300 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer",
 							children: "रद्द करें"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "submit",
-							className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ग्राहक खाता खोलें" })]
+							className: `px-5 py-2 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm cursor-pointer ${isWholesaler ? "bg-blue-700 hover:bg-blue-800" : "bg-amber-600 hover:bg-amber-700"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isWholesaler ? "होलसेल डीलर खाता खोलें" : "रिटेल कस्टमर खाता खोलें" })]
 						})]
 					})
 				]
@@ -58988,8 +63585,13 @@ var InstallModal = ({ onClose, currentState, initialTab = "apk" }) => {
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center gap-3",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20",
-							children: activeTab === "apk" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-6 h-6 text-amber-200" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Code, { className: "w-6 h-6 text-amber-200" })
+							className: "w-11 h-11 rounded-xl bg-[#08172E] flex items-center justify-center border border-amber-400/50 overflow-hidden shadow-sm shrink-0",
+							children: activeTab === "apk" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+								src: "/logo.png",
+								alt: "TEJ FOOD App Icon",
+								referrerPolicy: "no-referrer",
+								className: "w-full h-full object-cover"
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Code, { className: "w-6 h-6 text-amber-200" })
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center gap-2",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -60219,9 +64821,17 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "bg-gradient-to-r from-slate-950 via-slate-900 to-amber-900 text-white px-6 py-6 text-center relative",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							mode === "login" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "w-20 h-20 mx-auto rounded-2xl overflow-hidden shadow-lg ring-4 ring-amber-400/35 bg-[#08172E]",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: "/logo.png",
+									alt: "TEJ FOOD PRODUCTS Logo",
+									referrerPolicy: "no-referrer",
+									className: "w-full h-full object-cover"
+								})
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg ring-4 ring-amber-400/20",
-								children: mode === "login" ? "T" : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeyRound, { className: "w-8 h-8 text-slate-950" })
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeyRound, { className: "w-8 h-8 text-slate-950" })
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 								className: "mt-3 text-xl font-black tracking-tight text-white",
@@ -60716,7 +65326,7 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 	});
 };
 // src/views/DashboardView.tsx
-var DashboardView = ({ orders, customers, rawStock, bagStock, products, production, expenses, staff: _staff, settings, currentRole, permissions, onNavigate, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onSelectOrder }) => {
+var DashboardView = ({ orders, customers, rawStock, bagStock, products, production, expenses, staff, settings, currentRole, activeStaffMember, permissions, onNavigate, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onSelectOrder }) => {
 	const perms = permissions || getDefaultPermissionsForRole(currentRole);
 	const canSeeProfit = currentRole === "admin" || perms.viewAccounting;
 	const todayStr = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -60753,6 +65363,30 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 	const readyDispatchOrders = orders.filter((o) => o.status === "ready_dispatch");
 	const dispatchedOrders = orders.filter((o) => o.status === "dispatched");
 	bagStock.filter((b) => b.packedCount <= b.minThreshold);
+	const currentMonthPrefix = todayStr.slice(0, 7);
+	const canSeeSalesmanSummary = currentRole === "admin" || currentRole === "manager" || currentRole === "accountant" || currentRole === "salesman" || perms.manageStaff || perms.viewReports;
+	const salesmanSummaryList = (() => {
+		if (!canSeeSalesmanSummary) return [];
+		const baseSalesmen = staff.filter((s) => s.role === "salesman");
+		const scoped = currentRole === "salesman" && activeStaffMember ? baseSalesmen.filter((s) => s.id === activeStaffMember.id) : baseSalesmen;
+		const custMap = new Map(customers.map((c) => [c.id, c]));
+		return scoped.map((sm) => {
+			const addedCustomers = customers.filter((c) => c.salesmanId === sm.id);
+			const monthOrders = orders.filter((o) => {
+				if (!o.date.startsWith(currentMonthPrefix)) return false;
+				return (o.salesmanId || custMap.get(o.customerId)?.salesmanId) === sm.id;
+			});
+			const monthAmount = monthOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+			const monthBags = monthOrders.reduce((sum, o) => sum + o.items.reduce((s2, i) => s2 + i.quantity, 0), 0);
+			return {
+				salesman: sm,
+				customerCount: addedCustomers.length,
+				orderCount: monthOrders.length,
+				bagCount: monthBags,
+				totalAmount: monthAmount
+			};
+		});
+	})();
 	const handleShareDailyReport = () => {
 		const text = `*${settings.companyName}* - ${settings.brandName} आटा%0A📊 *दैनिक बिज़नेस रिपोर्ट (DAILY REPORT)*%0A📅 *तारीख*: ${todayStr}%0A--------------------------------%0A💰 *आज की कुल बिक्री*: ₹${todaySales.toLocaleString("en-IN")}%0A💵 *नकद प्राप्ति (Cash)*: ₹${cashReceived.toLocaleString("en-IN")}%0A🏦 *बैंक प्राप्ति (Bank)*: ₹${bankReceived.toLocaleString("en-IN")}%0A📱 *UPI प्राप्ति*: ₹${upiReceived.toLocaleString("en-IN")}%0A📉 *आज का कुल खर्च*: ₹${todayExpensesTotal.toLocaleString("en-IN")}%0A📈 *अनुमानित शुद्ध मुनाफा*: ₹${estimatedNetProfit.toLocaleString("en-IN")}%0A⚠️ *ग्राहकों से कुल बकाया*: ₹${totalMarketDues.toLocaleString("en-IN")}%0A--------------------------------%0A🏭 *आज का प्रोडक्शन*: ${todayAttaKg} KG आटा (${todayBagsPacked} बैग)%0A📦 *गोदाम स्टॉक*: ${rawStock.wheatQuintals.toFixed(1)} क्विंटल गेहूँ | ${totalReadyBags} बैग तैयार%0A🚚 *आज डिलीवरी स्थिति*: ${dispatchedOrders.length} रास्ते में, ${readyDispatchOrders.length} तैयार%0A--------------------------------%0ATEJ FOOD PRODUCTS ERP 📱`;
 		window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
@@ -60863,7 +65497,7 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						onClick: () => onNavigate("customers"),
+						onClick: () => onNavigate("wholesale_dealers"),
 						className: "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-400 hover:shadow-md transition cursor-pointer group",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex justify-between items-start",
@@ -60882,9 +65516,11 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "text-[11px] text-slate-500 mt-1 block",
 								children: [
-									"कुल ",
-									customers.length,
-									" पंजीकृत ग्राहक"
+									customers.filter((c) => c.type === "wholesaler").length,
+									" होलसेल •",
+									" ",
+									customers.filter((c) => c.type !== "wholesaler").length,
+									" रिटेल"
 								]
 							})]
 						})]
@@ -61217,6 +65853,72 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 					})]
 				})]
 			}),
+			canSeeSalesmanSummary && salesmanSummaryList.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white rounded-2xl border border-amber-200 shadow-xs overflow-hidden",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "px-5 py-3.5 bg-gradient-to-r from-amber-50 to-white border-b border-amber-200 flex flex-wrap justify-between items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "p-2 rounded-xl bg-amber-500 text-slate-950",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-4 h-4" })
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+							className: "font-bold text-sm text-slate-900",
+							children: [
+								"सेल्समैन फील्ड — इस माह के ऑर्डर्स (",
+								currentMonthPrefix,
+								")"
+							]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[11px] text-slate-500",
+							children: "सेल्समैन द्वारा जोड़े गए ग्राहकों से इस महीने आए ऑर्डर और बिक्री का लेखा-जोखा"
+						})] })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => onNavigate("salesman_ledger"),
+						className: "text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "पूरा लेखा-जोखा देखें" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "w-4 h-4" })]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3",
+					children: salesmanSummaryList.map((row) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						onClick: () => onNavigate("salesman_ledger"),
+						className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50/70 hover:bg-amber-50/40 cursor-pointer transition space-y-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center justify-between gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-bold text-xs text-slate-900 truncate",
+								children: row.salesman.name
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold shrink-0",
+								children: [row.customerCount, " ग्राहक"]
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-baseline justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] text-slate-500 block",
+								children: "इस माह ऑर्डर"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono font-bold text-sm text-slate-900",
+								children: [
+									row.orderCount,
+									" ऑर्डर • ",
+									row.bagCount,
+									" बैग"
+								]
+							})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-right",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[10px] text-slate-500 block",
+									children: "कुल बिक्री"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-mono font-black text-base text-emerald-700",
+									children: ["₹", row.totalAmount.toLocaleString("en-IN")]
+								})]
+							})]
+						})]
+					}, row.salesman.id))
+				})]
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "grid grid-cols-1 lg:grid-cols-3 gap-6",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -61479,11 +66181,205 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 		]
 	});
 };
+// src/components/CustomersMapOverview.tsx
+var CustomerMapPinMarker = ({ customer, isSelected, onSelect, onCloseWindow }) => {
+	const [markerRef, marker] = useAdvancedMarkerRef();
+	if (typeof customer.latitude !== "number" || typeof customer.longitude !== "number") return null;
+	const isWholesale = customer.type === "wholesaler";
+	const position = {
+		lat: customer.latitude,
+		lng: customer.longitude
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedMarker, {
+		ref: markerRef,
+		position,
+		onClick: onSelect,
+		title: customer.firmName,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pin, {
+			background: isWholesale ? "#1d4ed8" : "#d97706",
+			borderColor: isWholesale ? "#1e3a8a" : "#92400e",
+			glyphColor: "#ffffff"
+		})
+	}), isSelected && marker && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoWindow, {
+		anchor: marker,
+		maxWidth: 260,
+		onCloseClick: onCloseWindow,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-1 text-xs text-slate-800 space-y-1.5",
+			children: [
+				isWholesale && customer.shopPhotoUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: customer.shopPhotoUrl,
+					alt: customer.firmName,
+					className: "w-full h-24 object-cover rounded-lg border border-slate-200"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between gap-1",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: `px-1.5 py-0.5 rounded text-[9px] font-bold ${isWholesale ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`,
+						children: isWholesale ? "होलसेल डीलर" : "रिटेल कस्टमर"
+					}), customer.currentDue > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "font-mono font-bold text-rose-600 text-[11px]",
+						children: ["बकाया: ₹", customer.currentDue.toLocaleString("en-IN")]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+					className: "font-black text-slate-900 text-sm leading-tight",
+					children: customer.firmName
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[11px] text-slate-600",
+					children: ["श्री ", customer.name]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[11px] text-slate-600 flex items-center gap-1",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["+91 ", customer.phone] })]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[10px] text-slate-500",
+					children: [
+						customer.address,
+						", ",
+						customer.city
+					]
+				}),
+				(customer.entryByName || customer.salesmanName) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "text-[10px] text-indigo-800 bg-indigo-50 px-2 py-1 rounded flex items-center gap-1",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-3 h-3 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: customer.entryByName ? `Entry By: ${customer.entryByName}` : `सेल्समैन: ${customer.salesmanName}` })]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+					href: customer.googleMapsUrl || buildGoogleMapsPlaceUrl(customer.latitude, customer.longitude, customer.placeId),
+					target: "_blank",
+					rel: "noopener noreferrer",
+					className: "inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:underline pt-0.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Maps में रास्ता खोलें" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3" })]
+				})
+			]
+		})
+	})] });
+};
+var CustomersMapOverview = ({ customers, title, onClose }) => {
+	const mapsConfig = useGoogleMapsConfig();
+	const locatedCustomers = customers.filter((c) => typeof c.latitude === "number" && typeof c.longitude === "number" && Number.isFinite(c.latitude) && Number.isFinite(c.longitude));
+	const [selectedId, setSelectedId] = (0, import_react.useState)(locatedCustomers[0]?.id || null);
+	const defaultCenter = locatedCustomers.length > 0 ? {
+		lat: locatedCustomers[0].latitude,
+		lng: locatedCustomers[0].longitude
+	} : {
+		lat: 26.9124,
+		lng: 75.7873
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+						className: "font-bold text-sm sm:text-base flex items-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-4 h-4 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: title })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "text-[11px] text-slate-300",
+						children: [
+							"मैप पर पिन किए गए खाते: ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: locatedCustomers.length }),
+							" / ",
+							customers.length
+						]
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						onClick: onClose,
+						className: "p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-4 h-4" })
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-3 text-xs",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "inline-flex items-center gap-1.5 font-bold text-blue-800",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-3 h-3 rounded-full bg-blue-700 inline-block" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Store, { className: "w-3.5 h-3.5" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+								"होलसेल डीलर (",
+								locatedCustomers.filter((c) => c.type === "wholesaler").length,
+								")"
+							] })
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "inline-flex items-center gap-1.5 font-bold text-amber-800",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "w-3 h-3 rounded-full bg-amber-600 inline-block" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-3.5 h-3.5" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+								"रिटेल कस्टमर (",
+								locatedCustomers.filter((c) => c.type !== "wholesaler").length,
+								")"
+							] })
+						]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex-1 min-h-[380px] h-[60vh] relative bg-slate-100",
+					children: !mapsConfig.apiKey ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "h-full flex items-center justify-center p-6 text-center text-xs text-slate-600",
+						children: "Google Maps API कुंजी उपलब्ध नहीं है।"
+					}) : locatedCustomers.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "h-full flex flex-col items-center justify-center p-6 text-center text-xs text-slate-500 space-y-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-8 h-8 text-slate-300" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "font-bold text-slate-700",
+								children: "अभी किसी खाते की Google Map लोकेशन सेव नहीं है।"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "नया खाता जोड़ते समय या एडिट करते समय GPS/Map लोकेशन सेव करें।" })
+						]
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(APIProvider, {
+						apiKey: mapsConfig.apiKey,
+						libraries: ["marker"],
+						language: "hi",
+						region: "IN",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Map$1, {
+							mapId: "DEMO_MAP_ID",
+							internalUsageAttributionIds: ["gmp_mcp_codeassist_v1_aistudio"],
+							defaultCenter,
+							defaultZoom: 11,
+							gestureHandling: "greedy",
+							style: {
+								width: "100%",
+								height: "100%"
+							},
+							children: locatedCustomers.map((cust) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomerMapPinMarker, {
+								customer: cust,
+								isSelected: selectedId === cust.id,
+								onSelect: () => setSelectedId(cust.id),
+								onCloseWindow: () => setSelectedId(null)
+							}, cust.id))
+						})
+					})
+				})
+			]
+		})
+	});
+};
 // src/views/CustomerView.tsx
-var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onOpenNewCustomer, onOpenReceivePayment, onSelectOrder, onUpdateCustomer, onDeleteCustomer }) => {
+var CustomerView = ({ customers, orders, settings, staff = [], sectionMode = "all", canReceivePayment = true, onOpenNewCustomer, onOpenReceivePayment, onSelectOrder, onUpdateCustomer, onDeleteCustomer }) => {
 	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 	const [filterType, setFilterType] = (0, import_react.useState)("all");
+	const [filterSalesmanId, setFilterSalesmanId] = (0, import_react.useState)("all");
 	const [selectedCustomerId, setSelectedCustomerId] = (0, import_react.useState)(null);
+	const [showMapOverview, setShowMapOverview] = (0, import_react.useState)(false);
+	const [lightboxPhoto, setLightboxPhoto] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		setFilterType("all");
+		setSelectedCustomerId(null);
+	}, [sectionMode]);
+	const salesmen = staff.filter((s) => s.role === "salesman");
+	const scopedCustomers = customers.filter((c) => {
+		if (sectionMode === "wholesale") return c.type === "wholesaler";
+		if (sectionMode === "retail") return c.type !== "wholesaler";
+		return true;
+	});
 	const [editingCustomer, setEditingCustomer] = (0, import_react.useState)(null);
 	const [editFirmName, setEditFirmName] = (0, import_react.useState)("");
 	const [editName, setEditName] = (0, import_react.useState)("");
@@ -61495,19 +66391,33 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 	const [editGstin, setEditGstin] = (0, import_react.useState)("");
 	const [editCreditLimit, setEditCreditLimit] = (0, import_react.useState)(5e4);
 	const [editCurrentDue, setEditCurrentDue] = (0, import_react.useState)(0);
+	const [editSalesmanId, setEditSalesmanId] = (0, import_react.useState)("");
+	const [editLatitude, setEditLatitude] = (0, import_react.useState)(void 0);
+	const [editLongitude, setEditLongitude] = (0, import_react.useState)(void 0);
+	const [editPlaceId, setEditPlaceId] = (0, import_react.useState)(void 0);
+	const [editMapAddress, setEditMapAddress] = (0, import_react.useState)(void 0);
+	const [editGoogleMapsUrl, setEditGoogleMapsUrl] = (0, import_react.useState)(void 0);
+	const [editShopPhotoUrl, setEditShopPhotoUrl] = (0, import_react.useState)("");
+	const [editPhotoLoading, setEditPhotoLoading] = (0, import_react.useState)(false);
 	const [deleteConfirmCustomer, setDeleteConfirmCustomer] = (0, import_react.useState)(null);
-	const filteredCustomers = customers.filter((c) => {
-		if (!(c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.firmName.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery) || c.city.toLowerCase().includes(searchQuery.toLowerCase()))) return false;
+	const filteredCustomers = scopedCustomers.filter((c) => {
+		const q = searchQuery.toLowerCase();
+		if (!(c.name.toLowerCase().includes(q) || c.firmName.toLowerCase().includes(q) || c.phone.includes(searchQuery) || c.city.toLowerCase().includes(q) || (c.salesmanName || "").toLowerCase().includes(q) || (c.entryByName || "").toLowerCase().includes(q))) return false;
+		if (filterSalesmanId === "direct" && c.salesmanId) return false;
+		if (filterSalesmanId !== "all" && filterSalesmanId !== "direct" && c.salesmanId !== filterSalesmanId) return false;
 		if (filterType === "dues") return c.currentDue > 0;
+		if (filterType === "located") return typeof c.latitude === "number" && typeof c.longitude === "number";
 		if (filterType === "retailer") return c.type === "retailer";
 		if (filterType === "wholesaler") return c.type === "wholesaler";
 		if (filterType === "caterer") return c.type === "caterer";
 		return true;
 	});
-	const totalDues = customers.reduce((s, c) => s + c.currentDue, 0);
-	const totalPurchases = customers.reduce((s, c) => s + c.totalPurchased, 0);
-	const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+	const totalDues = scopedCustomers.reduce((s, c) => s + c.currentDue, 0);
+	const totalPurchases = scopedCustomers.reduce((s, c) => s + c.totalPurchased, 0);
+	const locatedCount = scopedCustomers.filter((c) => typeof c.latitude === "number" && typeof c.longitude === "number").length;
+	const selectedCustomer = scopedCustomers.find((c) => c.id === selectedCustomerId);
 	const customerOrders = orders.filter((o) => o.customerId === selectedCustomerId);
+	const defaultModalType = sectionMode === "wholesale" ? "wholesaler" : "retailer";
 	const handleSendReminder = (customer) => {
 		const msg = `*श्री ${customer.name} जी* (${customer.firmName})%0A सादर प्रणाम! 🙏%0A%0A*${settings.companyName}* (${settings.brandName} आटा) की ओर से आपका खाता विवरण:%0A💰 *वर्तमान बकाया राशि*: ₹${customer.currentDue.toLocaleString("en-IN")}%0A%0Aकृपया शेष राशि का भुगतान शीघ्र अति शीघ्र निम्नलिखित बैंक खाते या UPI पर करने की कृपा करें:%0A🏦 *बैंक*: ${settings.bankName}%0AA/C No: ${settings.accountNumber}%0AIFSC: ${settings.ifscCode}%0A📱 *UPI ID*: ${settings.upiId}%0A%0Aधन्यवाद! 🙏%0A*${settings.companyName}* - फोन: ${settings.phone}`;
 		const cleanPhone = customer.phone.replace(/[^0-9]/g, "");
@@ -61526,10 +66436,39 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 		setEditGstin(cust.gstin || "");
 		setEditCreditLimit(cust.creditLimit);
 		setEditCurrentDue(cust.currentDue);
+		setEditSalesmanId(cust.salesmanId || "");
+		setEditLatitude(cust.latitude);
+		setEditLongitude(cust.longitude);
+		setEditPlaceId(cust.placeId);
+		setEditMapAddress(cust.mapAddress);
+		setEditGoogleMapsUrl(cust.googleMapsUrl);
+		setEditShopPhotoUrl(cust.shopPhotoUrl || "");
+	};
+	const handleEditMapCapture = (loc) => {
+		setEditLatitude(loc.latitude);
+		setEditLongitude(loc.longitude);
+		if (loc.placeId) setEditPlaceId(loc.placeId);
+		if (loc.mapAddress) setEditMapAddress(loc.mapAddress);
+		setEditGoogleMapsUrl(loc.googleMapsUrl || buildGoogleMapsPlaceUrl(loc.latitude, loc.longitude, loc.placeId));
+		if (loc.address && (!editAddress.trim() || editAddress.trim().length < 5)) setEditAddress(loc.address);
+		if (loc.city) setEditCity(loc.city);
+	};
+	const handleEditPhotoUpload = async (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setEditPhotoLoading(true);
+		try {
+			const compressed = await compressShopPhoto(file);
+			setEditShopPhotoUrl(compressed);
+		} finally {
+			setEditPhotoLoading(false);
+			e.target.value = "";
+		}
 	};
 	const handleSaveEditCustomer = (e) => {
 		e.preventDefault();
 		if (!editingCustomer || !onUpdateCustomer) return;
+		const matchedSalesman = salesmen.find((s) => s.id === editSalesmanId);
 		onUpdateCustomer({
 			...editingCustomer,
 			firmName: editFirmName.trim(),
@@ -61541,7 +66480,15 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 			type: editType,
 			gstin: editGstin.trim() ? editGstin.trim().toUpperCase() : void 0,
 			creditLimit: Number(editCreditLimit) || 0,
-			currentDue: Number(editCurrentDue) || 0
+			currentDue: Number(editCurrentDue) || 0,
+			salesmanId: editSalesmanId || void 0,
+			salesmanName: matchedSalesman?.name || (editSalesmanId ? editingCustomer.salesmanName : void 0),
+			latitude: editLatitude,
+			longitude: editLongitude,
+			placeId: editPlaceId,
+			mapAddress: editMapAddress,
+			googleMapsUrl: editGoogleMapsUrl || (typeof editLatitude === "number" && typeof editLongitude === "number" ? buildGoogleMapsPlaceUrl(editLatitude, editLongitude, editPlaceId) : void 0),
+			shopPhotoUrl: editType === "wholesaler" && editShopPhotoUrl ? editShopPhotoUrl : void 0
 		});
 		setEditingCustomer(null);
 	};
@@ -61551,6 +66498,8 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 		if (selectedCustomerId === deleteConfirmCustomer.id) setSelectedCustomerId(null);
 		setDeleteConfirmCustomer(null);
 	};
+	const isWholesaleSection = sectionMode === "wholesale";
+	const isRetailSection = sectionMode === "retail";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-6 pb-12",
 		children: [
@@ -61558,21 +66507,36 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 				className: "flex flex-col sm:flex-row sm:items-center justify-between gap-4",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
 					className: "text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ग्राहक खाता प्रबंधन (Customer Management)" })]
+					children: [isWholesaleSection ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Store, { className: "w-6 h-6 text-blue-700" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isWholesaleSection ? "होलसेल डीलर्स प्रबंधन (Wholesale Dealers)" : isRetailSection ? "रिटेल कस्टमर प्रबंधन (Retail Customers)" : "ग्राहक खाता प्रबंधन (Customers)" })]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-xs text-slate-500 mt-0.5",
-					children: "किराना दुकानदार, होलसेल मंडी आढ़तिया, कैटरर्स खाता, ग्राहक एडिट, डिलीट एवं बकाया उधारी नियंत्रण"
+					children: isWholesaleSection ? "होलसेल मंडी आढ़तिया खाते, दुकान फोटो, Google Maps GPS लोकेशन, Entry By व सेल्समैन लिंक" : isRetailSection ? "किराना दुकानदार, कैटरर्स व सीधे ग्राहक — पता, Google Maps लोकेशन, Entry By व बकाया नियंत्रण" : "किराना दुकानदार, होलसेल मंडी आढ़तिया, कैटरर्स खाता एवं बकाया नियंत्रण"
 				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-2",
-					children: [canReceivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: () => onOpenReceivePayment(),
-						className: "flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "भुगतान प्राप्त करें" })]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: onOpenNewCustomer,
-						className: "flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-xs",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ नया ग्राहक जोड़ें" })]
-					})]
+					className: "flex flex-wrap items-center gap-2",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setShowMapOverview(true),
+							className: "flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Map$2, { className: "w-4 h-4 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+								"मैप पर देखें (",
+								locatedCount,
+								")"
+							] })]
+						}),
+						canReceivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onOpenReceivePayment(),
+							className: "flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "भुगतान प्राप्त करें" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onOpenNewCustomer(defaultModalType),
+							className: `flex items-center gap-1.5 px-3.5 py-2 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${isWholesaleSection ? "bg-blue-700 hover:bg-blue-800" : "bg-amber-600 hover:bg-amber-700"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isWholesaleSection ? "+ नया होलसेल डीलर जोड़ें" : isRetailSection ? "+ नया रिटेल कस्टमर जोड़ें" : "+ नया ग्राहक जोड़ें" })]
+						})
+					]
 				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -61583,7 +66547,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-xs font-bold text-slate-500 uppercase",
-								children: "मार्केट में कुल बकाया (Total Dues)"
+								children: isWholesaleSection ? "डीलर्स पर कुल बकाया" : "कस्टमर्स पर कुल बकाया"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "font-mono font-black text-2xl text-rose-600 block mt-1",
@@ -61591,7 +66555,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "text-[11px] text-slate-500",
-								children: [customers.filter((c) => c.currentDue > 0).length, " ग्राहकों से वसूली बाकी है"]
+								children: [scopedCustomers.filter((c) => c.currentDue > 0).length, " खातों से वसूली बाकी है"]
 							})
 						]
 					}),
@@ -61600,15 +66564,19 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-xs font-bold text-slate-500 uppercase",
-								children: "कुल पंजीकृत ग्राहक"
+								children: isWholesaleSection ? "कुल होलसेल डीलर खाते" : isRetailSection ? "कुल रिटेल कस्टमर खाते" : "कुल पंजीकृत खाते"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "font-mono font-black text-2xl text-slate-900 block mt-1",
-								children: customers.length
+								children: scopedCustomers.length
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "text-[11px] text-slate-500",
-								children: "दुकानदार, आढ़तिया व कैटरर्स"
+								children: [
+									"📍 ",
+									locatedCount,
+									" खातों की Google Map लोकेशन सेव है"
+								]
 							})
 						]
 					}),
@@ -61625,7 +66593,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-[11px] text-slate-500",
-								children: "सभी ग्राहकों की कुल खरीदारी"
+								children: "इस श्रेणी की कुल खरीदारी"
 							})
 						]
 					})
@@ -61639,39 +66607,78 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 						type: "text",
 						value: searchQuery,
 						onChange: (e) => setSearchQuery(e.target.value),
-						placeholder: "नाम, दुकान, शहर या मोबाइल नंबर खोजें...",
+						placeholder: "नाम, दुकान, शहर, Entry By या मोबाइल खोजें...",
 						className: "w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
 							onClick: () => setFilterType("all"),
-							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filterType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
 							children: [
 								"सभी (",
-								customers.length,
+								scopedCustomers.length,
 								")"
 							]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
 							onClick: () => setFilterType("dues"),
-							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filterType === "dues" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100"}`,
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "dues" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100"}`,
 							children: [
-								"केवल बकायादार (",
-								customers.filter((c) => c.currentDue > 0).length,
+								"बकायादार (",
+								scopedCustomers.filter((c) => c.currentDue > 0).length,
 								")"
 							]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							onClick: () => setFilterType("retailer"),
-							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filterType === "retailer" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
-							children: "किराना"
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setFilterType("located"),
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "located" ? "bg-blue-700 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`,
+							children: [
+								"📍 मैप पिन (",
+								locatedCount,
+								")"
+							]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						sectionMode !== "wholesale" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setFilterType("retailer"),
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "retailer" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+							children: "किराना"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setFilterType("caterer"),
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "caterer" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+							children: "कैटरर्स"
+						})] }),
+						sectionMode === "all" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							onClick: () => setFilterType("wholesaler"),
-							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filterType === "wholesaler" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+							className: `px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${filterType === "wholesaler" ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
 							children: "होलसेलर"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+							value: filterSalesmanId,
+							onChange: (e) => setFilterSalesmanId(e.target.value),
+							className: "px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 border border-amber-300 text-amber-950",
+							title: "सेल्समैन के अनुसार फ़िल्टर करें",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: "all",
+									children: "सभी सेल्समैन / डायरेक्ट"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: "direct",
+									children: "डायरेक्ट (बिना सेल्समैन)"
+								}),
+								salesmen.map((sm) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+									value: sm.id,
+									children: ["सेल्समैन: ", sm.name]
+								}, sm.id))
+							]
 						})
 					]
 				})]
@@ -61687,11 +66694,11 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-3 px-4",
-									children: "फर्म व व्यापारी"
+									children: "फर्म व व्यापारी / Entry By"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-3 px-3",
-									children: "संपर्क व पता"
+									children: "संपर्क, पता व Google Map"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-3 px-3 text-center",
@@ -61716,30 +66723,62 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 							] })
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", {
 							className: "divide-y divide-slate-100",
-							children: filteredCustomers.map((cust) => {
+							children: filteredCustomers.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+								colSpan: 7,
+								className: "py-10 text-center text-slate-500",
+								children: "इस श्रेणी में कोई खाता नहीं मिला। ऊपर बटन से नया खाता जोड़ें।"
+							}) }) : filteredCustomers.map((cust) => {
 								const isOverLimit = cust.currentDue > cust.creditLimit;
+								const hasCoords = typeof cust.latitude === "number" && typeof cust.longitude === "number";
+								const mapsLink = cust.googleMapsUrl || (hasCoords ? buildGoogleMapsPlaceUrl(cust.latitude, cust.longitude, cust.placeId) : void 0);
 								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
 									className: "hover:bg-slate-50/80 transition",
 									children: [
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 											className: "py-3 px-4",
 											children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex items-center gap-2.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-													className: "w-8 h-8 rounded-xl bg-amber-100 text-amber-900 font-bold flex items-center justify-center shrink-0 text-sm",
+												className: "flex items-start gap-2.5",
+												children: [cust.type === "wholesaler" && cust.shopPhotoUrl ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+													type: "button",
+													onClick: () => setLightboxPhoto({
+														firmName: cust.firmName,
+														url: cust.shopPhotoUrl
+													}),
+													title: "दुकान की फोटो बड़ा करके देखें",
+													className: "w-11 h-11 rounded-xl overflow-hidden border-2 border-blue-300 shrink-0 hover:scale-105 transition cursor-pointer",
+													children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+														src: cust.shopPhotoUrl,
+														alt: cust.firmName,
+														className: "w-full h-full object-cover"
+													})
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: `w-9 h-9 rounded-xl font-bold flex items-center justify-center shrink-0 text-sm ${cust.type === "wholesaler" ? "bg-blue-100 text-blue-900" : "bg-amber-100 text-amber-900"}`,
 													children: cust.firmName.charAt(0)
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-													className: "font-bold text-slate-900 block text-sm",
-													children: cust.firmName
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-													className: "text-[11px] text-slate-600 font-medium",
-													children: [
-														"श्री ",
-														cust.name,
-														" ",
-														cust.gstin ? `• GST: ${cust.gstin}` : ""
-													]
-												})] })]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "font-bold text-slate-900 block text-sm",
+														children: cust.firmName
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+														className: "text-[11px] text-slate-600 font-medium block",
+														children: [
+															"श्री ",
+															cust.name,
+															" ",
+															cust.gstin ? `• GST: ${cust.gstin}` : ""
+														]
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+														className: "flex flex-wrap items-center gap-1 mt-1",
+														children: [cust.entryByName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+															className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold",
+															children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-2.5 h-2.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["Entry By: ", cust.entryByName] })]
+														}), cust.salesmanName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+															className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold",
+															children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-2.5 h-2.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["सेल्समैन: ", cust.salesmanName] })]
+														})]
+													})
+												] })]
 											})
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
@@ -61756,12 +66795,23 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: cust.email })]
 													}),
 													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-														className: "flex items-center gap-1 text-[11px] text-slate-500",
-														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+														className: "flex items-start gap-1 text-[11px] text-slate-600",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-slate-400 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
 															cust.address,
 															", ",
 															cust.city
 														] })]
+													}),
+													mapsLink && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+														href: mapsLink,
+														target: "_blank",
+														rel: "noopener noreferrer",
+														className: "inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold",
+														children: [
+															/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-2.5 h-2.5 text-rose-600" }),
+															/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Maps लोकेशन" }),
+															/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
+														]
 													})
 												]
 											})
@@ -61770,7 +66820,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 											className: "py-3 px-3 text-center",
 											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 												className: `px-2 py-0.5 rounded-full text-[10px] font-bold ${cust.type === "wholesaler" ? "bg-blue-100 text-blue-800" : cust.type === "retailer" ? "bg-amber-100 text-amber-800" : "bg-purple-100 text-purple-800"}`,
-												children: cust.type.toUpperCase()
+												children: cust.type === "wholesaler" ? "होलसेल डीलर" : cust.type === "retailer" ? "रिटेल किराना" : cust.type.toUpperCase()
 											})
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
@@ -61797,35 +66847,38 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 												className: "flex items-center justify-center gap-1.5",
 												children: [
 													cust.currentDue > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
 														onClick: () => handleSendReminder(cust),
 														title: "WhatsApp पर बकाया तगादा भेजें",
-														className: "p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg transition",
+														className: "p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg transition cursor-pointer",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-3.5 h-3.5" })
 													}),
 													canReceivePayment && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
 														onClick: () => onOpenReceivePayment(cust.id),
 														title: "भुगतान दर्ज करें",
-														className: "px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-[11px] font-bold transition",
+														className: "px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-[11px] font-bold transition cursor-pointer",
 														children: "वसूलें"
 													}),
 													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
 														onClick: () => setSelectedCustomerId(cust.id),
 														title: "बिलिंग इतिहास देखें",
-														className: "px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition",
+														className: "px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition cursor-pointer",
 														children: "लेजर"
 													}),
 													onUpdateCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														type: "button",
 														onClick: () => startEditCustomer(cust),
 														title: "ग्राहक विवरण एडिट करें",
-														className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-900 rounded-lg transition",
+														className: "p-1.5 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-900 rounded-lg transition cursor-pointer",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" })
 													}),
 													onDeleteCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 														type: "button",
 														onClick: () => setDeleteConfirmCustomer(cust),
-														title: "ग्राहक को खाता सूची से हटाएं",
-														className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg transition",
+														title: "खाता सूची से हटाएं",
+														className: "p-1.5 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 rounded-lg transition cursor-pointer",
 														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5 text-rose-600" })
 													})
 												]
@@ -61838,16 +66891,46 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 					})
 				})
 			}),
+			lightboxPhoto && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-4",
+				onClick: () => setLightboxPhoto(null),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-white rounded-2xl overflow-hidden max-w-lg w-full shadow-2xl border border-slate-200",
+					onClick: (e) => e.stopPropagation(),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "px-4 py-3 bg-slate-900 text-white flex items-center justify-between text-xs font-bold",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["होलसेल दुकान फोटो: ", lightboxPhoto.firmName] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setLightboxPhoto(null),
+							className: "p-1 hover:bg-white/10 rounded",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-4 h-4" })
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+						src: lightboxPhoto.url,
+						alt: lightboxPhoto.firmName,
+						className: "w-full max-h-[70vh] object-contain bg-slate-100"
+					})]
+				})
+			}),
+			showMapOverview && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomersMapOverview, {
+				customers: filteredCustomers,
+				title: isWholesaleSection ? "होलसेल डीलर्स लोकेशन मैप (Wholesale Dealers Map)" : isRetailSection ? "रिटेल कस्टमर्स लोकेशन मैप (Retail Customers Map)" : "सभी ग्राहक व डीलर्स लोकेशन मैप",
+				onClose: () => setShowMapOverview(false)
+			}),
 			editingCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 text-xs text-slate-800",
+					className: "bg-white rounded-2xl p-5 sm:p-6 max-w-2xl w-full shadow-2xl border border-slate-200 text-xs text-slate-800 max-h-[94vh] overflow-y-auto",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex justify-between items-center mb-4 pb-2 border-b border-slate-200",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
 							className: "text-base font-bold text-slate-900 flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ग्राहक विवरण व खाता एडिट करें (Edit Customer)" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-5 h-5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ग्राहक / डीलर विवरण एडिट करें" })]
+						}), editingCustomer.entryByName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-[11px] text-emerald-700 font-semibold mt-0.5",
+							children: ["Entry By: ", editingCustomer.entryByName]
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							onClick: () => setEditingCustomer(null),
 							className: "p-1 text-slate-400 hover:text-slate-800",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
@@ -61892,19 +66975,19 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold"
 								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 									className: "block font-bold text-slate-700 mb-1",
-									children: "ग्राहक श्रेणी (Customer Type) *"
+									children: "ग्राहक श्रेणी (Account Type) *"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
 									value: editType,
 									onChange: (e) => setEditType(e.target.value),
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium",
 									children: [
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-											value: "retailer",
-											children: "किराना स्टोर (Retailer)"
+											value: "wholesaler",
+											children: "होलसेल डीलर / आढ़तिया (Wholesaler)"
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-											value: "wholesaler",
-											children: "होलसेल मंडी आढ़तिया (Wholesaler)"
+											value: "retailer",
+											children: "रिटेल किराना स्टोर (Retailer)"
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
 											value: "caterer",
@@ -61916,6 +66999,63 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 										})
 									]
 								})] })]
+							}),
+							editType === "wholesaler" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-blue-50/70 border border-blue-200 rounded-xl p-3 space-y-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-wrap items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "font-bold text-blue-950 flex items-center gap-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "w-4 h-4 text-blue-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "होलसेल दुकान फोटो (Shop Photo)" })]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+												className: "px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "w-3 h-3" }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कैमरा" }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+														type: "file",
+														accept: "image/*",
+														capture: "environment",
+														onChange: handleEditPhotoUpload,
+														className: "hidden"
+													})
+												]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+												className: "px-2.5 py-1 bg-white hover:bg-blue-50 border border-blue-300 text-blue-900 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ImagePlus, { className: "w-3 h-3" }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "गैलरी" }),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+														type: "file",
+														accept: "image/*",
+														onChange: handleEditPhotoUpload,
+														className: "hidden"
+													})
+												]
+											})]
+										})]
+									}),
+									editPhotoLoading && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-1.5 text-blue-800 text-[11px]",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फोटो प्रोसेस हो रही है..." })]
+									}),
+									editShopPhotoUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative inline-block",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+											src: editShopPhotoUrl,
+											alt: "Shop preview",
+											className: "h-28 w-44 object-cover rounded-xl border border-blue-300"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setEditShopPhotoUrl(""),
+											className: "absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-lg",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3 h-3" })
+										})]
+									})
+								]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 								className: "block font-bold text-slate-700 mb-1",
@@ -61951,6 +67091,14 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 									onChange: (e) => setEditCity(e.target.value),
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
 								})] })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocationPickerMap, {
+								latitude: editLatitude,
+								longitude: editLongitude,
+								address: editAddress,
+								city: editCity,
+								firmName: editFirmName,
+								onLocationChange: handleEditMapCapture
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
@@ -61988,16 +67136,39 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 								]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50/70 border border-amber-200 rounded-xl p-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									className: "flex items-center gap-1.5 font-bold text-amber-950 mb-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "नियुक्त सेल्समैन (Assigned Salesman)" })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+									value: editSalesmanId,
+									onChange: (e) => setEditSalesmanId(e.target.value),
+									className: "w-full px-3 py-2 bg-white border border-amber-300 rounded-xl font-semibold text-slate-800",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "",
+										children: "डायरेक्ट ग्राहक (कोई सेल्समैन नहीं)"
+									}), salesmen.map((sm) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+										value: sm.id,
+										children: [
+											sm.name,
+											" (",
+											sm.phone,
+											")"
+										]
+									}, sm.id))]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-3 flex justify-end gap-2 border-t border-slate-200",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									type: "button",
 									onClick: () => setEditingCustomer(null),
-									className: "px-4 py-2 border rounded-xl font-semibold hover:bg-slate-100",
+									className: "px-4 py-2 border rounded-xl font-semibold hover:bg-slate-100 cursor-pointer",
 									children: "रद्द करें"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 									type: "submit",
-									className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs flex items-center gap-1.5",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ग्राहक जानकारी सुरक्षित करें" })]
+									className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "जानकारी सुरक्षित करें" })]
 								})]
 							})
 						]
@@ -62015,7 +67186,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 							className: "text-base font-bold text-center text-slate-900",
-							children: "ग्राहक खाता डिलीट करें?"
+							children: "खाता डिलीट करें?"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 							className: "text-xs text-slate-600 text-center mt-2 leading-relaxed",
@@ -62034,7 +67205,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 									className: "font-bold block",
 									children: [
-										"चेतावनी: इस ग्राहक पर ₹",
+										"चेतावनी: इस खाते पर ₹",
 										deleteConfirmCustomer.currentDue.toLocaleString("en-IN"),
 										" की बकाया उधारी है!"
 									]
@@ -62065,49 +67236,85 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 			selectedCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "bg-white p-5 rounded-2xl border-2 border-amber-400 shadow-md space-y-4",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex justify-between items-start border-b border-slate-200 pb-3",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "text-[10px] uppercase font-bold text-amber-700",
-							children: "ग्राहक खाता लेजर"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-							className: "text-lg font-black text-slate-900",
-							children: selectedCustomer.firmName
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "text-xs text-slate-600",
-							children: [
-								"श्री ",
-								selectedCustomer.name,
-								" | फोन: +91 ",
-								selectedCustomer.phone,
-								selectedCustomer.email ? ` | ईमेल: ${selectedCustomer.email}` : "",
-								" | पता: ",
-								selectedCustomer.address,
-								", ",
-								selectedCustomer.city
-							]
-						})
-					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex items-center gap-2",
+					className: "flex flex-wrap justify-between items-start gap-3 border-b border-slate-200 pb-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3",
+						children: [selectedCustomer.type === "wholesaler" && selectedCustomer.shopPhotoUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: selectedCustomer.shopPhotoUrl,
+							alt: selectedCustomer.firmName,
+							className: "w-16 h-16 rounded-xl object-cover border-2 border-blue-300 shrink-0"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] uppercase font-bold text-amber-700",
+								children: "खाता लेजर विवरण"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+								className: "text-lg font-black text-slate-900",
+								children: selectedCustomer.firmName
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xs text-slate-600",
+								children: [
+									"श्री ",
+									selectedCustomer.name,
+									" | फोन: +91 ",
+									selectedCustomer.phone,
+									selectedCustomer.email ? ` | ईमेल: ${selectedCustomer.email}` : "",
+									" | पता:",
+									" ",
+									selectedCustomer.address,
+									", ",
+									selectedCustomer.city
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-wrap items-center gap-2 mt-1",
+								children: [
+									selectedCustomer.entryByName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold",
+										children: ["Entry By: ", selectedCustomer.entryByName]
+									}),
+									selectedCustomer.salesmanName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 font-bold",
+										children: ["सेल्समैन: ", selectedCustomer.salesmanName]
+									}),
+									typeof selectedCustomer.latitude === "number" && typeof selectedCustomer.longitude === "number" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+										href: selectedCustomer.googleMapsUrl || buildGoogleMapsPlaceUrl(selectedCustomer.latitude, selectedCustomer.longitude, selectedCustomer.placeId),
+										target: "_blank",
+										rel: "noopener noreferrer",
+										className: "text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-bold inline-flex items-center gap-1",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-rose-600" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Google Maps लोकेशन खोलें" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-2.5 h-2.5" })
+										]
+									})
+								]
+							})
+						] })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-wrap items-center gap-2",
 						children: [
 							onUpdateCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
 								onClick: () => startEditCustomer(selectedCustomer),
 								className: "px-3 py-1.5 bg-slate-100 hover:bg-amber-100 text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1 border border-slate-300",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "एडिट करें" })]
 							}),
 							onDeleteCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
 								onClick: () => setDeleteConfirmCustomer(selectedCustomer),
 								className: "px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-1 border border-rose-200",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5 text-rose-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "डिलीट" })]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
 								onClick: () => handleSendReminder(selectedCustomer),
 								className: "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "WhatsApp तगादा" })]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								onClick: () => setSelectedCustomerId(null),
 								className: "px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold",
 								children: "बंद करें"
@@ -62116,7 +67323,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
 					className: "text-xs font-bold text-slate-700 uppercase mb-2",
-					children: "इस ग्राहक के सभी बिल एवं ऑर्डर्स:"
+					children: "इस खाते के सभी बिल एवं ऑर्डर्स:"
 				}), customerOrders.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-xs text-slate-500 py-3 text-center",
 					children: "कोई पूर्व बिल रिकॉर्ड नहीं मिला।"
@@ -62196,6 +67403,7 @@ var CustomerView = ({ customers, orders, settings, canReceivePayment = true, onO
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 										className: "py-2 px-3 text-center",
 										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
 											onClick: () => onSelectOrder(order),
 											className: "px-2 py-0.5 bg-slate-900 text-white rounded text-[10px] font-bold",
 											children: "देखें"
@@ -64066,7 +69274,8 @@ var ProductionView = ({ production, products, orders, bagStock, onOpenNewProduct
 	});
 };
 // src/views/OrderView.tsx
-var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, onUpdateOrder, onDeleteOrder }) => {
+var OrderView = ({ orders, staff = [], onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, onUpdateOrder, onDeleteOrder }) => {
+	const salesmen = staff.filter((s) => s.role === "salesman");
 	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 	const [statusFilter, setStatusFilter] = (0, import_react.useState)("all");
 	const [billTypeFilter, setBillTypeFilter] = (0, import_react.useState)("all");
@@ -64080,6 +69289,7 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 	const [editStatus, setEditStatus] = (0, import_react.useState)("pending");
 	const [editNotes, setEditNotes] = (0, import_react.useState)("");
 	const [editVehicleNumber, setEditVehicleNumber] = (0, import_react.useState)("");
+	const [editSalesmanId, setEditSalesmanId] = (0, import_react.useState)("");
 	const [deleteConfirmOrder, setDeleteConfirmOrder] = (0, import_react.useState)(null);
 	const filteredOrders = orders.filter((o) => {
 		if (!(o.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) || o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) || o.customerFirm.toLowerCase().includes(searchQuery.toLowerCase()) || o.customerPhone.includes(searchQuery))) return false;
@@ -64152,6 +69362,7 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 		setEditStatus(order.status);
 		setEditNotes(order.notes || "");
 		setEditVehicleNumber(order.vehicleNumber || "");
+		setEditSalesmanId(order.salesmanId || "");
 	};
 	const handleItemChange = (index, field, val) => {
 		const updated = [...editItems];
@@ -64171,6 +69382,7 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 	const handleSaveEditOrder = (e) => {
 		e.preventDefault();
 		if (!editingOrder || !onUpdateOrder) return;
+		const matchedSalesman = salesmen.find((s) => s.id === editSalesmanId);
 		onUpdateOrder({
 			...editingOrder,
 			billType: editBillType,
@@ -64185,7 +69397,9 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 			paymentMode: editPaymentMode,
 			status: editStatus,
 			notes: editNotes.trim(),
-			vehicleNumber: editVehicleNumber.trim() || editingOrder.vehicleNumber
+			vehicleNumber: editVehicleNumber.trim() || editingOrder.vehicleNumber,
+			salesmanId: editSalesmanId || void 0,
+			salesmanName: matchedSalesman?.name || (editSalesmanId ? editingOrder.salesmanName : void 0)
 		}, editingOrder);
 		setEditingOrder(null);
 	};
@@ -64341,7 +69555,31 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 													className: "text-[10px] text-slate-500 truncate max-w-xs block",
 													children: order.customerAddress
-												})
+												}),
+												order.salesmanName && (() => {
+													const comm = resolveOrderCommission(order, salesmen.find((s) => s.id === order.salesmanId));
+													return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+														className: "flex flex-wrap items-center gap-1 mt-0.5",
+														children: [
+															/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold",
+																children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-2.5 h-2.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["सेल्समैन: ", order.salesmanName] })]
+															}),
+															comm.isDelivered && comm.creditedAmount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold font-mono",
+																children: [
+																	"+₹",
+																	comm.creditedAmount.toLocaleString("en-IN"),
+																	" सैलरी में जुड़ा ✓"
+																]
+															}),
+															!comm.isDelivered && order.status !== "cancelled" && comm.projectedAmount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold font-mono",
+																children: ["डिलीवरी कमीशन: ₹", comm.projectedAmount.toLocaleString("en-IN")]
+															})
+														]
+													});
+												})()
 											]
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
@@ -64693,16 +69931,33 @@ var OrderView = ({ orders, onOpenNewOrder, onSelectOrder, onUpdateOrderStatus, o
 									})]
 								})]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-								className: "block font-bold text-slate-700 mb-1",
-								children: "रिमार्क / डिलीवरी निर्देश"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-								type: "text",
-								value: editNotes,
-								onChange: (e) => setEditNotes(e.target.value),
-								placeholder: "उदा. शाम 5 बजे तक दुकान पर अनलोड करवाएं",
-								className: "w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl"
-							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "सेल्समैन क्रेडिट (Salesman)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+									value: editSalesmanId,
+									onChange: (e) => setEditSalesmanId(e.target.value),
+									className: "w-full px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl font-semibold",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "",
+										children: "डायरेक्ट ऑर्डर (कोई सेल्समैन नहीं)"
+									}), salesmen.map((sm) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: sm.id,
+										children: sm.name
+									}, sm.id))]
+								})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "रिमार्क / डिलीवरी निर्देश"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									value: editNotes,
+									onChange: (e) => setEditNotes(e.target.value),
+									placeholder: "उदा. शाम 5 बजे तक दुकान पर अनलोड करवाएं",
+									className: "w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl"
+								})] })]
+							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "flex justify-end gap-2 pt-3 border-t border-slate-200 shrink-0",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
@@ -65005,7 +70260,7 @@ var DeliveryView = ({ orders, onUpdateOrderStatus, onSelectOrder }) => {
 	});
 };
 // src/views/StaffView.tsx
-var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAddStaff, onUpdateStaff, onDeleteStaff, onSwitchRole, onSelectStaffMember }) => {
+var StaffView = ({ staffList, customers = [], orders = [], currentRole, currentStaffId, canManageStaff, onAddStaff, onUpdateStaff, onDeleteStaff, onSwitchRole, onSelectStaffMember, onOpenSalesmanLedger }) => {
 	const [showAddModal, setShowAddModal] = (0, import_react.useState)(false);
 	const [editingStaff, setEditingStaff] = (0, import_react.useState)(null);
 	const [permissionsModalStaff, setPermissionsModalStaff] = (0, import_react.useState)(null);
@@ -65018,6 +70273,9 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 	const [password, setPassword] = (0, import_react.useState)("");
 	const [shift, setShift] = (0, import_react.useState)("सुबह शिफ्ट (8 AM - 5 PM)");
 	const [assignedVehicle, setAssignedVehicle] = (0, import_react.useState)("");
+	const [baseSalary, setBaseSalary] = (0, import_react.useState)(15e3);
+	const [commissionType, setCommissionType] = (0, import_react.useState)("percent");
+	const [commissionRate, setCommissionRate] = (0, import_react.useState)(2);
 	const [newPermissions, setNewPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
 	const [editName, setEditName] = (0, import_react.useState)("");
 	const [editPhone, setEditPhone] = (0, import_react.useState)("");
@@ -65027,6 +70285,9 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 	const [editShift, setEditShift] = (0, import_react.useState)("");
 	const [editVehicle, setEditVehicle] = (0, import_react.useState)("");
 	const [editActive, setEditActive] = (0, import_react.useState)(true);
+	const [editBaseSalary, setEditBaseSalary] = (0, import_react.useState)(15e3);
+	const [editCommissionType, setEditCommissionType] = (0, import_react.useState)("percent");
+	const [editCommissionRate, setEditCommissionRate] = (0, import_react.useState)(2);
 	const [showEditPass, setShowEditPass] = (0, import_react.useState)(false);
 	const [editPermissions, setEditPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
 	const [quickPermissions, setQuickPermissions] = (0, import_react.useState)(getDefaultPermissionsForRole("packing_staff"));
@@ -65052,6 +70313,9 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 		setPassword("");
 		setShift("सुबह शिफ्ट (8 AM - 5 PM)");
 		setAssignedVehicle("");
+		setBaseSalary(15e3);
+		setCommissionType("percent");
+		setCommissionRate(2);
 		setNewPermissions(getDefaultPermissionsForRole("packing_staff"));
 		setShowAddModal(true);
 	};
@@ -65072,7 +70336,12 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 			shift: shift.trim(),
 			assignedVehicle: role === "delivery_staff" ? assignedVehicle.trim() || "महिंद्रा बोलेरो पिकअप RJ-14-GA-4521" : void 0,
 			joinedDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
-			permissions: role === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...newPermissions }
+			permissions: role === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...newPermissions },
+			...role === "salesman" ? {
+				baseSalary: Math.max(0, Number(baseSalary) || 0),
+				commissionType,
+				commissionRate: Math.max(0, Number(commissionRate) || 0)
+			} : {}
 		});
 		setShowAddModal(false);
 	};
@@ -65087,6 +70356,9 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 		setEditShift(staff.shift || "सुबह शिफ्ट (8 AM - 5 PM)");
 		setEditVehicle(staff.assignedVehicle || "");
 		setEditActive(staff.active);
+		setEditBaseSalary(staff.baseSalary ?? 15e3);
+		setEditCommissionType(staff.commissionType || "percent");
+		setEditCommissionRate(staff.commissionRate ?? 2);
 		setShowEditPass(false);
 		setEditPermissions(getEffectivePermissions(staff, staff.role));
 	};
@@ -65105,7 +70377,12 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 			shift: editShift.trim(),
 			assignedVehicle: editRole === "delivery_staff" ? editVehicle.trim() || "महिंद्रा बोलेरो पिकअप RJ-14-GA-4521" : void 0,
 			active: editActive,
-			permissions: editRole === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...editPermissions }
+			permissions: editRole === "admin" ? { ...ALL_TRUE_PERMISSIONS } : { ...editPermissions },
+			...editRole === "salesman" ? {
+				baseSalary: Math.max(0, Number(editBaseSalary) || 0),
+				commissionType: editCommissionType,
+				commissionRate: Math.max(0, Number(editCommissionRate) || 0)
+			} : {}
 		});
 		setEditingStaff(null);
 	};
@@ -65346,6 +70623,59 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 									})
 								]
 							}),
+							member.role === "salesman" && (() => {
+								const curMonth = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+								const linkedCusts = customers.filter((c) => c.salesmanId === member.id);
+								const linkedCustIds = new Set(linkedCusts.map((c) => c.id));
+								const monthOrders = orders.filter((o) => o.status !== "cancelled" && o.date.startsWith(curMonth) && (o.salesmanId === member.id || !o.salesmanId && linkedCustIds.has(o.customerId)));
+								const monthAmount = monthOrders.reduce((s, o) => s + o.totalAmount, 0);
+								const deliveredComm = monthOrders.reduce((s, o) => s + resolveOrderCommission(o, member).creditedAmount, 0);
+								const baseSal = member.baseSalary || 0;
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-amber-50/90 border border-amber-300 rounded-xl p-2.5 text-[11px] space-y-1.5",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "font-bold text-amber-950 flex items-center gap-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन फील्ड (इस माह)" })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "font-mono font-bold text-emerald-700",
+												children: ["₹", monthAmount.toLocaleString("en-IN")]
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between text-[10px] text-amber-900",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["जोड़े ग्राहक: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: linkedCusts.length })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["इस माह ऑर्डर: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: monthOrders.length })] })]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "pt-1 border-t border-amber-200/80 space-y-0.5 text-[10px]",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex justify-between",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "text-slate-600",
+													children: "मूल वेतन + डिलीवर कमीशन:"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "font-mono font-black text-emerald-800",
+													children: ["₹", (baseSal + deliveredComm).toLocaleString("en-IN")]
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex justify-between text-amber-800",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["नियम: ", formatCommissionRuleHindi(member)] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "font-mono font-bold",
+													children: ["+₹", deliveredComm.toLocaleString("en-IN")]
+												})]
+											})]
+										}),
+										onOpenSalesmanLedger && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => onOpenSalesmanLedger(member.id),
+											className: "w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] transition",
+											children: "फील्ड लेखा व सैलरी/कमीशन खोलें"
+										})
+									]
+								});
+							})(),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-[11px]",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -65572,6 +70902,71 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 									children: "कर्मचारी खाता सक्रिय (Active) रखें"
 								})]
 							}),
+							editRole === "salesman" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2.5",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", {
+										className: "font-bold text-amber-950 text-xs flex items-center gap-1.5",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-4 h-4 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन सैलरी व डिलीवरी कमीशन सेटिंग (Salary & Commission)" })]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "grid grid-cols-1 sm:grid-cols-3 gap-2.5",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: "मूल मासिक सैलरी (₹)"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "number",
+												min: "0",
+												value: editBaseSalary,
+												onChange: (e) => setEditBaseSalary(Number(e.target.value) || 0),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold"
+											})] }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: "कमीशन प्रकार"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+												value: editCommissionType,
+												onChange: (e) => setEditCommissionType(e.target.value),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-semibold",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "percent",
+														children: "बिल राशि का प्रतिशत (%)"
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "per_bag",
+														children: "प्रति बैग कमीशन (₹/बैग)"
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "fixed_per_order",
+														children: "प्रति डिलीवर्ड ऑर्डर (₹)"
+													})
+												]
+											})] }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: editCommissionType === "percent" ? "कमीशन दर (%)" : editCommissionType === "per_bag" ? "प्रति बैग राशि (₹)" : "प्रति ऑर्डर राशि (₹)"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "number",
+												min: "0",
+												step: "0.5",
+												value: editCommissionRate,
+												onChange: (e) => setEditCommissionRate(Number(e.target.value) || 0),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-emerald-700"
+											})] })
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: "text-[10px] text-amber-900",
+										children: [
+											"ऑर्डर का स्टेटस ",
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Delivered" }),
+											" होते ही यह कमीशन अपने-आप सेल्समैन की सैलरी में जुड़ जाएगा।"
+										]
+									})
+								]
+							}),
 							renderPermissionMatrix(editPermissions, setEditPermissions, editRole),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "pt-3 flex justify-end gap-2 border-t border-slate-200",
@@ -65797,6 +71192,67 @@ var StaffView = ({ staffList, currentRole, currentStaffId, canManageStaff, onAdd
 									placeholder: "RJ-14-GA-4521",
 									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase"
 								})] })]
+							}),
+							role === "salesman" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2.5",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", {
+										className: "font-bold text-amber-950 text-xs flex items-center gap-1.5",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-4 h-4 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन सैलरी व कमीशन सेटिंग (Salary & Commission)" })]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "grid grid-cols-1 sm:grid-cols-3 gap-2.5",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: "मूल मासिक सैलरी (₹)"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "number",
+												min: "0",
+												value: baseSalary,
+												onChange: (e) => setBaseSalary(Number(e.target.value) || 0),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold"
+											})] }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: "कमीशन प्रकार"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+												value: commissionType,
+												onChange: (e) => setCommissionType(e.target.value),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-semibold",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "percent",
+														children: "बिल राशि का प्रतिशत (%)"
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "per_bag",
+														children: "प्रति बैग कमीशन (₹/बैग)"
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "fixed_per_order",
+														children: "प्रति डिलीवर्ड ऑर्डर (₹)"
+													})
+												]
+											})] }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+												className: "block font-bold text-slate-700 mb-1",
+												children: commissionType === "percent" ? "कमीशन दर (%)" : commissionType === "per_bag" ? "प्रति बैग राशि (₹)" : "प्रति ऑर्डर राशि (₹)"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "number",
+												min: "0",
+												step: "0.5",
+												value: commissionRate,
+												onChange: (e) => setCommissionRate(Number(e.target.value) || 0),
+												className: "w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-mono font-bold text-emerald-700"
+											})] })
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-[10px] text-amber-900",
+										children: "ऑर्डर डिलीवर (Delivered) होने के बाद यह कमीशन अपने-आप सेल्समैन की सैलरी में जुड़ेगा।"
+									})
+								]
 							}),
 							renderPermissionMatrix(newPermissions, setNewPermissions, role),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -84912,6 +90368,1025 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 		]
 	});
 };
+// src/views/SalesmanLedgerView.tsx
+function getPreviousMonth(ym) {
+	const [y, m] = ym.split("-").map(Number);
+	if (!y || !m) return ym;
+	if (m === 1) return `${y - 1}-12`;
+	return `${y}-${String(m - 1).padStart(2, "0")}`;
+}
+function formatMonthLabel(ym) {
+	const [y, m] = ym.split("-").map(Number);
+	if (!y || !m) return ym;
+	return new Date(y, m - 1, 1).toLocaleDateString("hi-IN", {
+		month: "long",
+		year: "numeric"
+	});
+}
+var SalesmanLedgerView = ({ staffList, customers, orders, settings, currentRole, activeStaffMember, canManageStaff = false, initialSelectedSalesmanId, onSelectOrder, onUpdateStaff, onOpenNewOrderForCustomer, onOpenNewCustomer, onOpenReceivePayment }) => {
+	const currentMonth = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
+	const previousMonth = getPreviousMonth(currentMonth);
+	const canViewAllSalesmen = currentRole === "admin" || currentRole === "manager" || currentRole === "accountant";
+	const salesmanProfiles = (0, import_react.useMemo)(() => {
+		const list = staffList.filter((s) => s.role === "salesman");
+		const knownIds = new Set(list.map((s) => s.id));
+		const extraEntries = [];
+		for (const c of customers) if (c.salesmanId && !knownIds.has(c.salesmanId)) {
+			const matchedStaff = staffList.find((s) => s.id === c.salesmanId);
+			knownIds.add(c.salesmanId);
+			extraEntries.push(matchedStaff || {
+				id: c.salesmanId,
+				name: c.salesmanName || c.salesmanId,
+				phone: "",
+				role: "salesman",
+				roleHindi: "सेल्समैन (फील्ड)",
+				active: true,
+				joinedDate: ""
+			});
+		}
+		return [...list, ...extraEntries];
+	}, [staffList, customers]);
+	const visibleSalesmen = (0, import_react.useMemo)(() => {
+		if (!canViewAllSalesmen && activeStaffMember?.role === "salesman") {
+			const own = salesmanProfiles.find((s) => s.id === activeStaffMember.id);
+			return own ? [own] : [activeStaffMember];
+		}
+		return salesmanProfiles;
+	}, [
+		canViewAllSalesmen,
+		activeStaffMember,
+		salesmanProfiles
+	]);
+	const [selectedSalesmanId, setSelectedSalesmanId] = (0, import_react.useState)(() => {
+		if (initialSelectedSalesmanId) return initialSelectedSalesmanId;
+		if (!canViewAllSalesmen && activeStaffMember?.role === "salesman") return activeStaffMember.id;
+		return visibleSalesmen[0]?.id || "";
+	});
+	(0, import_react.useEffect)(() => {
+		if (initialSelectedSalesmanId) setSelectedSalesmanId(initialSelectedSalesmanId);
+	}, [initialSelectedSalesmanId]);
+	(0, import_react.useEffect)(() => {
+		if (!visibleSalesmen.some((s) => s.id === selectedSalesmanId)) setSelectedSalesmanId(visibleSalesmen[0]?.id || "");
+	}, [visibleSalesmen, selectedSalesmanId]);
+	const [monthMode, setMonthMode] = (0, import_react.useState)("single");
+	const [selectedMonth, setSelectedMonth] = (0, import_react.useState)(currentMonth);
+	const [detailTab, setDetailTab] = (0, import_react.useState)("customers");
+	const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
+	const [editingCommissionFor, setEditingCommissionFor] = (0, import_react.useState)(null);
+	const [commSalary, setCommSalary] = (0, import_react.useState)(15e3);
+	const [commType, setCommType] = (0, import_react.useState)("percent");
+	const [commRate, setCommRate] = (0, import_react.useState)(2);
+	const openCommissionModal = (sm) => {
+		setEditingCommissionFor(sm);
+		setCommSalary(sm.baseSalary ?? 15e3);
+		setCommType(sm.commissionType || "percent");
+		setCommRate(sm.commissionRate ?? 2);
+	};
+	const handleSaveCommissionRule = (e) => {
+		e.preventDefault();
+		if (!editingCommissionFor || !onUpdateStaff) return;
+		onUpdateStaff({
+			...editingCommissionFor,
+			baseSalary: Math.max(0, Number(commSalary) || 0),
+			commissionType: commType,
+			commissionRate: Math.max(0, Number(commRate) || 0)
+		});
+		setEditingCommissionFor(null);
+	};
+	const customerById = (0, import_react.useMemo)(() => {
+		const map = /* @__PURE__ */ new Map();
+		customers.forEach((c) => map.set(c.id, c));
+		return map;
+	}, [customers]);
+	const getEffectiveOrderSalesmanId = (order) => {
+		if (order.salesmanId) return order.salesmanId;
+		return customerById.get(order.customerId)?.salesmanId || "";
+	};
+	const salesmanStatsMap = (0, import_react.useMemo)(() => {
+		const stats = /* @__PURE__ */ new Map();
+		for (const sm of visibleSalesmen) {
+			const addedCustomers = customers.filter((c) => c.salesmanId === sm.id);
+			const periodOrders = orders.filter((o) => {
+				if (o.status === "cancelled") return false;
+				if (getEffectiveOrderSalesmanId(o) !== sm.id) return false;
+				if (monthMode === "single" && !o.date.startsWith(selectedMonth)) return false;
+				return true;
+			});
+			const activeSet = /* @__PURE__ */ new Set();
+			let totalBags = 0;
+			let totalKg = 0;
+			let totalAmount = 0;
+			let paidAmount = 0;
+			let dueAmount = 0;
+			let deliveredOrderCount = 0;
+			let deliveredCommissionTotal = 0;
+			let pendingCommissionTotal = 0;
+			for (const ord of periodOrders) {
+				activeSet.add(ord.customerId);
+				totalAmount += ord.totalAmount || 0;
+				paidAmount += ord.paidAmount || 0;
+				dueAmount += ord.dueAmount || 0;
+				for (const item of ord.items) {
+					totalBags += item.quantity || 0;
+					totalKg += (item.quantity || 0) * (item.bagSize || 0);
+				}
+				const commInfo = resolveOrderCommission(ord, sm);
+				if (commInfo.isDelivered) {
+					deliveredOrderCount += 1;
+					deliveredCommissionTotal += commInfo.creditedAmount;
+				} else pendingCommissionTotal += commInfo.projectedAmount;
+			}
+			stats.set(sm.id, {
+				customersAdded: addedCustomers,
+				periodOrders,
+				orderCount: periodOrders.length,
+				deliveredOrderCount,
+				totalBags,
+				totalKg,
+				totalAmount,
+				paidAmount,
+				dueAmount,
+				activeCustomerCount: activeSet.size,
+				deliveredCommissionTotal: Math.round(deliveredCommissionTotal * 100) / 100,
+				pendingCommissionTotal: Math.round(pendingCommissionTotal * 100) / 100
+			});
+		}
+		return stats;
+	}, [
+		visibleSalesmen,
+		customers,
+		orders,
+		monthMode,
+		selectedMonth,
+		customerById
+	]);
+	const overallPeriodTotals = (0, import_react.useMemo)(() => {
+		let totalCustomers = 0;
+		let totalOrders = 0;
+		let totalBags = 0;
+		let totalKg = 0;
+		let totalAmount = 0;
+		let totalPaid = 0;
+		let totalDue = 0;
+		let totalDeliveredCommission = 0;
+		salesmanStatsMap.forEach((st) => {
+			totalCustomers += st.customersAdded.length;
+			totalOrders += st.orderCount;
+			totalBags += st.totalBags;
+			totalKg += st.totalKg;
+			totalAmount += st.totalAmount;
+			totalPaid += st.paidAmount;
+			totalDue += st.dueAmount;
+			totalDeliveredCommission += st.deliveredCommissionTotal;
+		});
+		return {
+			totalCustomers,
+			totalOrders,
+			totalBags,
+			totalKg,
+			totalAmount,
+			totalPaid,
+			totalDue,
+			totalDeliveredCommission: Math.round(totalDeliveredCommission * 100) / 100
+		};
+	}, [salesmanStatsMap]);
+	const selectedSalesman = visibleSalesmen.find((s) => s.id === selectedSalesmanId) || visibleSalesmen[0];
+	const selectedStats = selectedSalesman ? salesmanStatsMap.get(selectedSalesman.id) : void 0;
+	const selectedBaseSalary = selectedSalesman?.baseSalary || 0;
+	const selectedTotalPayableSalary = selectedBaseSalary + (selectedStats?.deliveredCommissionTotal || 0);
+	const customerBreakdownRows = (0, import_react.useMemo)(() => {
+		if (!selectedSalesman || !selectedStats) return [];
+		const customerMapForSm = /* @__PURE__ */ new Map();
+		selectedStats.customersAdded.forEach((c) => customerMapForSm.set(c.id, c));
+		selectedStats.periodOrders.forEach((o) => {
+			const c = customerById.get(o.customerId);
+			if (c && !customerMapForSm.has(c.id)) customerMapForSm.set(c.id, c);
+		});
+		const rows = Array.from(customerMapForSm.values()).map((cust) => {
+			const custOrders = selectedStats.periodOrders.filter((o) => o.customerId === cust.id);
+			const orderCount = custOrders.length;
+			const bagsCount = custOrders.reduce((s, o) => s + o.items.reduce((isum, i) => isum + i.quantity, 0), 0);
+			const weightKg = custOrders.reduce((s, o) => s + o.items.reduce((isum, i) => isum + i.quantity * i.bagSize, 0), 0);
+			const orderAmount = custOrders.reduce((s, o) => s + o.totalAmount, 0);
+			const paidAmount = custOrders.reduce((s, o) => s + o.paidAmount, 0);
+			const dueInPeriod = custOrders.reduce((s, o) => s + o.dueAmount, 0);
+			const deliveredComm = custOrders.reduce((s, o) => s + resolveOrderCommission(o, selectedSalesman).creditedAmount, 0);
+			const latestDate = custOrders.length > 0 ? custOrders.map((o) => o.date).sort().reverse()[0] : cust.lastOrderDate || "";
+			return {
+				customer: cust,
+				isAddedByThisSalesman: cust.salesmanId === selectedSalesman.id,
+				orderCount,
+				bagsCount,
+				weightKg,
+				orderAmount,
+				paidAmount,
+				dueInPeriod,
+				deliveredComm: Math.round(deliveredComm * 100) / 100,
+				latestDate
+			};
+		});
+		const q = searchQuery.trim().toLowerCase();
+		return (q ? rows.filter((r) => r.customer.firmName.toLowerCase().includes(q) || r.customer.name.toLowerCase().includes(q) || r.customer.phone.includes(q) || r.customer.city.toLowerCase().includes(q)) : rows).sort((a, b) => b.orderAmount - a.orderAmount);
+	}, [
+		selectedSalesman,
+		selectedStats,
+		customerById,
+		searchQuery
+	]);
+	const filteredPeriodOrders = (0, import_react.useMemo)(() => {
+		if (!selectedStats) return [];
+		const q = searchQuery.trim().toLowerCase();
+		return [...q ? selectedStats.periodOrders.filter((o) => o.invoiceNumber.toLowerCase().includes(q) || o.customerFirm.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q)) : selectedStats.periodOrders].sort((a, b) => b.date.localeCompare(a.date));
+	}, [selectedStats, searchQuery]);
+	const periodLabel = monthMode === "all" ? "सभी महीने (All Time)" : formatMonthLabel(selectedMonth);
+	const handleShareSalesmanReport = () => {
+		if (!selectedSalesman || !selectedStats) return;
+		const topCustLines = customerBreakdownRows.filter((r) => r.orderCount > 0).slice(0, 8).map((r, i) => `${i + 1}. ${r.customer.firmName}: ${r.orderCount} ऑर्डर (${r.bagsCount} बैग) = ₹${r.orderAmount.toLocaleString("en-IN")}`).join("%0A");
+		const msg = `*${settings.companyName}* - ${settings.brandName} आटा%0A📊 *सेल्समैन फील्ड, सैलरी व कमीशन रिपोर्ट*%0A👤 *सेल्समैन*: ${selectedSalesman.name}%0A📅 *अवधि*: ${periodLabel}%0A--------------------------------%0A🏪 *जोड़े गए कुल ग्राहक/डीलर*: ${selectedStats.customersAdded.length} (${selectedStats.activeCustomerCount} सक्रिय)%0A📦 *कुल ऑर्डर्स*: ${selectedStats.orderCount} ऑर्डर (${selectedStats.totalBags} बैग • डिलीवर्ड: ${selectedStats.deliveredOrderCount})%0A💰 *कुल ऑर्डर राशि*: ₹${selectedStats.totalAmount.toLocaleString("en-IN")}%0A💵 *मूल सैलरी*: ₹${selectedBaseSalary.toLocaleString("en-IN")}%0A🏅 *डिलीवर्ड कमीशन*: +₹${selectedStats.deliveredCommissionTotal.toLocaleString("en-IN")} (${formatCommissionRuleHindi(selectedSalesman)})%0A💳 *कुल देय सैलरी*: ₹${selectedTotalPayableSalary.toLocaleString("en-IN")}%0A` + (topCustLines ? `--------------------------------%0A*ग्राहक-वार ऑर्डर:*%0A${topCustLines}%0A` : "") + `--------------------------------%0ATEJ FOOD PRODUCTS ERP`;
+		window.open(`https://api.whatsapp.com/send?text=${msg}`, "_blank");
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-6 pb-12",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col lg:flex-row lg:items-center justify-between gap-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+					className: "text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन फील्ड, सैलरी व कमीशन लेखा-जोखा (Salesman Ledger)" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs text-slate-500 mt-0.5",
+					children: "सेल्समैन द्वारा जोड़े गए होलसेल डीलर/रिटेल कस्टमर, मासिक ऑर्डर एवं डिलीवरी के बाद जुड़ा कस्टमाइज कमीशन"
+				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs text-xs",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => {
+								setMonthMode("single");
+								setSelectedMonth(currentMonth);
+							},
+							className: `px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${monthMode === "single" && selectedMonth === currentMonth ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`,
+							children: [
+								"इस महीने (",
+								formatMonthLabel(currentMonth),
+								")"
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => {
+								setMonthMode("single");
+								setSelectedMonth(previousMonth);
+							},
+							className: `px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${monthMode === "single" && selectedMonth === previousMonth ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`,
+							children: "पिछला महीना"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setMonthMode("all"),
+							className: `px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${monthMode === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`,
+							children: "सभी महीने"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1.5 pl-1 border-l border-slate-200",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Calendar, { className: "w-3.5 h-3.5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "month",
+								value: selectedMonth,
+								onChange: (e) => {
+									if (e.target.value) {
+										setMonthMode("single");
+										setSelectedMonth(e.target.value);
+									}
+								},
+								className: "px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800"
+							})]
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] font-bold text-slate-500 uppercase",
+								children: monthMode === "single" ? "इस महीने कुल सेल्समैन ऑर्डर" : "कुल सेल्समैन ऑर्डर राशि"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono font-black text-2xl text-slate-950 block mt-1",
+								children: ["₹", overallPeriodTotals.totalAmount.toLocaleString("en-IN")]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[11px] text-amber-700 font-semibold block mt-0.5",
+								children: [
+									overallPeriodTotals.totalOrders,
+									" ऑर्डर • ",
+									overallPeriodTotals.totalBags,
+									" बैग"
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] font-bold text-slate-500 uppercase",
+								children: "डिलीवर्ड ऑर्डर्स पर कुल कमीशन"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono font-black text-2xl text-emerald-700 block mt-1",
+								children: ["₹", overallPeriodTotals.totalDeliveredCommission.toLocaleString("en-IN")]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] text-slate-500 block mt-0.5",
+								children: "केवल डिलीवर हुए ऑर्डर का कमीशन जुड़ा"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] font-bold text-slate-500 uppercase",
+								children: "सेल्समैन द्वारा जोड़े खाते"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono font-black text-2xl text-blue-700 block mt-1",
+								children: [overallPeriodTotals.totalCustomers, " खाते"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[11px] text-slate-500 block mt-0.5",
+								children: [visibleSalesmen.length, " सक्रिय सेल्समैन फील्ड टीम"]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] font-bold text-slate-500 uppercase",
+								children: "ऑर्डर वसूली बनाम बकाया"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono font-black text-xl text-emerald-700 block mt-1",
+								children: ["जमा: ₹", overallPeriodTotals.totalPaid.toLocaleString("en-IN")]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-[11px] font-mono font-bold text-rose-600 block mt-0.5",
+								children: ["बकाया: ₹", overallPeriodTotals.totalDue.toLocaleString("en-IN")]
+							})
+						]
+					})
+				]
+			}),
+			visibleSalesmen.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-10 h-10 text-slate-300 mx-auto" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "text-base font-bold text-slate-900",
+						children: "कोई सेल्समैन खाता नहीं मिला"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "text-xs text-slate-500 max-w-md mx-auto",
+						children: [
+							"पहले \"स्टाफ मैनेजमेंट\" में जाकर किसी कर्मचारी का पद ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "सेल्समैन (Salesman)" }),
+							" चुनें, फिर उसके जोड़े गए ग्राहकों व ऑर्डर का मासिक लेखा-जोखा यहाँ स्वतः दिखेगा।"
+						]
+					})
+				]
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [canViewAllSalesmen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "space-y-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex items-center justify-between",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+						className: "text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Award, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+							"सेल्समैन चुनें (",
+							visibleSalesmen.length,
+							") — ",
+							periodLabel
+						] })]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3",
+					children: visibleSalesmen.map((sm) => {
+						const st = salesmanStatsMap.get(sm.id);
+						const isSelected = selectedSalesman?.id === sm.id;
+						const smPayable = (sm.baseSalary || 0) + (st?.deliveredCommissionTotal || 0);
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setSelectedSalesmanId(sm.id),
+							className: `text-left p-4 rounded-2xl border-2 transition cursor-pointer ${isSelected ? "bg-slate-950 text-white border-amber-500 shadow-lg" : "bg-white text-slate-900 border-slate-200 hover:border-amber-400"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-start justify-between gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: `text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? "bg-amber-500 text-slate-950" : "bg-amber-100 text-amber-900"}`,
+										children: "सेल्समैन फील्ड"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+										className: "font-black text-sm mt-1.5",
+										children: sm.name
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+										className: `text-[10px] mt-0.5 ${isSelected ? "text-amber-300" : "text-amber-800"}`,
+										children: ["कमीशन: ", formatCommissionRuleHindi(sm)]
+									})
+								] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-right",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: `text-[10px] block ${isSelected ? "text-emerald-300" : "text-slate-500"}`,
+										children: "सैलरी + डिलीवर कमीशन"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "font-mono font-black text-lg block",
+										children: ["₹", smPayable.toLocaleString("en-IN")]
+									})]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: `mt-3 pt-2.5 border-t grid grid-cols-3 gap-2 text-[11px] ${isSelected ? "border-slate-800 text-slate-300" : "border-slate-100 text-slate-600"}`,
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "block text-[10px] opacity-75",
+										children: "ग्राहक/डीलर"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", {
+										className: isSelected ? "text-white" : "text-slate-900",
+										children: [st?.customersAdded.length || 0, " खाता"]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "block text-[10px] opacity-75",
+										children: "ऑर्डर्स"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", {
+										className: isSelected ? "text-amber-300" : "text-amber-700",
+										children: [st?.orderCount || 0, " ऑर्डर"]
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "block text-[10px] opacity-75",
+										children: "डिलीवर्ड कमीशन"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", {
+										className: isSelected ? "text-emerald-300" : "text-emerald-700",
+										children: ["+₹", (st?.deliveredCommissionTotal || 0).toLocaleString("en-IN")]
+									})] })
+								]
+							})]
+						}, sm.id);
+					})
+				})]
+			}), selectedSalesman && selectedStats && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white rounded-2xl border-2 border-amber-400/70 shadow-sm overflow-hidden",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950 text-white p-5 flex flex-col md:flex-row md:items-center justify-between gap-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2 flex-wrap",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase",
+										children: "सेल्समैन फील्ड व वेतन खाता"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "px-2.5 py-0.5 rounded-full bg-white/10 text-amber-200 text-[10px] font-bold",
+										children: ["अवधि: ", periodLabel]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-[10px] font-bold",
+										children: formatCommissionRuleHindi(selectedSalesman)
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+								className: "text-lg sm:text-xl font-black mt-1.5",
+								children: [selectedSalesman.name, " — ऑर्डर, सैलरी व डिलीवरी कमीशन लेखा-जोखा"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xs text-slate-300 mt-0.5",
+								children: [
+									"जोड़े गए खाते: ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: selectedStats.customersAdded.length }),
+									" • ",
+									periodLabel,
+									" में",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [selectedStats.orderCount, " ऑर्डर"] }),
+									" (",
+									selectedStats.deliveredOrderCount,
+									" डिलीवर्ड •",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", {
+										className: "text-amber-300",
+										children: ["₹", selectedStats.totalAmount.toLocaleString("en-IN")]
+									}),
+									")"
+								]
+							})
+						] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-wrap items-center gap-2",
+							children: [
+								canManageStaff && onUpdateStaff && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: () => openCommissionModal(selectedSalesman),
+									className: "px-3 py-2 bg-white text-slate-950 hover:bg-amber-100 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlidersVertical, { className: "w-3.5 h-3.5 text-amber-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कमीशन / सैलरी सेट करें" })]
+								}),
+								onOpenNewCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: onOpenNewCustomer,
+									className: "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ नया खाता जोड़ें" })]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									onClick: handleShareSalesmanReport,
+									className: "px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "WhatsApp रिपोर्ट" })]
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "p-4 bg-gradient-to-r from-emerald-50 via-white to-amber-50 border-b border-slate-200 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-white p-3 rounded-xl border border-slate-200",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wallet, { className: "w-3.5 h-3.5 text-slate-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "मूल मासिक सैलरी (Base Salary)" })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-mono font-black text-lg text-slate-900 block mt-1",
+									children: ["₹", selectedBaseSalary.toLocaleString("en-IN")]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-white p-3 rounded-xl border border-emerald-300",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3.5 h-3.5 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+										"डिलीवर्ड कमीशन (",
+										selectedStats.deliveredOrderCount,
+										" ऑर्डर)"
+									] })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-mono font-black text-lg text-emerald-700 block mt-1",
+									children: ["+₹", selectedStats.deliveredCommissionTotal.toLocaleString("en-IN")]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-slate-900 text-white p-3 rounded-xl border border-amber-400",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[10px] font-bold text-amber-300 uppercase block",
+									children: "कुल देय सैलरी (Salary + Commission)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-mono font-black text-xl text-white block mt-1",
+									children: ["₹", selectedTotalPayableSalary.toLocaleString("en-IN")]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-white p-3 rounded-xl border border-amber-200",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[10px] font-bold text-amber-800 uppercase flex items-center gap-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, { className: "w-3.5 h-3.5 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "पेंडिंग डिलीवरी कमीशन" })]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "font-mono font-black text-lg text-amber-700 block mt-1",
+										children: ["₹", selectedStats.pendingCommissionTotal.toLocaleString("en-IN")]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: "ऑर्डर Delivered होने पर सैलरी में जुड़ेगा"
+									})
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setDetailTab("customers"),
+								className: `px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${detailTab === "customers" ? "bg-slate-900 text-white shadow-xs" : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-100"}`,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+									"ग्राहक/डीलर-वार हिसाब (",
+									customerBreakdownRows.length,
+									")"
+								] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setDetailTab("orders"),
+								className: `px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${detailTab === "orders" ? "bg-slate-900 text-white shadow-xs" : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-100"}`,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShoppingCart, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+									"इस अवधि के सभी ऑर्डर (",
+									filteredPeriodOrders.length,
+									")"
+								] })]
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative w-full sm:w-72",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-4 h-4 text-slate-400 absolute left-3 top-2.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "text",
+								value: searchQuery,
+								onChange: (e) => setSearchQuery(e.target.value),
+								placeholder: "ग्राहक, डीलर या बिल नं. खोजें...",
+								className: "w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+							})]
+						})]
+					}),
+					detailTab === "customers" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "overflow-x-auto",
+						children: customerBreakdownRows.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "p-8 text-center text-xs text-slate-500 space-y-2",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-8 h-8 text-slate-300 mx-auto" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "font-bold text-slate-700",
+									children: "इस सेल्समैन के अंतर्गत अभी कोई डीलर/ग्राहक खाता लिंक नहीं है।"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "नया होलसेल डीलर या रिटेल कस्टमर जोड़ते समय सेल्समैन चुनें — उसके सभी ऑर्डर और कमीशन यहाँ अपने-आप दिखेंगे।" })
+							]
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
+							className: "w-full text-left text-xs",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", {
+								className: "bg-slate-100 text-slate-700 font-bold border-b border-slate-200",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-4",
+										children: "डीलर / ग्राहक विवरण"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-center",
+										children: monthMode === "single" ? "इस माह ऑर्डर" : "कुल ऑर्डर"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-center",
+										children: "कुल बैग / वजन"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-right",
+										children: "कुल ऑर्डर राशि"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-right",
+										children: "डिलीवर कमीशन"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-right",
+										children: "कुल वर्तमान बकाया"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-4 text-center",
+										children: "कार्रवाई"
+									})
+								] })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", {
+								className: "divide-y divide-slate-100",
+								children: customerBreakdownRows.map((row) => {
+									const { customer } = row;
+									return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+										className: "hover:bg-amber-50/40 transition",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-4",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-start gap-2.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+														className: `w-8 h-8 rounded-xl font-black flex items-center justify-center shrink-0 ${customer.type === "wholesaler" ? "bg-blue-100 text-blue-900" : "bg-amber-100 text-amber-900"}`,
+														children: customer.firmName.charAt(0)
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+														className: "flex items-center gap-1.5 flex-wrap",
+														children: [
+															/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+																className: "font-bold text-slate-900 text-sm",
+																children: customer.firmName
+															}),
+															/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+																className: `text-[9px] px-1.5 py-0.5 rounded-full font-bold ${customer.type === "wholesaler" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`,
+																children: customer.type === "wholesaler" ? "होलसेल" : "रिटेल"
+															}),
+															customer.entryByName && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold",
+																children: [
+																	/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-2.5 h-2.5" }),
+																	"Entry By: ",
+																	customer.entryByName
+																]
+															})
+														]
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+														className: "text-[11px] text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5",
+														children: [
+															/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["श्री ", customer.name] }),
+															/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center gap-0.5 font-mono",
+																children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "w-3 h-3 text-slate-400" }), customer.phone]
+															}),
+															/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+																className: "inline-flex items-center gap-0.5",
+																children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "w-3 h-3 text-slate-400" }), customer.city]
+															})
+														]
+													})] })]
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3 text-center",
+												children: [row.orderCount > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-black",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-3 h-3 text-emerald-700" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [row.orderCount, " ऑर्डर"] })]
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "0 ऑर्डर" })]
+												}), row.latestDate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "block text-[10px] text-slate-500 mt-0.5 font-mono",
+													children: ["अंतिम: ", row.latestDate]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3 text-center font-mono",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "font-bold text-slate-900 block",
+													children: [row.bagsCount, " बैग"]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "text-[10px] text-slate-500",
+													children: [row.weightKg, " KG"]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-3 text-right font-mono",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "font-black text-sm text-slate-950 block",
+													children: ["₹", row.orderAmount.toLocaleString("en-IN")]
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3 text-right font-mono font-bold text-emerald-700",
+												children: ["+₹", row.deliveredComm.toLocaleString("en-IN")]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-3 text-right font-mono",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: `font-black ${customer.currentDue > 0 ? "text-rose-600" : "text-slate-400"}`,
+													children: ["₹", customer.currentDue.toLocaleString("en-IN")]
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-4 text-center",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-center gap-1.5",
+													children: [onOpenNewOrderForCustomer && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => onOpenNewOrderForCustomer(customer.id),
+														className: "px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ऑर्डर" })]
+													}), onOpenReceivePayment && customer.currentDue > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => onOpenReceivePayment(customer.id),
+														className: "px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "वसूली" })]
+													})]
+												})
+											})
+										]
+									}, customer.id);
+								})
+							})]
+						})
+					}),
+					detailTab === "orders" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "overflow-x-auto",
+						children: filteredPeriodOrders.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "p-8 text-center text-xs text-slate-500 space-y-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Package, { className: "w-8 h-8 text-slate-300 mx-auto" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "font-bold text-slate-700",
+								children: [periodLabel, " में इस सेल्समैन के ग्राहकों का कोई ऑर्डर दर्ज नहीं है।"]
+							})]
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
+							className: "w-full text-left text-xs",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", {
+								className: "bg-slate-100 text-slate-700 font-bold border-b border-slate-200",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-4",
+										children: "इनवॉइस व तारीख"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3",
+										children: "ग्राहक / डीलर"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3",
+										children: "सामान व बैग"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-right",
+										children: "कुल राशि"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-right",
+										children: "कमीशन स्थिति"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-3 text-center",
+										children: "स्थिति"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+										className: "py-3 px-4 text-center",
+										children: "बिल"
+									})
+								] })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", {
+								className: "divide-y divide-slate-100",
+								children: filteredPeriodOrders.map((ord) => {
+									const totalBags = ord.items.reduce((s, i) => s + i.quantity, 0);
+									const comm = resolveOrderCommission(ord, selectedSalesman);
+									return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+										className: "hover:bg-slate-50 transition",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-4",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "font-mono font-bold text-slate-900 block",
+													children: ord.invoiceNumber
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "text-[10px] text-slate-500 font-mono",
+													children: ["📅 ", ord.date]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "font-bold text-slate-900 block",
+													children: ord.customerFirm
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "text-[11px] text-slate-600",
+													children: ["श्री ", ord.customerName]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3",
+												children: [ord.items.map((item, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "text-[11px] text-slate-700",
+													children: [
+														"• ",
+														item.productName,
+														" (",
+														item.bagSize,
+														"KG × ",
+														item.quantity,
+														")"
+													]
+												}, idx)), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "text-[10px] font-bold text-amber-800 block mt-0.5",
+													children: [
+														"कुल ",
+														totalBags,
+														" बैग"
+													]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+												className: "py-3 px-3 text-right font-mono font-black text-slate-900",
+												children: ["₹", ord.totalAmount.toLocaleString("en-IN")]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-3 text-right font-mono",
+												children: comm.isDelivered ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[11px]",
+													children: [
+														"+₹",
+														comm.creditedAmount.toLocaleString("en-IN"),
+														" ✓ जुड़ा"
+													]
+												}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+													className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-[10px]",
+													children: ["डिलीवरी पर: ₹", comm.projectedAmount.toLocaleString("en-IN")]
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-3 text-center",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: `px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${ord.status === "delivered" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-800"}`,
+													children: ord.status
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+												className: "py-3 px-4 text-center",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+													type: "button",
+													onClick: () => onSelectOrder(ord),
+													className: "px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileText, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "देखें" })]
+												})
+											})
+										]
+									}, ord.id);
+								})
+							})]
+						})
+					})
+				]
+			})] }),
+			editingCommissionFor && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-xs text-slate-800",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center justify-between pb-3 border-b border-slate-200 mb-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+							className: "text-base font-black text-slate-900 flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlidersVertical, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेल्समैन सैलरी व कमीशन कस्टमाइज़ करें" })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-[11px] text-slate-500 mt-0.5",
+							children: ["सेल्समैन: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: editingCommissionFor.name })]
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setEditingCommissionFor(null),
+							className: "p-1 text-slate-400 hover:text-slate-800",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleSaveCommissionRule,
+						className: "space-y-4",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "मूल मासिक सैलरी / Base Salary (₹) *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "number",
+								min: "0",
+								required: true,
+								value: commSalary,
+								onChange: (e) => setCommSalary(Number(e.target.value) || 0),
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-sm"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: "कमीशन गणना तरीका (Commission Mode) *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+								value: commType,
+								onChange: (e) => setCommType(e.target.value),
+								className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "percent",
+										children: "बिल राशि का प्रतिशत (% of Order Total)"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "per_bag",
+										children: "प्रति बैग निश्चित राशि (₹ per Bag)"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "fixed_per_order",
+										children: "प्रति डिलीवर ऑर्डर निश्चित राशि (₹ per Order)"
+									})
+								]
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "block font-bold text-slate-700 mb-1",
+								children: commType === "percent" ? "कमीशन प्रतिशत (%)*" : commType === "per_bag" ? "प्रति बैग कमीशन (₹)*" : "प्रति डिलीवर ऑर्डर कमीशन (₹)*"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "number",
+								min: "0",
+								step: "0.5",
+								required: true,
+								value: commRate,
+								onChange: (e) => setCommRate(Number(e.target.value) || 0),
+								className: "w-full px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl font-mono font-black text-emerald-800 text-sm"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900",
+								children: [
+									"ऑर्डर की स्थिति ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Delivered" }),
+									" होने पर यह कमीशन स्वतः सेल्समैन की कुल देय सैलरी में जुड़ जाएगा।"
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex justify-end gap-2 pt-2 border-t border-slate-200",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => setEditingCommissionFor(null),
+									className: "px-4 py-2 border border-slate-300 rounded-xl font-semibold hover:bg-slate-50 cursor-pointer",
+									children: "रद्द करें"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "submit",
+									className: "px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex items-center gap-1.5 cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कमीशन नियम सेव करें" })]
+								})]
+							})
+						]
+					})]
+				})
+			})
+		]
+	});
+};
 // src/App.tsx
 function App() {
 	const [isAuthenticated, setIsAuthenticated] = (0, import_react.useState)(false);
@@ -84921,18 +91396,27 @@ function App() {
 	const autoLoginAttemptedRef = (0, import_react.useRef)(false);
 	const [selectedOrderForInvoice, setSelectedOrderForInvoice] = (0, import_react.useState)(null);
 	const [showNewOrderModal, setShowNewOrderModal] = (0, import_react.useState)(false);
+	const [newOrderCustomerId, setNewOrderCustomerId] = (0, import_react.useState)(void 0);
 	const [showNewProductionModal, setShowNewProductionModal] = (0, import_react.useState)(false);
 	const [showNewExpenseModal, setShowNewExpenseModal] = (0, import_react.useState)(false);
 	const [showNewCustomerModal, setShowNewCustomerModal] = (0, import_react.useState)(false);
+	const [newCustomerDefaultType, setNewCustomerDefaultType] = (0, import_react.useState)("retailer");
 	const [showReceivePaymentModal, setShowReceivePaymentModal] = (0, import_react.useState)(false);
 	const [receivePaymentCustId, setReceivePaymentCustId] = (0, import_react.useState)(void 0);
+	const [salesmanLedgerTargetId, setSalesmanLedgerTargetId] = (0, import_react.useState)(void 0);
 	const [showRoleSwitcherModal, setShowRoleSwitcherModal] = (0, import_react.useState)(false);
 	const [showInstallModal, setShowInstallModal] = (0, import_react.useState)(false);
 	const [showLiveSyncModal, setShowLiveSyncModal] = (0, import_react.useState)(false);
 	const [installModalTab, setInstallModalTab] = (0, import_react.useState)("apk");
 	const [liveToast, setLiveToast] = (0, import_react.useState)(null);
 	const [writeErrorBanner, setWriteErrorBanner] = (0, import_react.useState)(null);
+	const [showGmpQuotaBanner, setShowGmpQuotaBanner] = (0, import_react.useState)(false);
 	const toastTimerRef = (0, import_react.useRef)(null);
+	(0, import_react.useEffect)(() => {
+		const onQuotaExceeded = () => setShowGmpQuotaBanner(true);
+		window.addEventListener("gmp-quota-exceeded", onQuotaExceeded);
+		return () => window.removeEventListener("gmp-quota-exceeded", onQuotaExceeded);
+	}, []);
 	const handleRemoteActivity = (0, import_react.useCallback)((evt) => {
 		setLiveToast(evt);
 		if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
@@ -84976,7 +91460,10 @@ function App() {
 	const isTabAllowed = (0, import_react.useCallback)((tab) => {
 		switch (tab) {
 			case "dashboard": return true;
+			case "wholesale_dealers":
+			case "retail_customers":
 			case "customers": return activePermissions.viewCustomers;
+			case "salesman_ledger": return currentRole === "admin" || currentRole === "manager" || currentRole === "accountant" || currentRole === "salesman" || activePermissions.manageStaff || activePermissions.viewReports;
 			case "inventory": return activePermissions.viewInventory;
 			case "production": return activePermissions.viewProduction;
 			case "orders": return activePermissions.viewOrders;
@@ -85042,6 +91529,7 @@ function App() {
 			order: newOrder
 		});
 		setShowNewOrderModal(false);
+		setNewOrderCustomerId(void 0);
 		setSelectedOrderForInvoice(newOrder);
 	};
 	const handleProductionCreated = (batch) => {
@@ -85235,6 +91723,28 @@ function App() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-white",
 		children: [
+			showGmpQuotaBanner && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm flex items-center justify-center gap-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"Google Maps Platform quota reached. If you are the app owner, visit",
+					" ",
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+						href: "https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors",
+						target: "_blank",
+						rel: "noopener noreferrer",
+						className: "underline font-semibold text-amber-950 hover:text-amber-800",
+						children: "maps developer site"
+					}),
+					" ",
+					"for instructions to update your account."
+				] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: () => setShowGmpQuotaBanner(false),
+					className: "p-1 text-amber-900 hover:bg-amber-200/60 rounded cursor-pointer",
+					"aria-label": "बंद करें",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-4 h-4" })
+				})]
+			}),
 			liveToast && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "fixed top-16 right-3 sm:right-6 z-50 max-w-sm w-[calc(100%-1.5rem)] bg-slate-950 text-white border-2 border-emerald-400 rounded-2xl shadow-2xl p-3.5 flex items-start gap-3 animate-bounce",
 				children: [
@@ -85302,7 +91812,10 @@ function App() {
 				connectedDevicesCount: sync.connectedDevices.length,
 				syncDeviceRole: sync.config.deviceRole,
 				onOpenRoleSwitcher: () => setShowRoleSwitcherModal(true),
-				onOpenNewOrder: () => setShowNewOrderModal(true),
+				onOpenNewOrder: () => {
+					setNewOrderCustomerId(void 0);
+					setShowNewOrderModal(true);
+				},
 				onOpenNewProduction: () => setShowNewProductionModal(true),
 				onOpenReceivePayment: () => {
 					setReceivePaymentCustId(void 0);
@@ -85337,9 +91850,13 @@ function App() {
 							staff,
 							settings,
 							currentRole,
+							activeStaffMember,
 							permissions: activePermissions,
 							onNavigate: setActiveTab,
-							onOpenNewOrder: () => setShowNewOrderModal(true),
+							onOpenNewOrder: () => {
+								setNewOrderCustomerId(void 0);
+								setShowNewOrderModal(true);
+							},
 							onOpenNewProduction: () => setShowNewProductionModal(true),
 							onOpenReceivePayment: () => {
 								setReceivePaymentCustId(void 0);
@@ -85347,12 +91864,17 @@ function App() {
 							},
 							onSelectOrder: setSelectedOrderForInvoice
 						}),
-						activeTab === "customers" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomerView, {
+						(activeTab === "wholesale_dealers" || activeTab === "retail_customers" || activeTab === "customers") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomerView, {
 							customers,
 							orders,
+							staff,
 							settings,
+							sectionMode: activeTab === "wholesale_dealers" ? "wholesale" : activeTab === "retail_customers" ? "retail" : "all",
 							canReceivePayment: activePermissions.receivePayment,
-							onOpenNewCustomer: () => setShowNewCustomerModal(true),
+							onOpenNewCustomer: (defaultType) => {
+								setNewCustomerDefaultType(defaultType || (activeTab === "wholesale_dealers" ? "wholesaler" : "retailer"));
+								setShowNewCustomerModal(true);
+							},
 							onOpenReceivePayment: (custId) => {
 								setReceivePaymentCustId(custId);
 								setShowReceivePaymentModal(true);
@@ -85360,6 +91882,30 @@ function App() {
 							onSelectOrder: setSelectedOrderForInvoice,
 							onUpdateCustomer: activePermissions.editCustomers ? handleCustomerUpdated : void 0,
 							onDeleteCustomer: activePermissions.editCustomers ? handleCustomerDeleted : void 0
+						}),
+						activeTab === "salesman_ledger" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SalesmanLedgerView, {
+							staffList: staff,
+							customers,
+							orders,
+							settings,
+							currentRole,
+							activeStaffMember,
+							canManageStaff,
+							initialSelectedSalesmanId: salesmanLedgerTargetId,
+							onSelectOrder: setSelectedOrderForInvoice,
+							onUpdateStaff: canManageStaff ? handleStaffUpdated : void 0,
+							onOpenNewOrderForCustomer: (custId) => {
+								setNewOrderCustomerId(custId);
+								setShowNewOrderModal(true);
+							},
+							onOpenNewCustomer: () => {
+								setNewCustomerDefaultType("retailer");
+								setShowNewCustomerModal(true);
+							},
+							onOpenReceivePayment: (custId) => {
+								setReceivePaymentCustId(custId);
+								setShowReceivePaymentModal(true);
+							}
 						}),
 						activeTab === "inventory" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InventoryView, {
 							rawStock,
@@ -85380,7 +91926,11 @@ function App() {
 						}),
 						activeTab === "orders" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OrderView, {
 							orders,
-							onOpenNewOrder: () => setShowNewOrderModal(true),
+							staff,
+							onOpenNewOrder: () => {
+								setNewOrderCustomerId(void 0);
+								setShowNewOrderModal(true);
+							},
 							onSelectOrder: setSelectedOrderForInvoice,
 							onUpdateOrderStatus: handleOrderStatusUpdate,
 							onUpdateOrder: activePermissions.editOrders ? handleOrderUpdated : void 0,
@@ -85393,6 +91943,8 @@ function App() {
 						}),
 						activeTab === "staff" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StaffView, {
 							staffList: staff,
+							customers,
+							orders,
 							currentRole,
 							currentStaffId: activeStaffMember?.id,
 							canManageStaff,
@@ -85400,7 +91952,11 @@ function App() {
 							onUpdateStaff: canManageStaff ? handleStaffUpdated : void 0,
 							onDeleteStaff: canManageStaff ? handleStaffDeleted : void 0,
 							onSwitchRole: handleSwitchRole,
-							onSelectStaffMember: handleSelectStaffMember
+							onSelectStaffMember: handleSelectStaffMember,
+							onOpenSalesmanLedger: (smId) => {
+								setSalesmanLedgerTargetId(smId);
+								setActiveTab("salesman_ledger");
+							}
 						}),
 						activeTab === "accounting" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AccountingView, {
 							orders,
@@ -85459,7 +92015,12 @@ function App() {
 				customers,
 				products,
 				staff,
-				onClose: () => setShowNewOrderModal(false),
+				activeStaffMember,
+				preselectedCustomerId: newOrderCustomerId,
+				onClose: () => {
+					setShowNewOrderModal(false);
+					setNewOrderCustomerId(void 0);
+				},
 				onSubmit: handleOrderCreated
 			}),
 			showNewProductionModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NewProductionModal, {
@@ -85473,6 +92034,9 @@ function App() {
 				onSubmit: handleExpenseCreated
 			}),
 			showNewCustomerModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NewCustomerModal, {
+				staff,
+				activeStaffMember,
+				defaultType: newCustomerDefaultType,
 				onClose: () => setShowNewCustomerModal(false),
 				onSubmit: handleCustomerCreated
 			}),
@@ -85585,4 +92149,18 @@ var ErrorBoundary = class extends import_react.Component {
 	}
 };
 // src/main.tsx
+if (typeof window !== "undefined") {
+	const win = window;
+	const prevAuthFailure = win.gm_authFailure;
+	win.gm_authFailure = () => {
+		window.dispatchEvent(new CustomEvent("gmp-quota-exceeded"));
+		if (typeof prevAuthFailure === "function") prevAuthFailure();
+	};
+	const origConsoleError = console.error.bind(console);
+	console.error = (...args) => {
+		const joined = args.map((a) => typeof a === "string" ? a : String(a)).join(" ");
+		if (joined.includes("OverQuotaMapError") || joined.includes("QuotaExceededError") || joined.includes("RESOURCE_EXHAUSTED")) window.dispatchEvent(new CustomEvent("gmp-quota-exceeded"));
+		origConsoleError(...args);
+	};
+}
 (0, import_client.createRoot)(document.getElementById("root")).render(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_react.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ErrorBoundary, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(App, {}) }) }));

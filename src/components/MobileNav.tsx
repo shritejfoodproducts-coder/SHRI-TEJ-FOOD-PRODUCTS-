@@ -11,7 +11,9 @@ import {
   Truck, 
   FileSpreadsheet,
   UserCheck,
-  Download
+  Download,
+  Briefcase,
+  Store
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -36,16 +38,29 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const tabs = [
     { id: 'dashboard' as ActiveTab, label: 'डैशबोर्ड', icon: LayoutDashboard, visible: true },
     { id: 'orders' as ActiveTab, label: 'ऑर्डर', icon: ClipboardList, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, visible: perms.viewOrders },
+    { id: 'wholesale_dealers' as ActiveTab, label: 'होलसेल', icon: Store, visible: perms.viewCustomers },
+    { id: 'retail_customers' as ActiveTab, label: 'रिटेल', icon: Users, visible: perms.viewCustomers },
     { id: 'inventory' as ActiveTab, label: 'स्टॉक', icon: Package, visible: perms.viewInventory },
     { id: 'production' as ActiveTab, label: 'उत्पादन', icon: Factory, visible: perms.viewProduction },
-    { id: 'customers' as ActiveTab, label: 'ग्राहक', icon: Users, visible: perms.viewCustomers },
+    {
+      id: 'salesman_ledger' as ActiveTab,
+      label: 'सेल्समैन',
+      icon: Briefcase,
+      visible:
+        currentRole === 'admin' ||
+        currentRole === 'manager' ||
+        currentRole === 'accountant' ||
+        currentRole === 'salesman' ||
+        perms.manageStaff ||
+        perms.viewReports,
+    },
     { id: 'delivery' as ActiveTab, label: 'डिलीवरी', icon: Truck, visible: perms.viewDelivery },
     { id: 'staff' as ActiveTab, label: 'स्टाफ', icon: UserCheck, visible: currentRole === 'admin' || perms.manageStaff },
     { id: 'reports' as ActiveTab, label: 'Excel', icon: FileSpreadsheet, visible: perms.viewReports },
   ].filter((t) => t.visible);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center select-none shadow-lg no-print">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;

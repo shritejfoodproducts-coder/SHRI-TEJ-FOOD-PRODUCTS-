@@ -28,6 +28,8 @@ export interface StaffPermissions {
   manageSettings: boolean;
 }
 
+export type CommissionType = 'percent' | 'per_bag' | 'fixed_per_order';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -41,6 +43,9 @@ export interface UserProfile {
   assignedVehicle?: string;
   joinedDate: string;
   permissions?: StaffPermissions;
+  baseSalary?: number; // मासिक मूल वेतन (₹)
+  commissionType?: CommissionType; // कमीशन प्रकार
+  commissionRate?: number; // % या प्रति बैग ₹ या प्रति ऑर्डर ₹
 }
 
 export type BagSize = 5 | 10 | 25 | 50; // In KG
@@ -116,6 +121,12 @@ export interface Order {
   vehicleNumber?: string;
   deliveredAt?: string;
   notes?: string;
+  salesmanId?: string;
+  salesmanName?: string;
+  salesmanCommissionAmount?: number;
+  salesmanCommissionType?: CommissionType;
+  salesmanCommissionRate?: number;
+  commissionCredited?: boolean;
 }
 
 export interface Customer {
@@ -134,6 +145,17 @@ export interface Customer {
   currentDue: number;
   creditLimit: number;
   lastOrderDate?: string;
+  salesmanId?: string;
+  salesmanName?: string;
+  latitude?: number;
+  longitude?: number;
+  placeId?: string;
+  mapAddress?: string;
+  googleMapsUrl?: string;
+  shopPhotoUrl?: string;
+  entryByStaffId?: string;
+  entryByName?: string;
+  entryByRole?: UserRole;
 }
 
 export interface CustomerPaymentRecord {

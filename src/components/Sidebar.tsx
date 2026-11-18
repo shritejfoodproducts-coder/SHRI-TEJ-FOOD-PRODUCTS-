@@ -14,12 +14,17 @@ import {
   FileSpreadsheet, 
   Settings,
   Download,
-  HardDrive
+  HardDrive,
+  Briefcase,
+  Store
 } from 'lucide-react';
 
 export type ActiveTab = 
   | 'dashboard'
+  | 'wholesale_dealers'
+  | 'retail_customers'
   | 'customers'
+  | 'salesman_ledger'
   | 'inventory'
   | 'production'
   | 'orders'
@@ -61,12 +66,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
       visible: true,
     },
     {
-      id: 'customers' as ActiveTab,
-      labelHindi: 'ग्राहक खाता (Customers)',
-      labelEn: 'Customers',
+      id: 'wholesale_dealers' as ActiveTab,
+      labelHindi: 'होलसेल डीलर्स (Wholesale)',
+      labelEn: 'Wholesale Dealers',
+      icon: Store,
+      badge: null,
+      visible: perms.viewCustomers,
+    },
+    {
+      id: 'retail_customers' as ActiveTab,
+      labelHindi: 'रिटेल कस्टमर्स (Retail)',
+      labelEn: 'Retail Customers',
       icon: Users,
       badge: null,
       visible: perms.viewCustomers,
+    },
+    {
+      id: 'salesman_ledger' as ActiveTab,
+      labelHindi: 'सेल्समैन फील्ड लेखा (Salesman)',
+      labelEn: 'Salesman Ledger',
+      icon: Briefcase,
+      badge: 'मासिक',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+      visible:
+        currentRole === 'admin' ||
+        currentRole === 'manager' ||
+        currentRole === 'accountant' ||
+        currentRole === 'salesman' ||
+        perms.manageStaff ||
+        perms.viewReports,
     },
     {
       id: 'inventory' as ActiveTab,

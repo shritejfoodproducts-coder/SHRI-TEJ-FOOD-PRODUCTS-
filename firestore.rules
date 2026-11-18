@@ -83,7 +83,13 @@ service cloud.firestore {
 
     function isValidCustomer(data) {
       return data.keys().hasAll(['id', 'name', 'firmName', 'phone', 'address', 'city', 'type', 'totalOrders', 'totalPurchased', 'totalPaid', 'currentDue', 'creditLimit']) &&
-             data.keys().hasOnly(['id', 'name', 'firmName', 'phone', 'email', 'address', 'city', 'gstin', 'type', 'totalOrders', 'totalPurchased', 'totalPaid', 'currentDue', 'creditLimit', 'lastOrderDate', 'updatedAt']) &&
+             data.keys().hasOnly([
+               'id', 'name', 'firmName', 'phone', 'email', 'address', 'city', 'gstin', 'type',
+               'totalOrders', 'totalPurchased', 'totalPaid', 'currentDue', 'creditLimit', 'lastOrderDate',
+               'salesmanId', 'salesmanName',
+               'latitude', 'longitude', 'placeId', 'mapAddress', 'googleMapsUrl', 'shopPhotoUrl',
+               'entryByStaffId', 'entryByName', 'entryByRole', 'updatedAt'
+             ]) &&
              isNonEmptyString(data.id, 80) &&
              isNonEmptyString(data.name, 120) &&
              data.firmName is string && data.firmName.size() <= 150 &&
@@ -93,7 +99,18 @@ service cloud.firestore {
              data.totalPurchased is number && data.totalPurchased >= 0 &&
              data.totalPaid is number && data.totalPaid >= 0 &&
              data.currentDue is number && data.currentDue >= 0 &&
-             data.creditLimit is number && data.creditLimit >= 0;
+             data.creditLimit is number && data.creditLimit >= 0 &&
+             (!('salesmanId' in data) || (data.salesmanId is string && data.salesmanId.size() <= 80)) &&
+             (!('salesmanName' in data) || (data.salesmanName is string && data.salesmanName.size() <= 120)) &&
+             (!('latitude' in data) || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90)) &&
+             (!('longitude' in data) || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180)) &&
+             (!('placeId' in data) || (data.placeId is string && data.placeId.size() <= 200)) &&
+             (!('mapAddress' in data) || (data.mapAddress is string && data.mapAddress.size() <= 300)) &&
+             (!('googleMapsUrl' in data) || (data.googleMapsUrl is string && data.googleMapsUrl.size() <= 400)) &&
+             (!('shopPhotoUrl' in data) || (data.shopPhotoUrl is string && data.shopPhotoUrl.size() <= 350000)) &&
+             (!('entryByStaffId' in data) || (data.entryByStaffId is string && data.entryByStaffId.size() <= 80)) &&
+             (!('entryByName' in data) || (data.entryByName is string && data.entryByName.size() <= 120)) &&
+             (!('entryByRole' in data) || (data.entryByRole is string && data.entryByRole.size() <= 40));
     }
 
     function isValidOrder(data) {
@@ -103,6 +120,8 @@ service cloud.firestore {
                'date', 'billType', 'items', 'subtotal', 'taxAmount', 'discount', 'freightCharges',
                'totalAmount', 'paidAmount', 'paymentMode', 'dueAmount', 'status',
                'deliveryStaffId', 'deliveryStaffName', 'vehicleNumber', 'deliveredAt', 'notes',
+               'salesmanId', 'salesmanName',
+               'salesmanCommissionAmount', 'salesmanCommissionType', 'salesmanCommissionRate', 'commissionCredited',
                'createdByUid', 'updatedAt'
              ]) &&
              isNonEmptyString(data.id, 80) &&
@@ -115,7 +134,13 @@ service cloud.firestore {
              data.status in ['pending', 'in_production', 'ready_dispatch', 'dispatched', 'delivered', 'cancelled'] &&
              data.totalAmount is number && data.totalAmount >= 0 &&
              data.paidAmount is number && data.paidAmount >= 0 &&
-             data.dueAmount is number && data.dueAmount >= 0;
+             data.dueAmount is number && data.dueAmount >= 0 &&
+             (!('salesmanId' in data) || (data.salesmanId is string && data.salesmanId.size() <= 80)) &&
+             (!('salesmanName' in data) || (data.salesmanName is string && data.salesmanName.size() <= 120)) &&
+             (!('salesmanCommissionAmount' in data) || (data.salesmanCommissionAmount is number && data.salesmanCommissionAmount >= 0)) &&
+             (!('salesmanCommissionType' in data) || data.salesmanCommissionType in ['percent', 'per_bag', 'fixed_per_order']) &&
+             (!('salesmanCommissionRate' in data) || (data.salesmanCommissionRate is number && data.salesmanCommissionRate >= 0)) &&
+             (!('commissionCredited' in data) || data.commissionCredited is bool);
     }
 
     function isValidProduction(data) {
@@ -160,13 +185,20 @@ service cloud.firestore {
 
     function isValidStaff(data) {
       return data.keys().hasAll(['id', 'name', 'phone', 'role', 'roleHindi', 'active', 'joinedDate']) &&
-             data.keys().hasOnly(['id', 'name', 'phone', 'email', 'role', 'roleHindi', 'password', 'active', 'shift', 'assignedVehicle', 'joinedDate', 'permissions', 'updatedAt']) &&
+             data.keys().hasOnly([
+               'id', 'name', 'phone', 'email', 'role', 'roleHindi', 'password',
+               'active', 'shift', 'assignedVehicle', 'joinedDate', 'permissions',
+               'baseSalary', 'commissionType', 'commissionRate', 'updatedAt'
+             ]) &&
              isNonEmptyString(data.id, 80) &&
              isNonEmptyString(data.name, 120) &&
              isNonEmptyString(data.phone, 30) &&
              data.role in ['admin', 'manager', 'accountant', 'store_keeper', 'production_head', 'packing_staff', 'delivery_staff', 'salesman'] &&
              data.active is bool &&
-             isNonEmptyString(data.joinedDate, 40);
+             isNonEmptyString(data.joinedDate, 40) &&
+             (!('baseSalary' in data) || (data.baseSalary is number && data.baseSalary >= 0)) &&
+             (!('commissionType' in data) || data.commissionType in ['percent', 'per_bag', 'fixed_per_order']) &&
+             (!('commissionRate' in data) || (data.commissionRate is number && data.commissionRate >= 0));
     }
 
     function isValidDevice(data) {

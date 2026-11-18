@@ -401,9 +401,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
           {/* Brand Header */}
           <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-amber-900 text-white px-6 py-6 text-center relative">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg ring-4 ring-amber-400/20">
-              {mode === 'login' ? 'T' : <KeyRound className="w-8 h-8 text-slate-950" />}
-            </div>
+            {mode === 'login' ? (
+              <div className="w-20 h-20 mx-auto rounded-2xl overflow-hidden shadow-lg ring-4 ring-amber-400/35 bg-[#08172E]">
+                <img
+                  src="/logo.png"
+                  alt="TEJ FOOD PRODUCTS Logo"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg ring-4 ring-amber-400/20">
+                <KeyRound className="w-8 h-8 text-slate-950" />
+              </div>
+            )}
             <h1 className="mt-3 text-xl font-black tracking-tight text-white">
               {mode === 'login'
                 ? settings.companyName || 'Shri Tej Food Products'

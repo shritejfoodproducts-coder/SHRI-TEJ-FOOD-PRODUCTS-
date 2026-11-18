@@ -65,6 +65,17 @@
         "currentDue": { "type": "number" },
         "creditLimit": { "type": "number" },
         "lastOrderDate": { "type": "string" },
+        "salesmanId": { "type": "string" },
+        "salesmanName": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "placeId": { "type": "string" },
+        "mapAddress": { "type": "string" },
+        "googleMapsUrl": { "type": "string" },
+        "shopPhotoUrl": { "type": "string" },
+        "entryByStaffId": { "type": "string" },
+        "entryByName": { "type": "string" },
+        "entryByRole": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
       "required": ["id", "name", "firmName", "phone", "address", "city", "type", "totalOrders", "totalPurchased", "totalPaid", "currentDue", "creditLimit"]
@@ -93,6 +104,12 @@
         "paymentMode": { "type": "string", "enum": ["cash", "bank", "upi", "credit", "partial"] },
         "dueAmount": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "in_production", "ready_dispatch", "dispatched", "delivered", "cancelled"] },
+        "salesmanId": { "type": "string" },
+        "salesmanName": { "type": "string" },
+        "salesmanCommissionAmount": { "type": "number" },
+        "salesmanCommissionType": { "type": "string", "enum": ["percent", "per_bag", "fixed_per_order"] },
+        "salesmanCommissionRate": { "type": "number" },
+        "commissionCredited": { "type": "boolean" },
         "createdByUid": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
@@ -167,7 +184,10 @@
         "roleHindi": { "type": "string" },
         "active": { "type": "boolean" },
         "joinedDate": { "type": "string" },
-        "permissions": { "type": "object" }
+        "permissions": { "type": "object" },
+        "baseSalary": { "type": "number" },
+        "commissionType": { "type": "string", "enum": ["percent", "per_bag", "fixed_per_order"] },
+        "commissionRate": { "type": "number" }
       },
       "required": ["id", "name", "phone", "role", "roleHindi", "active", "joinedDate"]
     },

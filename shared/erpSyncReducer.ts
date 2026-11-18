@@ -1,9 +1,10 @@
-import type { BagSize } from '../src/types/erp.ts';
+import type { BagSize, Order, UserProfile } from '../src/types/erp.ts';
 import type {
   ErpMutationAction,
   LiveActivityEvent,
   SyncableErpState,
 } from './erpSyncTypes.ts';
+import { calculateSalesmanOrderCommission } from './commission.ts';
 
 export interface MutationApplyResult {
   nextState: SyncableErpState;
@@ -12,6 +13,32 @@ export interface MutationApplyResult {
     category: LiveActivityEvent['category'];
     title: string;
     detail: string;
+  };
+}
+
+function applySalesmanDeliveryCommission(
+  order: Order,
+  staffList: UserProfile[]
+): Order {
+  const salesman = order.salesmanId
+    ? staffList.find((s) => s.id === order.salesmanId)
+    : undefined;
+
+  if (order.status === 'delivered' && salesman) {
+    const commissionAmount = calculateSalesmanOrderCommission(order, salesman);
+    return {
+      ...order,
+      salesmanCommissionAmount: commissionAmount,
+      salesmanCommissionType: salesman.commissionType || 'percent',
+      salesmanCommissionRate: Number(salesman.commissionRate) || 0,
+      commissionCredited: commissionAmount > 0,
+    };
+  }
+
+  return {
+    ...order,
+    salesmanCommissionAmount: 0,
+    commissionCredited: false,
   };
 }
 
@@ -29,23 +56,36 @@ export function applyErpMutation(
         return { nextState: state, applied: false };
       }
 
-      const nextOrders = [order, ...state.orders];
+      const matchedCustomer = state.customers.find((c) => c.id === order.customerId);
+      const effectiveSalesmanId = order.salesmanId || matchedCustomer?.salesmanId;
+      const effectiveSalesmanName = order.salesmanName || matchedCustomer?.salesmanName;
+      const attributedOrder =
+        effectiveSalesmanId || effectiveSalesmanName
+          ? {
+              ...order,
+              salesmanId: effectiveSalesmanId,
+              salesmanName: effectiveSalesmanName,
+            }
+          : order;
+      const normalizedOrder = applySalesmanDeliveryCommission(attributedOrder, state.staff);
+
+      const nextOrders = [normalizedOrder, ...state.orders];
       const nextCustomers = state.customers.map((c) => {
-        if (c.id === order.customerId) {
+        if (c.id === normalizedOrder.customerId) {
           return {
             ...c,
             totalOrders: c.totalOrders + 1,
-            totalPurchased: c.totalPurchased + order.totalAmount,
-            totalPaid: c.totalPaid + order.paidAmount,
-            currentDue: c.currentDue + order.dueAmount,
-            lastOrderDate: order.date,
+            totalPurchased: c.totalPurchased + normalizedOrder.totalAmount,
+            totalPaid: c.totalPaid + normalizedOrder.paidAmount,
+            currentDue: c.currentDue + normalizedOrder.dueAmount,
+            lastOrderDate: normalizedOrder.date,
           };
         }
         return c;
       });
 
       const nextBagStock = state.bagStock.map((b) => {
-        const matchedLine = order.items.find(
+        const matchedLine = normalizedOrder.items.find(
           (i) => i.productId === b.productId && i.bagSize === b.bagSize
         );
         if (matchedLine) {
@@ -68,8 +108,8 @@ export function applyErpMutation(
         applied: true,
         activityMeta: {
           category: 'order',
-          title: `नया ऑर्डर: ${order.invoiceNumber}`,
-          detail: `${order.customerFirm || order.customerName} • ₹${order.totalAmount.toLocaleString('en-IN')}`,
+          title: `नया ऑर्डर: ${normalizedOrder.invoiceNumber}`,
+          detail: `${normalizedOrder.customerFirm || normalizedOrder.customerName} • ₹${normalizedOrder.totalAmount.toLocaleString('en-IN')}${normalizedOrder.salesmanName ? ` (${normalizedOrder.salesmanName})` : ''}`,
         },
       };
     }
@@ -81,12 +121,13 @@ export function applyErpMutation(
         return { nextState: state, applied: false };
       }
 
-      const deltaTotal = updatedOrder.totalAmount - existing.totalAmount;
-      const deltaPaid = updatedOrder.paidAmount - existing.paidAmount;
-      const deltaDue = updatedOrder.dueAmount - existing.dueAmount;
+      const normalizedUpdatedOrder = applySalesmanDeliveryCommission(updatedOrder, state.staff);
+      const deltaTotal = normalizedUpdatedOrder.totalAmount - existing.totalAmount;
+      const deltaPaid = normalizedUpdatedOrder.paidAmount - existing.paidAmount;
+      const deltaDue = normalizedUpdatedOrder.dueAmount - existing.dueAmount;
 
       const nextOrders = state.orders.map((o) =>
-        o.id === updatedOrder.id ? updatedOrder : o
+        o.id === normalizedUpdatedOrder.id ? normalizedUpdatedOrder : o
       );
 
       const nextCustomers = state.customers.map((c) => {
@@ -200,19 +241,23 @@ export function applyErpMutation(
       }
 
       const wasDelivered = targetOrder.status === 'delivered';
+      const resolvedDeliveredAt =
+        action.newStatus === 'delivered'
+          ? action.deliveredAt || new Date().toISOString().slice(0, 16).replace('T', ' ')
+          : targetOrder.deliveredAt;
+
       const nextOrders = state.orders.map((o) => {
         if (o.id === action.orderId) {
-          return {
+          const updated = {
             ...o,
             status: action.newStatus,
-            deliveredAt:
-              action.newStatus === 'delivered'
-                ? action.deliveredAt || new Date().toISOString().slice(0, 16).replace('T', ' ')
-                : o.deliveredAt,
+            deliveredAt: resolvedDeliveredAt,
           };
+          return applySalesmanDeliveryCommission(updated, state.staff);
         }
         return o;
       });
+      const finalizedOrder = nextOrders.find((o) => o.id === action.orderId);
 
       let nextBagStock = state.bagStock;
       if (action.newStatus === 'delivered' && !wasDelivered) {
@@ -231,6 +276,13 @@ export function applyErpMutation(
         });
       }
 
+      const commNote =
+        action.newStatus === 'delivered' &&
+        finalizedOrder?.salesmanCommissionAmount &&
+        finalizedOrder.salesmanCommissionAmount > 0
+          ? ` • सेल्समैन कमीशन +₹${finalizedOrder.salesmanCommissionAmount.toLocaleString('en-IN')}`
+          : '';
+
       return {
         nextState: {
           ...state,
@@ -242,7 +294,7 @@ export function applyErpMutation(
         activityMeta: {
           category: 'order',
           title: `ऑर्डर स्टेटस बदला: ${targetOrder.invoiceNumber}`,
-          detail: `${targetOrder.customerFirm || targetOrder.customerName} → ${action.newStatus}`,
+          detail: `${targetOrder.customerFirm || targetOrder.customerName} → ${action.newStatus}${commNote}`,
         },
       };
     }
@@ -296,7 +348,7 @@ export function applyErpMutation(
         activityMeta: {
           category: 'customer',
           title: `नया ग्राहक: ${action.customer.firmName || action.customer.name}`,
-          detail: `फ़ोन: ${action.customer.phone}`,
+          detail: `फ़ोन: ${action.customer.phone}${action.customer.salesmanName ? ` • सेल्समैन: ${action.customer.salesmanName}` : ''}`,
         },
       };
     }

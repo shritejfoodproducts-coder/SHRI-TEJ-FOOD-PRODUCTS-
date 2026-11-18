@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Order, OrderStatus, BillType, OrderItem, BagSize } from '../types/erp';
+import { Order, OrderStatus, BillType, OrderItem, UserProfile } from '../types/erp';
+import { resolveOrderCommission } from '../../shared/commission';
 import { 
   ClipboardList, 
   Plus, 
   Search, 
-  Filter, 
-  Printer, 
-  Share2, 
   Clock, 
   Factory, 
   Truck, 
@@ -18,12 +16,12 @@ import {
   X,
   Save,
   AlertTriangle,
-  IndianRupee,
-  Layers
+  Briefcase
 } from 'lucide-react';
 
 interface OrderViewProps {
   orders: Order[];
+  staff?: UserProfile[];
   onOpenNewOrder: () => void;
   onSelectOrder: (order: Order) => void;
   onUpdateOrderStatus: (orderId: string, newStatus: OrderStatus) => void;
@@ -33,12 +31,14 @@ interface OrderViewProps {
 
 export const OrderView: React.FC<OrderViewProps> = ({
   orders,
+  staff = [],
   onOpenNewOrder,
   onSelectOrder,
   onUpdateOrderStatus,
   onUpdateOrder,
   onDeleteOrder,
 }) => {
+  const salesmen = staff.filter((s) => s.role === 'salesman');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [billTypeFilter, setBillTypeFilter] = useState<string>('all');
@@ -54,6 +54,7 @@ export const OrderView: React.FC<OrderViewProps> = ({
   const [editStatus, setEditStatus] = useState<OrderStatus>('pending');
   const [editNotes, setEditNotes] = useState<string>('');
   const [editVehicleNumber, setEditVehicleNumber] = useState<string>('');
+  const [editSalesmanId, setEditSalesmanId] = useState<string>('');
 
   // Delete order state
   const [deleteConfirmOrder, setDeleteConfirmOrder] = useState<Order | null>(null);
@@ -147,6 +148,7 @@ export const OrderView: React.FC<OrderViewProps> = ({
     setEditStatus(order.status);
     setEditNotes(order.notes || '');
     setEditVehicleNumber(order.vehicleNumber || '');
+    setEditSalesmanId(order.salesmanId || '');
   };
 
   // Update item line in edit modal
@@ -170,6 +172,8 @@ export const OrderView: React.FC<OrderViewProps> = ({
     e.preventDefault();
     if (!editingOrder || !onUpdateOrder) return;
 
+    const matchedSalesman = salesmen.find((s) => s.id === editSalesmanId);
+
     const updatedOrder: Order = {
       ...editingOrder,
       billType: editBillType,
@@ -185,6 +189,8 @@ export const OrderView: React.FC<OrderViewProps> = ({
       status: editStatus,
       notes: editNotes.trim(),
       vehicleNumber: editVehicleNumber.trim() || editingOrder.vehicleNumber,
+      salesmanId: editSalesmanId || undefined,
+      salesmanName: matchedSalesman?.name || (editSalesmanId ? editingOrder.salesmanName : undefined),
     };
 
     onUpdateOrder(updatedOrder, editingOrder);
@@ -312,6 +318,28 @@ export const OrderView: React.FC<OrderViewProps> = ({
                       <span className="text-[10px] text-slate-500 truncate max-w-xs block">
                         {order.customerAddress}
                       </span>
+                      {order.salesmanName && (() => {
+                        const sm = salesmen.find((s) => s.id === order.salesmanId);
+                        const comm = resolveOrderCommission(order, sm);
+                        return (
+                          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold">
+                              <Briefcase className="w-2.5 h-2.5" />
+                              <span>सेल्समैन: {order.salesmanName}</span>
+                            </span>
+                            {comm.isDelivered && comm.creditedAmount > 0 && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold font-mono">
+                                +₹{comm.creditedAmount.toLocaleString('en-IN')} सैलरी में जुड़ा ✓
+                              </span>
+                            )}
+                            {!comm.isDelivered && order.status !== 'cancelled' && comm.projectedAmount > 0 && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold font-mono">
+                                डिलीवरी कमीशन: ₹{comm.projectedAmount.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     <td className="py-3 px-3">
@@ -596,15 +624,33 @@ export const OrderView: React.FC<OrderViewProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">रिमार्क / डिलीवरी निर्देश</label>
-                <input
-                  type="text"
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="उदा. शाम 5 बजे तक दुकान पर अनलोड करवाएं"
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">सेल्समैन क्रेडिट (Salesman)</label>
+                  <select
+                    value={editSalesmanId}
+                    onChange={(e) => setEditSalesmanId(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl font-semibold"
+                  >
+                    <option value="">डायरेक्ट ऑर्डर (कोई सेल्समैन नहीं)</option>
+                    {salesmen.map((sm) => (
+                      <option key={sm.id} value={sm.id}>
+                        {sm.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">रिमार्क / डिलीवरी निर्देश</label>
+                  <input
+                    type="text"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="उदा. शाम 5 बजे तक दुकान पर अनलोड करवाएं"
+                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 shrink-0">

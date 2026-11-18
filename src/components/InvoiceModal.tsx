@@ -326,9 +326,12 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xl shadow-xs">
-                    T
-                  </div>
+                  <img
+                    src="/logo.png"
+                    alt="TEJ FOOD PRODUCTS Logo"
+                    referrerPolicy="no-referrer"
+                    className="w-11 h-11 rounded-xl object-cover shadow-xs bg-[#08172E] border border-amber-400/50 shrink-0"
+                  />
                   <div>
                     <h1 className="text-xl font-bold tracking-tight text-slate-950">
                       {settings.companyName}
