@@ -391,6 +391,7 @@ export default function App() {
           authReady={sync.authReady}
           firebaseEmail={sync.firebaseUser?.email}
           authError={sync.authError}
+          unauthorizedDomainHost={sync.unauthorizedDomainHost}
           isSigningIn={sync.isSigningIn}
           firestoreReady={sync.firestoreReady}
           accessDenied={sync.accessDenied}

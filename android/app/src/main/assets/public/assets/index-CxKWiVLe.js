@@ -50187,11 +50187,29 @@ function playNotificationChime() {
 }
 function mapFirebaseAuthError(error) {
 	const code = typeof error === "object" && error !== null && "code" in error ? String(error.code || "") : "";
-	if (code === "auth/popup-blocked") return "ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।";
-	if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return "Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।";
-	if (code === "auth/unauthorized-domain") return "यह डोमेन Firebase Auth Authorized Domains में जुड़ा नहीं है। कृपया Firebase Console में इस डोमेन को जोड़ें।";
-	if (code === "auth/network-request-failed") return "नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।";
-	return error instanceof Error ? error.message : "Google साइन-इन में त्रुटि हुई।";
+	if (code === "auth/popup-blocked") return {
+		message: "ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।",
+		unauthorizedHost: null
+	};
+	if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return {
+		message: "Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।",
+		unauthorizedHost: null
+	};
+	if (code === "auth/unauthorized-domain") {
+		const currentHost = typeof window !== "undefined" ? window.location.hostname || window.location.origin : "";
+		return {
+			message: currentHost ? `यह डोमेन (${currentHost}) Firebase Auth Authorized Domains में जुड़ा नहीं है।` : "यह डोमेन Firebase Auth Authorized Domains में जुड़ा नहीं है। कृपया Firebase Console में इस डोमेन को जोड़ें।",
+			unauthorizedHost: currentHost || "unknown-domain"
+		};
+	}
+	if (code === "auth/network-request-failed") return {
+		message: "नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।",
+		unauthorizedHost: null
+	};
+	return {
+		message: error instanceof Error ? error.message : "Google साइन-इन में त्रुटि हुई।",
+		unauthorizedHost: null
+	};
 }
 function buildDefaultState() {
 	return {
@@ -50221,6 +50239,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 	const [firebaseUser, setFirebaseUser] = (0, import_react.useState)(null);
 	const [authReady, setAuthReady] = (0, import_react.useState)(false);
 	const [authError, setAuthError] = (0, import_react.useState)(null);
+	const [unauthorizedDomainHost, setUnauthorizedDomainHost] = (0, import_react.useState)(null);
 	const [isSigningIn, setIsSigningIn] = (0, import_react.useState)(false);
 	const [firestoreReady, setFirestoreReady] = (0, import_react.useState)(false);
 	const [status, setStatus] = (0, import_react.useState)("connecting");
@@ -50274,6 +50293,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 			setAuthReady(true);
 			if (user) {
 				setAuthError(null);
+				setUnauthorizedDomainHost(null);
 				setAccessDenied(false);
 				if (!connectionTestedRef.current) {
 					connectionTestedRef.current = true;
@@ -50321,11 +50341,14 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 	const signInWithGoogle = (0, import_react.useCallback)(async () => {
 		setIsSigningIn(true);
 		setAuthError(null);
+		setUnauthorizedDomainHost(null);
 		setAccessDenied(false);
 		try {
 			await signInWithPopup(auth, googleProvider);
 		} catch (err) {
-			setAuthError(mapFirebaseAuthError(err));
+			const mapped = mapFirebaseAuthError(err);
+			setAuthError(mapped.message);
+			setUnauthorizedDomainHost(mapped.unauthorizedHost);
 		} finally {
 			setIsSigningIn(false);
 		}
@@ -50890,6 +50913,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		firebaseUser,
 		authReady,
 		authError,
+		unauthorizedDomainHost,
 		isSigningIn,
 		signInWithGoogle,
 		signOutGoogle,
@@ -59973,7 +59997,7 @@ function resolveApiBaseUrl(syncServerUrl) {
 	if ((window.location.protocol === "capacitor:" || window.location.protocol === "file:" || window.location.hostname === "localhost" && window.location.port !== "3000") && syncServerUrl) return syncServerUrl.trim().replace(/\/+$/, "");
 	return "";
 }
-var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, syncRoomId = "tej-food-main", syncServerUrl, authReady, firebaseEmail, authError, isSigningIn = false, firestoreReady = false, accessDenied = false, connectionError, onGoogleSignIn, onGoogleSignOut, onLoginSuccess, onResetPassword, onOpenLiveSync }) => {
+var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDevicesCount = 1, syncRoomId = "tej-food-main", syncServerUrl, authReady, firebaseEmail, authError, unauthorizedDomainHost, isSigningIn = false, firestoreReady = false, accessDenied = false, connectionError, onGoogleSignIn, onGoogleSignOut, onLoginSuccess, onResetPassword, onOpenLiveSync }) => {
 	const [mode, setMode] = (0, import_react.useState)("login");
 	const [resetStep, setResetStep] = (0, import_react.useState)("request_otp");
 	const [identifier, setIdentifier] = (0, import_react.useState)("");
@@ -59996,6 +60020,7 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 	const [isVerifyingOtp, setIsVerifyingOtp] = (0, import_react.useState)(false);
 	const [resendCooldown, setResendCooldown] = (0, import_react.useState)(0);
 	const [emailProviderConfigured, setEmailProviderConfigured] = (0, import_react.useState)(null);
+	const [copiedDomain, setCopiedDomain] = (0, import_react.useState)(false);
 	const isDefaultAdminPass = staffList.find((s) => s.id === "staff-1" && s.role === "admin")?.password === "admin@tej786";
 	const apiBase = resolveApiBaseUrl(syncServerUrl);
 	(0, import_react.useEffect)(() => {
@@ -60242,10 +60267,56 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 								})]
 							}),
 							authError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 flex items-start gap-2 text-xs",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "font-semibold",
-									children: authError
+								className: "bg-rose-50 border border-rose-200 text-rose-800 rounded-xl px-3.5 py-2.5 space-y-2.5 text-xs",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-start gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-4 h-4 text-rose-600 shrink-0 mt-0.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "font-semibold",
+										children: authError
+									})]
+								}), unauthorizedDomainHost && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "bg-white border border-rose-200 rounded-xl p-3 space-y-2 text-[11px] text-slate-700",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "font-bold text-slate-900",
+											children: "इस समस्या को 10 सेकंड में ठीक करें:"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+												className: "flex-1 font-mono text-[10px] text-slate-900 break-all",
+												children: unauthorizedDomainHost
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => {
+													navigator.clipboard?.writeText(unauthorizedDomainHost);
+													setCopiedDomain(true);
+													window.setTimeout(() => setCopiedDomain(false), 2e3);
+												},
+												className: "px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] flex items-center gap-1 shrink-0 cursor-pointer",
+												children: copiedDomain ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3 h-3 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी हुआ" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "w-3 h-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कॉपी" })] })
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ol", {
+											className: "list-decimal pl-4 space-y-1 text-[11px] leading-relaxed",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: "नीचे दिए लिंक से Firebase Console खोलें:" }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Authentication → Settings → Authorized domains → Add domain" }), " पर जाएं।"] }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+													"ऊपर कॉपी किया गया डोमेन पेस्ट करके ",
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Add" }),
+													" दबाएं, फिर वापस आकर साइन इन करें।"
+												] })
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+											href: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`,
+											target: "_blank",
+											rel: "noopener noreferrer",
+											className: "inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg transition",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Firebase Authorized Domains खोलें" })]
+										})
+									]
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
@@ -85133,6 +85204,7 @@ function App() {
 		authReady: sync.authReady,
 		firebaseEmail: sync.firebaseUser?.email,
 		authError: sync.authError,
+		unauthorizedDomainHost: sync.unauthorizedDomainHost,
 		isSigningIn: sync.isSigningIn,
 		firestoreReady: sync.firestoreReady,
 		accessDenied: sync.accessDenied,

@@ -158,24 +158,44 @@ function playNotificationChime() {
   }
 }
 
-function mapFirebaseAuthError(error: unknown): string {
+function mapFirebaseAuthError(error: unknown): { message: string; unauthorizedHost: string | null } {
   const code =
     typeof error === 'object' && error !== null && 'code' in error
       ? String((error as { code?: unknown }).code || '')
       : '';
   if (code === 'auth/popup-blocked') {
-    return 'ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।';
+    return {
+      message:
+        'ब्राउज़र ने Google साइन-इन पॉपअप ब्लॉक कर दिया है। कृपया पॉपअप Allow करके दोबारा प्रयास करें।',
+      unauthorizedHost: null,
+    };
   }
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-    return 'Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।';
+    return {
+      message: 'Google साइन-इन पूरा होने से पहले बंद हो गया। कृपया दोबारा प्रयास करें।',
+      unauthorizedHost: null,
+    };
   }
   if (code === 'auth/unauthorized-domain') {
-    return 'यह डोमेन Firebase Auth Authorized Domains में जुड़ा नहीं है। कृपया Firebase Console में इस डोमेन को जोड़ें।';
+    const currentHost =
+      typeof window !== 'undefined' ? window.location.hostname || window.location.origin : '';
+    return {
+      message: currentHost
+        ? `यह डोमेन (${currentHost}) Firebase Auth Authorized Domains में जुड़ा नहीं है।`
+        : 'यह डोमेन Firebase Auth Authorized Domains में जुड़ा नहीं है। कृपया Firebase Console में इस डोमेन को जोड़ें।',
+      unauthorizedHost: currentHost || 'unknown-domain',
+    };
   }
   if (code === 'auth/network-request-failed') {
-    return 'नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।';
+    return {
+      message: 'नेटवर्क कनेक्शन नहीं मिल रहा। कृपया मोबाइल डेटा या Wi-Fi जांचें।',
+      unauthorizedHost: null,
+    };
   }
-  return error instanceof Error ? error.message : 'Google साइन-इन में त्रुटि हुई।';
+  return {
+    message: error instanceof Error ? error.message : 'Google साइन-इन में त्रुटि हुई।',
+    unauthorizedHost: null,
+  };
 }
 
 function buildDefaultState(): SyncableErpState {
@@ -221,6 +241,7 @@ export function useFirestoreErpSync({
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [unauthorizedDomainHost, setUnauthorizedDomainHost] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
 
   const [firestoreReady, setFirestoreReady] = useState<boolean>(false);
@@ -283,6 +304,7 @@ export function useFirestoreErpSync({
 
       if (user) {
         setAuthError(null);
+        setUnauthorizedDomainHost(null);
         setAccessDenied(false);
         if (!connectionTestedRef.current) {
           connectionTestedRef.current = true;
@@ -347,11 +369,14 @@ export function useFirestoreErpSync({
   const signInWithGoogle = useCallback(async () => {
     setIsSigningIn(true);
     setAuthError(null);
+    setUnauthorizedDomainHost(null);
     setAccessDenied(false);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      setAuthError(mapFirebaseAuthError(err));
+      const mapped = mapFirebaseAuthError(err);
+      setAuthError(mapped.message);
+      setUnauthorizedDomainHost(mapped.unauthorizedHost);
     } finally {
       setIsSigningIn(false);
     }
@@ -1174,6 +1199,7 @@ export function useFirestoreErpSync({
     firebaseUser,
     authReady,
     authError,
+    unauthorizedDomainHost,
     isSigningIn,
     signInWithGoogle,
     signOutGoogle,
