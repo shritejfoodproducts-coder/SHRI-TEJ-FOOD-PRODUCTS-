@@ -180,10 +180,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span className="text-xs font-bold text-slate-200">फ्री ERP एडिशन</span>
+            <span className="text-xs font-bold text-slate-200">फैक्ट्री ERP सिस्टम</span>
           </div>
           <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/80 px-1.5 py-0.5 rounded font-mono font-bold">
-            NO CLOUD
+            LIVE SYNC
           </span>
         </div>
         <p className="text-[11px] text-amber-400 font-medium mt-1">
@@ -253,11 +253,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>स्टोरेज:</span>
           </span>
           <span className="text-emerald-400 font-semibold font-mono text-[10px]">
-            केवल फ़ोन मेमोरी
+            क्लाउड + लोकल सिंक
           </span>
         </div>
         <p className="text-[10px] text-slate-500">
-          शून्य क्लाउड चार्ज • 100% प्राइवेट व सुरक्षित
+          डेटा सुरक्षित व रियल-टाइम अपडेटेड
         </p>
       </div>
     </aside>

@@ -13,7 +13,8 @@ import {
   UserCheck,
   Download,
   Briefcase,
-  Store
+  Store,
+  Settings
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -57,10 +58,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     { id: 'delivery' as ActiveTab, label: 'डिलीवरी', icon: Truck, visible: perms.viewDelivery },
     { id: 'staff' as ActiveTab, label: 'स्टाफ', icon: UserCheck, visible: currentRole === 'admin' || perms.manageStaff },
     { id: 'reports' as ActiveTab, label: 'Excel', icon: FileSpreadsheet, visible: perms.viewReports },
+    { id: 'settings' as ActiveTab, label: 'सेटिंग्स', icon: Settings, visible: currentRole === 'admin' || perms.manageSettings },
   ].filter((t) => t.visible);
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-start sm:justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -69,8 +71,8 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 relative transition rounded-lg ${
-              isActive ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            className={`shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1.5 px-2 relative transition rounded-lg ${
+              isActive ? 'text-amber-400 font-bold bg-amber-500/10' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <div className="relative">
@@ -90,7 +92,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       {onOpenInstallModal && (
         <button
           onClick={onOpenInstallModal}
-          className="flex flex-col items-center justify-center py-1 px-1.5 text-amber-400 font-bold rounded-lg hover:bg-slate-900 transition"
+          className="shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1 px-1.5 text-amber-400 font-bold rounded-lg hover:bg-slate-900 transition"
           title="फ्री ऐप इंस्टॉल करें"
         >
           <div className="p-1 bg-amber-500 text-slate-950 rounded-md">

@@ -371,6 +371,10 @@ export function useFirestoreErpSync({
   onRemoteActivityRef.current = onRemoteActivity;
   const firebaseUserRef = useRef(firebaseUser);
   firebaseUserRef.current = firebaseUser;
+  const firestoreReadyRef = useRef(firestoreReady);
+  firestoreReadyRef.current = firestoreReady;
+  const accessDeniedRef = useRef(accessDenied);
+  accessDeniedRef.current = accessDenied;
 
   const liveStateRef = useRef<SyncableErpState>(buildDefaultState());
   liveStateRef.current = {
@@ -578,14 +582,19 @@ export function useFirestoreErpSync({
       const factoryRef = doc(db, 'factories', roomId);
       const ops: Array<(batch: ReturnType<typeof writeBatch>) => void> = [];
 
+      const existingSnap = await getDoc(factoryRef);
+      const existingData = existingSnap.exists()
+        ? (existingSnap.data() as { ownerUid?: string; ownerEmail?: string })
+        : null;
+
       ops.push((batch) => {
         batch.set(
           factoryRef,
           stripUndefinedDeep({
             roomId,
             version: fullState.version || '2.5.0',
-            ownerUid: uid,
-            ownerEmail: email.toLowerCase(),
+            ownerUid: existingData?.ownerUid || uid,
+            ownerEmail: existingData?.ownerEmail || email.toLowerCase(),
             timestamp: nowIso,
             settings: fullState.settings,
             products: fullState.products,
@@ -1027,7 +1036,7 @@ export function useFirestoreErpSync({
   }, [authEnv.isCapacitorNative]);
 
   useEffect(() => {
-    if (!authReady || firebaseUser) return;
+    if (!authReady || (firebaseUser && !accessDenied)) return;
 
     let cancelled = false;
     const roomId = sanitizeRoomId(config.roomId);
@@ -1118,7 +1127,7 @@ export function useFirestoreErpSync({
       cancelled = true;
       window.clearInterval(pollTimer);
     };
-  }, [authReady, firebaseUser, config.roomId, connectTrigger, resolveSyncApiBase, applyLocalFullState]);
+  }, [authReady, firebaseUser, accessDenied, config.roomId, connectTrigger, resolveSyncApiBase, applyLocalFullState]);
 
   // Update presence whenever user role or device identity changes
   useEffect(() => {
@@ -1172,7 +1181,7 @@ export function useFirestoreErpSync({
   }, []);
 
   const probeServerHealth = useCallback(async (): Promise<ServerProbeResult> => {
-    if (!firebaseUserRef.current) {
+    if (!firebaseUserRef.current || accessDeniedRef.current || !firestoreReadyRef.current) {
       try {
         const base = resolveSyncApiBase();
         const res = await fetch(`${base}/api/health`);
@@ -1216,6 +1225,7 @@ export function useFirestoreErpSync({
         processedPaymentIdsRef.current
       );
       if (!res.applied) return;
+      liveStateRef.current = res.nextState;
 
       const nowIso = new Date().toISOString();
       const evtId = generateId('act');
@@ -1231,8 +1241,9 @@ export function useFirestoreErpSync({
         detail: res.activityMeta?.detail || '',
       };
 
-      // If logged in directly via Mobile + Password (no Firebase Google Auth yet), update local + Express server sync
-      if (!user) {
+      // If logged in via Mobile + Password without an authorized Firestore workspace session,
+      // persist immediately via Local Storage + Express server sync instead of triggering permission errors.
+      if (!user || !firestoreReadyRef.current || accessDeniedRef.current) {
         applyLocalFullState(res.nextState);
         saveStateToStorage(res.nextState);
         setRecentEvents((prev) => [activityEvent, ...prev].slice(0, 40));
@@ -1511,9 +1522,13 @@ export function useFirestoreErpSync({
             break;
           }
 
+          case 'product:create':
+          case 'product:update':
+          case 'product:delete':
           case 'product:rate_update': {
             batch.update(factoryRef, {
               products: stripUndefinedDeep(res.nextState.products),
+              bagStock: stripUndefinedDeep(res.nextState.bagStock),
               timestamp: nowIso,
             });
             break;

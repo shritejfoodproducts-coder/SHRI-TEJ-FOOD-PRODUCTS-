@@ -25,7 +25,8 @@ import {
   Calendar,
   ChevronRight,
   FileSpreadsheet,
-  Briefcase
+  Briefcase,
+  Settings
 } from 'lucide-react';
 import { ActiveTab } from '../components/Sidebar';
 
@@ -70,6 +71,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const perms = permissions || getDefaultPermissionsForRole(currentRole);
   const canSeeProfit = currentRole === 'admin' || perms.viewAccounting;
+  const canManageSettings = currentRole === 'admin' || perms.manageSettings;
   const todayStr = new Date().toISOString().slice(0, 10);
 
   // Today's Orders
@@ -228,6 +230,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {canManageSettings && (
+              <button
+                onClick={() => onNavigate('settings')}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer"
+              >
+                <Settings className="w-4 h-4" />
+                <span>फैक्ट्री सेटिंग्स (Details Edit)</span>
+              </button>
+            )}
             <button
               onClick={handleShareDailyReport}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
@@ -776,6 +787,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className="p-2.5 bg-amber-900/60 hover:bg-amber-900 text-white rounded-xl font-bold transition text-center"
                 >
                   गोदाम स्टॉक देखें
+                </button>
+              )}
+              {canManageSettings && (
+                <button
+                  onClick={() => onNavigate('settings')}
+                  className="col-span-2 p-2.5 bg-slate-950/90 hover:bg-slate-900 text-amber-300 rounded-xl font-bold transition text-center flex items-center justify-center gap-1.5"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>फैक्ट्री सेटिंग्स (नाम, पता, बैंक, UPI, रेट बदलें)</span>
                 </button>
               )}
             </div>

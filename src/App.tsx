@@ -9,6 +9,7 @@ import {
   CustomerPaymentRecord,
   Customer,
   ProductionBatch,
+  ProductMaster,
   ExpenseRecord,
   RawMaterialStock,
 } from './types/erp';
@@ -370,6 +371,18 @@ export default function App() {
     runMutation({ type: 'product:rate_update', productId, bagSize, rate });
   };
 
+  const handleAddProduct = (product: ProductMaster) => {
+    runMutation({ type: 'product:create', product });
+  };
+
+  const handleUpdateProduct = (product: ProductMaster) => {
+    runMutation({ type: 'product:update', product });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    runMutation({ type: 'product:delete', productId });
+  };
+
   const handleRestoreState = (restored: AppDatabaseState) => {
     runMutation({ type: 'master:push_full_state', fullState: restored });
   };
@@ -528,6 +541,7 @@ export default function App() {
         syncStatus={sync.status}
         connectedDevicesCount={sync.connectedDevices.length}
         syncDeviceRole={sync.config.deviceRole}
+        isSettingsActive={activeTab === 'settings'}
         onOpenRoleSwitcher={() => setShowRoleSwitcherModal(true)}
         onOpenNewOrder={() => {
           setNewOrderCustomerId(undefined);
@@ -539,6 +553,7 @@ export default function App() {
           setShowReceivePaymentModal(true);
         }}
         onNavigateToInventory={() => setActiveTab('inventory')}
+        onNavigateToSettings={() => setActiveTab('settings')}
         onOpenInstallModal={() => handleOpenInstallModal('apk')}
         onOpenLiveSync={() => setShowLiveSyncModal(true)}
         onLogout={handleLogout}
@@ -751,8 +766,29 @@ export default function App() {
             <SettingsView
               settings={settings}
               products={products}
+              syncStatus={sync.status}
+              connectedDevicesCount={sync.connectedDevices.length}
+              currentAppState={{
+                version: '2.5.0',
+                timestamp: new Date().toISOString(),
+                settings,
+                products,
+                rawStock,
+                bagStock,
+                customers,
+                orders,
+                production,
+                expenses,
+                staff,
+              }}
               onSaveSettings={handleSaveSettings}
               onUpdateProductRate={handleUpdateProductRate}
+              onAddProduct={handleAddProduct}
+              onUpdateProduct={handleUpdateProduct}
+              onDeleteProduct={handleDeleteProduct}
+              onNavigate={setActiveTab}
+              onRestoreState={handleRestoreState}
+              onResetFactorySeeds={handleResetFactorySeeds}
               onOpenInstallModal={() => handleOpenInstallModal('apk')}
               onOpenLiveSync={() => setShowLiveSyncModal(true)}
             />

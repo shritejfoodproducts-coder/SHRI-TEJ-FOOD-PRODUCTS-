@@ -685,6 +685,83 @@ export function applyErpMutation(
       };
     }
 
+    case 'product:create': {
+      if (state.products.some((p) => p.id === action.product.id)) {
+        return { nextState: state, applied: false };
+      }
+      const nextProducts = [...state.products, action.product];
+      const bagSizes: BagSize[] = [5, 10, 25, 50];
+      const nextBagStock = [...state.bagStock];
+      for (const size of bagSizes) {
+        if (!nextBagStock.some((b) => b.productId === action.product.id && b.bagSize === size)) {
+          nextBagStock.push({
+            productId: action.product.id,
+            bagSize: size,
+            packedCount: 0,
+            reservedCount: 0,
+            minThreshold: 10,
+          });
+        }
+      }
+      return {
+        nextState: {
+          ...state,
+          timestamp: nowIso,
+          products: nextProducts,
+          bagStock: nextBagStock,
+        },
+        applied: true,
+        activityMeta: {
+          category: 'settings',
+          title: `नया आइटम जोड़ा गया: ${action.product.nameHindi}`,
+          detail: action.product.brand || action.product.nameEn || 'नया प्रोडक्ट',
+        },
+      };
+    }
+
+    case 'product:update': {
+      if (!state.products.some((p) => p.id === action.product.id)) {
+        return { nextState: state, applied: false };
+      }
+      const nextProducts = state.products.map((p) =>
+        p.id === action.product.id ? action.product : p
+      );
+      return {
+        nextState: {
+          ...state,
+          timestamp: nowIso,
+          products: nextProducts,
+        },
+        applied: true,
+        activityMeta: {
+          category: 'settings',
+          title: `आइटम अपडेट: ${action.product.nameHindi}`,
+          detail: action.product.brand || action.product.nameEn || 'प्रोडक्ट मास्टर',
+        },
+      };
+    }
+
+    case 'product:delete': {
+      const target = state.products.find((p) => p.id === action.productId);
+      if (!target) {
+        return { nextState: state, applied: false };
+      }
+      return {
+        nextState: {
+          ...state,
+          timestamp: nowIso,
+          products: state.products.filter((p) => p.id !== action.productId),
+          bagStock: state.bagStock.filter((b) => b.productId !== action.productId),
+        },
+        applied: true,
+        activityMeta: {
+          category: 'settings',
+          title: `आइटम हटाया गया`,
+          detail: target.nameHindi,
+        },
+      };
+    }
+
     case 'product:rate_update': {
       const nextProducts = state.products.map((p) => {
         if (p.id === action.productId) {

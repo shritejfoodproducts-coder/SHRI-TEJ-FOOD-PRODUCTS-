@@ -13,7 +13,8 @@ import {
   Radio,
   Crown,
   LogOut,
-  Cloud
+  Cloud,
+  Settings
 } from 'lucide-react';
 import type { SyncConnectionStatus } from '../hooks/useFirestoreErpSync';
 import type { SyncDeviceRole } from '../../shared/erpSyncTypes';
@@ -27,11 +28,13 @@ interface HeaderProps {
   syncStatus?: SyncConnectionStatus;
   connectedDevicesCount?: number;
   syncDeviceRole?: SyncDeviceRole;
+  isSettingsActive?: boolean;
   onOpenRoleSwitcher: () => void;
   onOpenNewOrder: () => void;
   onOpenNewProduction: () => void;
   onOpenReceivePayment: () => void;
   onNavigateToInventory: () => void;
+  onNavigateToSettings?: () => void;
   onOpenInstallModal: () => void;
   onOpenLiveSync?: () => void;
   onLogout?: () => void;
@@ -46,16 +49,19 @@ export const Header: React.FC<HeaderProps> = ({
   syncStatus = 'connecting',
   connectedDevicesCount = 1,
   syncDeviceRole = 'master',
+  isSettingsActive = false,
   onOpenRoleSwitcher,
   onOpenNewOrder,
   onOpenNewProduction,
   onOpenReceivePayment,
   onNavigateToInventory,
+  onNavigateToSettings,
   onOpenInstallModal,
   onOpenLiveSync,
   onLogout,
 }) => {
   const perms = permissions || getDefaultPermissionsForRole(currentRole);
+  const canManageSettings = currentRole === 'admin' || perms.manageSettings;
   const [timeStr, setTimeStr] = useState<string>('');
 
   useEffect(() => {
@@ -112,8 +118,8 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-sm sm:text-lg font-black tracking-tight text-white whitespace-nowrap">
-                TEJ FOOD PRODUCTS
+              <span className="text-sm sm:text-lg font-black tracking-tight text-white truncate max-w-[140px] sm:max-w-xs">
+                {settings.companyName || 'TEJ FOOD PRODUCTS'}
               </span>
               <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
                 <Sparkles className="w-3 h-3 text-amber-400" />
@@ -121,9 +127,9 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-medium">
-              <span className="truncate max-w-[120px] sm:max-w-xs">{settings.companyName}</span>
+              <span className="truncate max-w-[120px] sm:max-w-xs">{settings.proprietor || settings.brandName}</span>
               <span className="text-emerald-400 font-semibold hidden sm:inline flex items-center gap-1">
-                • 🔥 Firebase लाइव सिंक
+                • 🔥 लाइव सिंक
               </span>
             </div>
           </div>
@@ -238,6 +244,23 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
           </div>
+
+          {/* Factory Settings Quick Button (Always visible on Mobile & Desktop for Admin/Authorized) */}
+          {canManageSettings && onNavigateToSettings && (
+            <button
+              type="button"
+              onClick={onNavigateToSettings}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                isSettingsActive
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                  : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/40'
+              }`}
+              title="फैक्ट्री का नाम, पता, बैंक खाता, UPI ID व सभी सेटिंग्स अपडेट करें"
+            >
+              <Settings className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline whitespace-nowrap">सेटिंग्स</span>
+            </button>
+          )}
 
           {/* Role Simulator Switcher Button (Admin can switch; staff sees own badge) */}
           <button

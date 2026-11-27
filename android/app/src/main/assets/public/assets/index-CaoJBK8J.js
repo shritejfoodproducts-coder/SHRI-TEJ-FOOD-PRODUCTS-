@@ -50311,6 +50311,82 @@ function applyErpMutation(state, action, processedPaymentIds) {
 				detail: action.settings.companyName
 			}
 		};
+		case "product:create": {
+			if (state.products.some((p) => p.id === action.product.id)) return {
+				nextState: state,
+				applied: false
+			};
+			const nextProducts = [...state.products, action.product];
+			const bagSizes = [
+				5,
+				10,
+				25,
+				50
+			];
+			const nextBagStock = [...state.bagStock];
+			for (const size of bagSizes) if (!nextBagStock.some((b) => b.productId === action.product.id && b.bagSize === size)) nextBagStock.push({
+				productId: action.product.id,
+				bagSize: size,
+				packedCount: 0,
+				reservedCount: 0,
+				minThreshold: 10
+			});
+			return {
+				nextState: {
+					...state,
+					timestamp: nowIso,
+					products: nextProducts,
+					bagStock: nextBagStock
+				},
+				applied: true,
+				activityMeta: {
+					category: "settings",
+					title: `नया आइटम जोड़ा गया: ${action.product.nameHindi}`,
+					detail: action.product.brand || action.product.nameEn || "नया प्रोडक्ट"
+				}
+			};
+		}
+		case "product:update": {
+			if (!state.products.some((p) => p.id === action.product.id)) return {
+				nextState: state,
+				applied: false
+			};
+			const nextProducts = state.products.map((p) => p.id === action.product.id ? action.product : p);
+			return {
+				nextState: {
+					...state,
+					timestamp: nowIso,
+					products: nextProducts
+				},
+				applied: true,
+				activityMeta: {
+					category: "settings",
+					title: `आइटम अपडेट: ${action.product.nameHindi}`,
+					detail: action.product.brand || action.product.nameEn || "प्रोडक्ट मास्टर"
+				}
+			};
+		}
+		case "product:delete": {
+			const target = state.products.find((p) => p.id === action.productId);
+			if (!target) return {
+				nextState: state,
+				applied: false
+			};
+			return {
+				nextState: {
+					...state,
+					timestamp: nowIso,
+					products: state.products.filter((p) => p.id !== action.productId),
+					bagStock: state.bagStock.filter((b) => b.productId !== action.productId)
+				},
+				applied: true,
+				activityMeta: {
+					category: "settings",
+					title: `आइटम हटाया गया`,
+					detail: target.nameHindi
+				}
+			};
+		}
 		case "product:rate_update": {
 			const nextProducts = state.products.map((p) => {
 				if (p.id === action.productId) return {
@@ -50562,6 +50638,10 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 	onRemoteActivityRef.current = onRemoteActivity;
 	const firebaseUserRef = (0, import_react.useRef)(firebaseUser);
 	firebaseUserRef.current = firebaseUser;
+	const firestoreReadyRef = (0, import_react.useRef)(firestoreReady);
+	firestoreReadyRef.current = firestoreReady;
+	const accessDeniedRef = (0, import_react.useRef)(accessDenied);
+	accessDeniedRef.current = accessDenied;
 	const liveStateRef = (0, import_react.useRef)(buildDefaultState());
 	liveStateRef.current = {
 		version: "2.5.0",
@@ -50709,12 +50789,14 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		const nowIso = (/* @__PURE__ */ new Date()).toISOString();
 		const factoryRef = doc(db, "factories", roomId);
 		const ops = [];
+		const existingSnap = await getDoc(factoryRef);
+		const existingData = existingSnap.exists() ? existingSnap.data() : null;
 		ops.push((batch) => {
 			batch.set(factoryRef, stripUndefinedDeep({
 				roomId,
 				version: fullState.version || "2.5.0",
-				ownerUid: uid,
-				ownerEmail: email.toLowerCase(),
+				ownerUid: existingData?.ownerUid || uid,
+				ownerEmail: existingData?.ownerEmail || email.toLowerCase(),
 				timestamp: nowIso,
 				settings: fullState.settings,
 				products: fullState.products,
@@ -51010,7 +51092,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		return "";
 	}, [authEnv.isCapacitorNative]);
 	(0, import_react.useEffect)(() => {
-		if (!authReady || firebaseUser) return;
+		if (!authReady || firebaseUser && !accessDenied) return;
 		let cancelled = false;
 		const roomId = sanitizeRoomId(config.roomId);
 		const base = resolveSyncApiBase();
@@ -51079,6 +51161,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 	}, [
 		authReady,
 		firebaseUser,
+		accessDenied,
 		config.roomId,
 		connectTrigger,
 		resolveSyncApiBase,
@@ -51124,7 +51207,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		setConnectTrigger((prev) => prev + 1);
 	}, []);
 	const probeServerHealth = (0, import_react.useCallback)(async () => {
-		if (!firebaseUserRef.current) {
+		if (!firebaseUserRef.current || accessDeniedRef.current || !firestoreReadyRef.current) {
 			try {
 				const base = resolveSyncApiBase();
 				if ((await fetch(`${base}/api/health`)).ok) return {
@@ -51152,6 +51235,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 		const currentState = liveStateRef.current;
 		const res = applyErpMutation(currentState, action, processedPaymentIdsRef.current);
 		if (!res.applied) return;
+		liveStateRef.current = res.nextState;
 		const nowIso = (/* @__PURE__ */ new Date()).toISOString();
 		const evtId = generateId("act");
 		const activityEvent = {
@@ -51165,7 +51249,7 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 			title: res.activityMeta?.title || "डेटा अपडेट",
 			detail: res.activityMeta?.detail || ""
 		};
-		if (!user) {
+		if (!user || !firestoreReadyRef.current || accessDeniedRef.current) {
 			applyLocalFullState(res.nextState);
 			saveStateToStorage(res.nextState);
 			setRecentEvents((prev) => [activityEvent, ...prev].slice(0, 40));
@@ -51368,9 +51452,13 @@ function useFirestoreErpSync({ currentUserRole, isAuthenticatedInErp, onRemoteAc
 						timestamp: nowIso
 					});
 					break;
+				case "product:create":
+				case "product:update":
+				case "product:delete":
 				case "product:rate_update":
 					batch.update(factoryRef, {
 						products: stripUndefinedDeep(res.nextState.products),
+						bagStock: stripUndefinedDeep(res.nextState.bagStock),
 						timestamp: nowIso
 					});
 					break;
@@ -53733,8 +53821,9 @@ var require_react_jsx_runtime_production = /* @__PURE__ */ __commonJSMin(((expor
 var import_jsx_runtime = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = require_react_jsx_runtime_production();
 })))();
-var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onOpenInstallModal, onOpenLiveSync, onLogout }) => {
+var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCount, syncStatus = "connecting", connectedDevicesCount = 1, syncDeviceRole = "master", isSettingsActive = false, onOpenRoleSwitcher, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onNavigateToInventory, onNavigateToSettings, onOpenInstallModal, onOpenLiveSync, onLogout }) => {
 	const perms = permissions || getDefaultPermissionsForRole(currentRole);
+	const canManageSettings = currentRole === "admin" || perms.manageSettings;
 	const [timeStr, setTimeStr] = (0, import_react.useState)("");
 	(0, import_react.useEffect)(() => {
 		const updateTime = () => {
@@ -53811,8 +53900,8 @@ var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCou
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-1.5 sm:gap-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "text-sm sm:text-lg font-black tracking-tight text-white whitespace-nowrap",
-						children: "TEJ FOOD PRODUCTS"
+						className: "text-sm sm:text-lg font-black tracking-tight text-white truncate max-w-[140px] sm:max-w-xs",
+						children: settings.companyName || "TEJ FOOD PRODUCTS"
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 						className: "hidden md:inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30",
 						children: [
@@ -53825,10 +53914,10 @@ var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCou
 					className: "flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-400 font-medium",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "truncate max-w-[120px] sm:max-w-xs",
-						children: settings.companyName
+						children: settings.proprietor || settings.brandName
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "text-emerald-400 font-semibold hidden sm:inline flex items-center gap-1",
-						children: "• 🔥 Firebase लाइव सिंक"
+						children: "• 🔥 लाइव सिंक"
 					})]
 				})] })]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -53914,6 +54003,16 @@ var Header = ({ currentRole, currentUserName, permissions, settings, lowStockCou
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IndianRupee, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ भुगतान" })]
 							})
 						]
+					}),
+					canManageSettings && onNavigateToSettings && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: onNavigateToSettings,
+						className: `flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${isSettingsActive ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md" : "bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/40"}`,
+						title: "फैक्ट्री का नाम, पता, बैंक खाता, UPI ID व सभी सेटिंग्स अपडेट करें",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "w-3.5 h-3.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "hidden sm:inline whitespace-nowrap",
+							children: "सेटिंग्स"
+						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
@@ -54064,11 +54163,11 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, permissions, pendingOrders
 						className: "flex items-center gap-2",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "text-xs font-bold text-slate-200",
-							children: "फ्री ERP एडिशन"
+							children: "फैक्ट्री ERP सिस्टम"
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/80 px-1.5 py-0.5 rounded font-mono font-bold",
-						children: "NO CLOUD"
+						children: "LIVE SYNC"
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-[11px] text-amber-400 font-medium mt-1",
@@ -54122,11 +54221,11 @@ var Sidebar = ({ activeTab, onTabChange, currentRole, permissions, pendingOrders
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDrive, { className: "w-3.5 h-3.5 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "स्टोरेज:" })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "text-emerald-400 font-semibold font-mono text-[10px]",
-						children: "केवल फ़ोन मेमोरी"
+						children: "क्लाउड + लोकल सिंक"
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "text-[10px] text-slate-500",
-					children: "शून्य क्लाउड चार्ज • 100% प्राइवेट व सुरक्षित"
+					children: "डेटा सुरक्षित व रियल-टाइम अपडेटेड"
 				})]
 			})
 		]
@@ -54196,16 +54295,22 @@ var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrde
 			label: "Excel",
 			icon: FileSpreadsheet,
 			visible: perms.viewReports
+		},
+		{
+			id: "settings",
+			label: "सेटिंग्स",
+			icon: Settings,
+			visible: currentRole === "admin" || perms.manageSettings
 		}
 	].filter((t) => t.visible);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
-		className: "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print",
+		className: "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1 flex justify-start sm:justify-around items-center gap-1 overflow-x-auto select-none shadow-lg no-print",
 		children: [tabs.map((tab) => {
 			const Icon = tab.icon;
 			const isActive = activeTab === tab.id;
 			return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 				onClick: () => onTabChange(tab.id),
-				className: `flex flex-col items-center justify-center py-1.5 px-2 relative transition rounded-lg ${isActive ? "text-amber-400 font-bold" : "text-slate-400 hover:text-slate-200"}`,
+				className: `shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1.5 px-2 relative transition rounded-lg ${isActive ? "text-amber-400 font-bold bg-amber-500/10" : "text-slate-400 hover:text-slate-200"}`,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "relative",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "w-5 h-5" }), tab.badge && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -54219,7 +54324,7 @@ var MobileNav = ({ activeTab, onTabChange, currentRole, permissions, pendingOrde
 			}, tab.id);
 		}), onOpenInstallModal && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 			onClick: onOpenInstallModal,
-			className: "flex flex-col items-center justify-center py-1 px-1.5 text-amber-400 font-bold rounded-lg hover:bg-slate-900 transition",
+			className: "shrink-0 min-w-[54px] flex flex-col items-center justify-center py-1 px-1.5 text-amber-400 font-bold rounded-lg hover:bg-slate-900 transition",
 			title: "फ्री ऐप इंस्टॉल करें",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "p-1 bg-amber-500 text-slate-950 rounded-md",
@@ -65677,6 +65782,7 @@ var LoginScreen = ({ settings, staffList, syncStatus = "connecting", connectedDe
 var DashboardView = ({ orders, customers, rawStock, bagStock, products, production, expenses, staff, settings, currentRole, activeStaffMember, permissions, onNavigate, onOpenNewOrder, onOpenNewProduction, onOpenReceivePayment, onSelectOrder }) => {
 	const perms = permissions || getDefaultPermissionsForRole(currentRole);
 	const canSeeProfit = currentRole === "admin" || perms.viewAccounting;
+	const canManageSettings = currentRole === "admin" || perms.manageSettings;
 	const todayStr = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 	const todayOrders = orders.filter((o) => o.date === todayStr);
 	const todaySales = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -65772,15 +65878,23 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 						})
 					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex flex-wrap items-center gap-2",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							onClick: handleShareDailyReport,
-							className: "flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "WhatsApp दैनिक समरी" })]
-						}), perms.viewReports && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							onClick: () => onNavigate("reports"),
-							className: "flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Excel डाउनलोड" })]
-						})]
+						children: [
+							canManageSettings && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => onNavigate("settings"),
+								className: "flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फैक्ट्री सेटिंग्स (Details Edit)" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: handleShareDailyReport,
+								className: "flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share2, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "WhatsApp दैनिक समरी" })]
+							}),
+							perms.viewReports && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => onNavigate("reports"),
+								className: "flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-xl transition",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Excel डाउनलोड" })]
+							})
+						]
 					})]
 				})]
 			}),
@@ -66520,6 +66634,11 @@ var DashboardView = ({ orders, customers, rawStock, bagStock, products, producti
 									onClick: () => onNavigate("inventory"),
 									className: "p-2.5 bg-amber-900/60 hover:bg-amber-900 text-white rounded-xl font-bold transition text-center",
 									children: "गोदाम स्टॉक देखें"
+								}),
+								canManageSettings && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									onClick: () => onNavigate("settings"),
+									className: "col-span-2 p-2.5 bg-slate-950/90 hover:bg-slate-900 text-amber-300 rounded-xl font-bold transition text-center flex items-center justify-center gap-1.5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फैक्ट्री सेटिंग्स (नाम, पता, बैंक, UPI, रेट बदलें)" })]
 								})
 							]
 						})]
@@ -90142,17 +90261,57 @@ function getDeviceStorageStats() {
 	};
 }
 // src/views/SettingsView.tsx
-var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, onOpenInstallModal, onOpenLiveSync }) => {
+var SettingsView = ({ settings, products, syncStatus = "connecting", connectedDevicesCount = 1, currentAppState, onSaveSettings, onUpdateProductRate, onAddProduct, onUpdateProduct, onDeleteProduct, onNavigate, onRestoreState, onResetFactorySeeds, onOpenInstallModal, onOpenLiveSync }) => {
 	const [formData, setFormData] = (0, import_react.useState)(settings);
-	const [savedSuccess, setSavedSuccess] = (0, import_react.useState)(false);
+	const [rateDrafts, setRateDrafts] = (0, import_react.useState)(() => {
+		const init = {};
+		products.forEach((p) => {
+			init[p.id] = { ...p.rates };
+		});
+		return init;
+	});
+	const [savedMessage, setSavedMessage] = (0, import_react.useState)(null);
 	const [previewDynamicQr, setPreviewDynamicQr] = (0, import_react.useState)("");
 	const [isProcessingImage, setIsProcessingImage] = (0, import_react.useState)(false);
 	const fileInputRef = (0, import_react.useRef)(null);
+	const backupFileInputRef = (0, import_react.useRef)(null);
+	const [showProductModal, setShowProductModal] = (0, import_react.useState)(false);
+	const [editingProductId, setEditingProductId] = (0, import_react.useState)(null);
+	const [prodNameHindi, setProdNameHindi] = (0, import_react.useState)("");
+	const [prodNameEn, setProdNameEn] = (0, import_react.useState)("");
+	const [prodBrand, setProdBrand] = (0, import_react.useState)("");
+	const [prodHsn, setProdHsn] = (0, import_react.useState)("1101");
+	const [prodDesc, setProdDesc] = (0, import_react.useState)("");
+	const [prodRates, setProdRates] = (0, import_react.useState)({
+		5: 180,
+		10: 350,
+		25: 850,
+		50: 1650
+	});
+	const [prodCostRates, setProdCostRates] = (0, import_react.useState)({
+		5: 145,
+		10: 285,
+		25: 700,
+		50: 1360
+	});
 	const storageStats = getDeviceStorageStats();
 	const activeQrBase64 = formData.qrCodeBase64 || formData.customQrCodeUrl || "";
 	(0, import_react.useEffect)(() => {
 		setFormData(settings);
 	}, [settings]);
+	(0, import_react.useEffect)(() => {
+		const nextDrafts = {};
+		products.forEach((p) => {
+			nextDrafts[p.id] = { ...p.rates };
+		});
+		setRateDrafts(nextDrafts);
+	}, [products]);
+	const showToast = (msg) => {
+		setSavedMessage(msg);
+		window.setTimeout(() => {
+			setSavedMessage((prev) => prev === msg ? null : prev);
+		}, 3500);
+	};
 	(0, import_react.useEffect)(() => {
 		const generatePreview = async () => {
 			try {
@@ -90178,7 +90337,7 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 		const file = e.target.files?.[0];
 		if (!file) return;
 		if (!file.type.startsWith("image/")) {
-			alert("कृपया केवल इमेज (JPG, PNG, WebP) फ़ाइल चुनें।");
+			showToast("कृपया केवल इमेज (JPG, PNG, WebP) फ़ाइल चुनें।");
 			return;
 		}
 		setIsProcessingImage(true);
@@ -90218,9 +90377,8 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 					};
 					setFormData(updatedSettings);
 					onSaveSettings(updatedSettings);
-					setSavedSuccess(true);
 					setIsProcessingImage(false);
-					setTimeout(() => setSavedSuccess(false), 3e3);
+					showToast("कस्टम पेमेंट QR कोड सफलतापूर्वक अपडेट व सुरक्षित हो गया!");
 				}
 			};
 			img.onerror = () => {
@@ -90232,9 +90390,8 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 				};
 				setFormData(updatedSettings);
 				onSaveSettings(updatedSettings);
-				setSavedSuccess(true);
 				setIsProcessingImage(false);
-				setTimeout(() => setSavedSuccess(false), 3e3);
+				showToast("कस्टम पेमेंट QR कोड सफलतापूर्वक अपडेट व सुरक्षित हो गया!");
 			};
 			img.src = rawBase64;
 		};
@@ -90250,59 +90407,107 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 		};
 		setFormData(updatedSettings);
 		onSaveSettings(updatedSettings);
-		setSavedSuccess(true);
-		setTimeout(() => setSavedSuccess(false), 2500);
+		showToast("कस्टम QR हटाया गया। अब UPI ID से ऑटो डायनामिक QR दिखेगा।");
 	};
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		onSaveSettings(formData);
-		setSavedSuccess(true);
-		setTimeout(() => setSavedSuccess(false), 3e3);
+		const cleaned = {
+			...formData,
+			companyName: formData.companyName.trim(),
+			brandName: formData.brandName.trim(),
+			proprietor: formData.proprietor.trim(),
+			address: formData.address.trim(),
+			phone: formData.phone.trim(),
+			email: (formData.email || "").trim(),
+			gstin: (formData.gstin || "").trim().toUpperCase(),
+			fssaiNumber: (formData.fssaiNumber || "").trim(),
+			bankName: formData.bankName.trim(),
+			accountNumber: formData.accountNumber.trim(),
+			ifscCode: formData.ifscCode.trim().toUpperCase(),
+			upiId: formData.upiId.trim(),
+			defaultGstRate: Number(formData.defaultGstRate) || 0,
+			autoBackupDays: Number(formData.autoBackupDays) || 1
+		};
+		setFormData(cleaned);
+		onSaveSettings(cleaned);
+		showToast("फैक्ट्री का नाम, पता, बैंक खाता, UPI ID व सभी सेटिंग्स सफलतापूर्वक अपडेट हो गईं!");
+	};
+	const handleSaveAllProductRates = () => {
+		let changedCount = 0;
+		products.forEach((p) => {
+			const draft = rateDrafts[p.id];
+			if (!draft) return;
+			[
+				5,
+				10,
+				25,
+				50
+			].forEach((size) => {
+				const nextVal = Number(draft[size]) || 0;
+				if (nextVal !== p.rates[size]) {
+					onUpdateProductRate(p.id, size, nextVal);
+					changedCount += 1;
+				}
+			});
+		});
+		showToast(changedCount > 0 ? `आटा बैग की ${changedCount} नई दरें सफलतापूर्वक अपडेट कर दी गईं!` : "सभी प्रोडक्ट दरें पहले से अपडेट हैं।");
+	};
+	const handleBackupRestoreFile = async (e) => {
+		const file = e.target.files?.[0];
+		if (!file || !onRestoreState) return;
+		try {
+			onRestoreState(await importDatabaseBackup(file));
+			showToast("बैकअप फ़ाइल से सारा डेटा सफलतापूर्वक रीस्टोर व सिंक कर दिया गया!");
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : "अमान्य बैकअप फ़ाइल";
+			showToast(`बैकअप त्रुटि: ${msg}`);
+		} finally {
+			e.target.value = "";
+		}
 	};
 	const qrBase64SizeKb = activeQrBase64 ? Math.round(activeQrBase64.length * (3 / 4) / 1024) : 0;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6 pb-12",
+		className: "space-y-6 pb-16",
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
-				className: "text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "w-6 h-6 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फैक्ट्री प्रोफाइल, QR कोड एवं सिस्टम सेटिंग्स (Company Settings)" })]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-xs text-slate-500 mt-0.5",
-				children: "कंपनी नाम, Tejstha आटा ब्रांड, GSTIN, FSSAI, बैंक खाता, कस्टम QR कोड (Base64) और फ्री लोकल स्टोरेज"
-			})] }),
-			savedSuccess && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "bg-emerald-50 border border-emerald-300 text-emerald-800 p-3.5 rounded-xl flex items-center gap-2 text-xs font-bold shadow-xs",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कंपनी सेटिंग्स एवं QR कोड Base64 इमेज सफलतापूर्वक localStorage में सुरक्षित (Persisted) कर दी गई हैं!" })]
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+					className: "text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "w-6 h-6 text-amber-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फैक्ट्री सेटिंग्स एवं डेटा प्रबंधन (Factory Settings)" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs text-slate-500 mt-0.5",
+					children: "यहाँ से कंपनी नाम, ब्रांड, पता, मोबाइल, ईमेल, GSTIN, बैंक खाता नंबर, UPI ID, QR कोड, प्रोडक्ट रेट और पूरा डेटा अपडेट करें"
+				})] })
+			}),
+			savedMessage && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "sticky top-16 z-30 bg-emerald-50 border-2 border-emerald-400 text-emerald-900 p-3.5 rounded-xl flex items-center gap-2 text-xs font-bold shadow-md",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-5 h-5 text-emerald-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: savedMessage })]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-950 text-white rounded-2xl p-5 border border-emerald-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-3",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "p-3 bg-emerald-600 text-white rounded-xl shadow-xs",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDrive, { className: "w-6 h-6" })
+						className: "p-3 bg-emerald-600 text-white rounded-xl shadow-xs shrink-0",
+						children: syncStatus === "connected" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud, { className: "w-6 h-6" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDrive, { className: "w-6 h-6" })
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-center gap-2",
+							className: "flex flex-wrap items-center gap-2",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-sm font-black text-emerald-300 uppercase",
-								children: "100% फ्री लोकल फोन स्टोरेज मोड एक्टिव"
+								children: syncStatus === "connected" ? "लाइव क्लाउड + लोकल डेटा सिंक एक्टिव" : "लोकल स्टोरेज सुरक्षित मोड एक्टिव"
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-[10px] bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full font-bold",
-								children: "NO CLOUD"
+								children: syncStatus === "connected" ? `${connectedDevicesCount} डिवाइस लाइव` : "OFFLINE READY"
 							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "text-xs text-slate-300 mt-1 max-w-xl",
-							children: "क्लाउड का उपयोग न करके सारा डेटा (स्टॉक, बिल, ग्राहक, खर्चे, qrCodeBase64) सीधे आपके फोन के इंटरनल स्टोरेज में सुरक्षित है। कोई सर्वर या मासिक चार्ज नहीं।"
+							children: "यहाँ से सेव की गई हर फैक्ट्री जानकारी (नाम, पता, बैंक अकाउंट, UPI ID, QR व रेट) तुरंत सभी बिल/इनवॉइस, WhatsApp शेयर और जुड़े मोबाइल डिवाइस पर अपडेट हो जाती है।"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-2 flex items-center gap-4 text-[11px] text-emerald-200",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["उपयोग: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: storageStats.usedFormatted })] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["कुल रिकॉर्ड्स: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: storageStats.totalRecordsCount })] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["क्लाउड चार्ज: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "₹0.00 (शून्य)" })] })
-							]
+							className: "mt-2 flex flex-wrap items-center gap-4 text-[11px] text-emerald-200",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["लोकल उपयोग: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: storageStats.usedFormatted })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["कुल रिकॉर्ड्स: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: storageStats.totalRecordsCount })] })]
 						})
 					] })]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -90311,12 +90516,12 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 						type: "button",
 						onClick: onOpenLiveSync,
 						className: "flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black text-xs transition shadow-md cursor-pointer",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "👑 मोबाइल सर्वर / लाइव सिंक" })]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "लाइव सिंक / Google कनेक्ट" })]
 					}), onOpenInstallModal && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						onClick: onOpenInstallModal,
 						className: "flex items-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl font-black text-xs transition shadow-md cursor-pointer",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फ़ोन में ऐप / API डाउनलोड" })]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फ़ोन में ऐप / APK" })]
 					})]
 				})]
 			}),
@@ -90324,6 +90529,228 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 				onSubmit: handleSubmit,
 				className: "space-y-6 text-xs text-slate-800",
 				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+								className: "font-bold text-sm text-slate-900 flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "1. फैक्ट्री / कंपनी पहचान व पूरा पता (Factory Details)" })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] text-slate-500 font-medium",
+								children: "सभी GST बिल व चालान पर यही विवरण छपेगा"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "कंपनी / फैक्ट्री का नाम *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									required: true,
+									value: formData.companyName,
+									onChange: (e) => setFormData({
+										...formData,
+										companyName: e.target.value
+									}),
+									placeholder: "जैसे: Shri Tej Food Products",
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "आटा ब्रांड नाम *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									required: true,
+									value: formData.brandName,
+									onChange: (e) => setFormData({
+										...formData,
+										brandName: e.target.value
+									}),
+									placeholder: "जैसे: Tejstha (तेजस्था)",
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm text-amber-700 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "प्रोपराइटर / मालिक का नाम *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									required: true,
+									value: formData.proprietor,
+									onChange: (e) => setFormData({
+										...formData,
+										proprietor: e.target.value
+									}),
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "फैक्ट्री संपर्क मोबाइल नंबर *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									required: true,
+									value: formData.phone,
+									onChange: (e) => setFormData({
+										...formData,
+										phone: e.target.value
+									}),
+									placeholder: "+91 98290 12345",
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "फैक्ट्री ईमेल आईडी (Email)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "email",
+									value: formData.email || "",
+									onChange: (e) => setFormData({
+										...formData,
+										email: e.target.value
+									}),
+									placeholder: "shritejfoodproducts@gmail.com",
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "डिफ़ॉल्ट GST दर (%)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "number",
+									min: 0,
+									max: 28,
+									step: .5,
+									value: formData.defaultGstRate ?? 5,
+									onChange: (e) => setFormData({
+										...formData,
+										defaultGstRate: Number(e.target.value) || 0
+									}),
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "sm:col-span-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "फैक्ट्री का पूरा पता (Factory Address) *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+										rows: 2,
+										required: true,
+										value: formData.address,
+										onChange: (e) => setFormData({
+											...formData,
+											address: e.target.value
+										}),
+										placeholder: "प्लॉट नंबर, इंडस्ट्रियल एरिया, शहर, राज्य व पिनकोड",
+										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "GSTIN नंबर (टैक्स इनवॉइस हेतु)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									value: formData.gstin,
+									onChange: (e) => setFormData({
+										...formData,
+										gstin: e.target.value.toUpperCase()
+									}),
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase font-bold focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "block font-bold text-slate-700 mb-1",
+									children: "FSSAI खाद्य सुरक्षा लाइसेंस नंबर"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "text",
+									value: formData.fssaiNumber,
+									onChange: (e) => setFormData({
+										...formData,
+										fssaiNumber: e.target.value
+									}),
+									className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+								})] })
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-white rounded-2xl border-2 border-emerald-200/80 p-5 shadow-xs space-y-4",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+									className: "font-bold text-sm text-slate-900 flex items-center gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CreditCard, { className: "w-4 h-4 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "2. बैंक खाता नंबर एवं UPI ID विवरण (Bank Account & UPI)" })]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-emerald-700 font-semibold",
+									children: "इनवॉइस, WhatsApp लिंक व कस्टमर खाते में दिखेगा"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "बैंक व शाखा का नाम *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										required: true,
+										value: formData.bankName,
+										onChange: (e) => setFormData({
+											...formData,
+											bankName: e.target.value
+										}),
+										className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "बैंक खाता नंबर (Account No.) *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										required: true,
+										value: formData.accountNumber,
+										onChange: (e) => setFormData({
+											...formData,
+											accountNumber: e.target.value
+										}),
+										className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "IFSC कोड *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										required: true,
+										value: formData.ifscCode,
+										onChange: (e) => setFormData({
+											...formData,
+											ifscCode: e.target.value.toUpperCase()
+										}),
+										className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase font-bold focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "UPI ID (PhonePe / GPay / Paytm) *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										required: true,
+										value: formData.upiId,
+										onChange: (e) => setFormData({
+											...formData,
+											upiId: e.target.value
+										}),
+										placeholder: "example@sbi",
+										className: "w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-sm text-purple-700 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+									})] })
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "pt-2 flex justify-end",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "submit",
+									className: "w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md transition cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फैक्ट्री नाम, पता, बैंक व UPI सेटिंग्स सेव करें" })]
+								})
+							})
+						]
+					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "bg-white rounded-2xl border-2 border-amber-300/80 p-5 shadow-xs space-y-4",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -90335,24 +90762,17 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QrCode, { className: "w-5 h-5" })
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 									className: "font-bold text-sm text-slate-900",
-									children: "ग्राहक पेमेंट QR कोड (qrCodeBase64 File Upload)"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									children: "3. ग्राहक पेमेंट QR कोड (कस्टम अपलोड या ऑटो UPI QR)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									className: "text-[11px] text-slate-500",
-									children: [
-										"फ़ोन गैलरी से QR कोड इमेज चुनें। यह ",
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
-											className: "font-mono font-bold text-slate-800",
-											children: "qrCodeBase64"
-										}),
-										" स्ट्रिंग के रूप में LocalStorage में सुरक्षित रहेगा।"
-									]
+									children: "फ़ोन गैलरी से अपनी दुकान का QR कोड अपलोड करें या ऊपर भरे गए UPI ID से ऑटो QR उपयोग करें"
 								})] })]
 							}), activeQrBase64 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
 									"कस्टम QR सक्रिय (",
 									qrBase64SizeKb,
-									" KB Base64)"
+									" KB)"
 								] })]
 							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700",
@@ -90366,18 +90786,15 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
 										htmlFor: "qr-file-input",
 										className: "block font-bold text-slate-700 text-xs",
-										children: "फ़ोन गैलरी से QR कोड इमेज चुनें (Select QR code from phone gallery) *"
+										children: "फ़ोन गैलरी से QR कोड इमेज चुनें (PhonePe / GPay / SBI Standee)"
 									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "space-y-2",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-											id: "qr-file-input",
-											ref: fileInputRef,
-											type: "file",
-											accept: "image/*",
-											onChange: handleGalleryImageSelect,
-											className: "block w-full text-xs text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer cursor-pointer border border-slate-300 rounded-xl bg-slate-50 p-1.5 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
-										})
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										id: "qr-file-input",
+										ref: fileInputRef,
+										type: "file",
+										accept: "image/*",
+										onChange: handleGalleryImageSelect,
+										className: "block w-full text-xs text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer cursor-pointer border border-slate-300 rounded-xl bg-slate-50 p-1.5 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 										onClick: () => fileInputRef.current?.click(),
@@ -90392,7 +90809,7 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 												children: activeQrBase64 ? "गैलरी से दूसरा QR कोड इमेज चुनें" : "फ़ोन गैलरी से QR कोड इमेज फ़ाइल चुनें"
 											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 												className: "text-[10px] text-slate-500 block mt-0.5",
-												children: "PhonePe, Paytm, Google Pay, SBI Standee QR (JPG, PNG, WebP)"
+												children: "JPG, PNG, WebP"
 											})] }),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 												type: "button",
@@ -90404,16 +90821,7 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 										className: "flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-amber-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-											"फ़ाइल चुनते ही इमेज ",
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "Base64 स्ट्रिंग" }),
-											" में बदलकर ",
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
-												className: "font-mono text-purple-700 font-bold",
-												children: "companySettings.qrCodeBase64"
-											}),
-											" में सेव हो जाती है और सभी इनवॉइस पर स्वतः दिखती है।"
-										] })]
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, { className: "w-4 h-4 text-amber-600 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "इमेज चुनते ही QR कोड तुरंत सेव हो जाता है और सभी बिल/इनवॉइस पर दिखने लगता है।" })]
 									})
 								]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -90454,7 +90862,7 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 										className: "mt-2 text-center",
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 											className: "font-bold text-xs text-slate-900 block",
-											children: activeQrBase64 ? "कस्टम गैलरी QR (qrCodeBase64)" : "ऑटो UPI QR"
+											children: activeQrBase64 ? "कस्टम गैलरी QR" : "ऑटो UPI QR"
 										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 											className: "font-mono text-[10px] text-purple-700 font-semibold block",
 											children: formData.upiId || "shritejfood@sbi"
@@ -90469,185 +90877,54 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 								]
 							})]
 						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
-							className: "font-bold text-sm text-slate-900 flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-4 h-4 text-amber-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "कंपनी व ब्रांड पहचान (Company & Brand Details)" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "कंपनी का नाम *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									required: true,
-									value: formData.companyName,
-									onChange: (e) => setFormData({
-										...formData,
-										companyName: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "आटा ब्रांड नाम *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									required: true,
-									value: formData.brandName,
-									onChange: (e) => setFormData({
-										...formData,
-										brandName: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm text-amber-700"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "प्रोपराइटर / मालिक का नाम *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.proprietor,
-									onChange: (e) => setFormData({
-										...formData,
-										proprietor: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "संपर्क मोबाइल नंबर *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.phone,
-									onChange: (e) => setFormData({
-										...formData,
-										phone: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "sm:col-span-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-										className: "block font-bold text-slate-700 mb-1",
-										children: "फैक्ट्री का पूरा पता *"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-										type: "text",
-										value: formData.address,
-										onChange: (e) => setFormData({
-											...formData,
-											address: e.target.value
-										}),
-										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-									})]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "GSTIN नंबर (टैक्स इनवॉइस हेतु)"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.gstin,
-									onChange: (e) => setFormData({
-										...formData,
-										gstin: e.target.value.toUpperCase()
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase font-bold"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "FSSAI खाद्य सुरक्षा लाइसेंस नंबर"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.fssaiNumber,
-									onChange: (e) => setFormData({
-										...formData,
-										fssaiNumber: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono"
-								})] })
-							]
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
-							className: "font-bold text-sm text-slate-900 flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CreditCard, { className: "w-4 h-4 text-emerald-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "बैंक व UPI भुगतान सेटिंग्स (Invoice Bank Information)" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "बैंक का नाम *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.bankName,
-									onChange: (e) => setFormData({
-										...formData,
-										bankName: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "खाता नंबर (Account No.) *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.accountNumber,
-									onChange: (e) => setFormData({
-										...formData,
-										accountNumber: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "IFSC कोड *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.ifscCode,
-									onChange: (e) => setFormData({
-										...formData,
-										ifscCode: e.target.value.toUpperCase()
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase font-bold"
-								})] }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "block font-bold text-slate-700 mb-1",
-									children: "UPI ID (PhonePe / GPay) *"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-									type: "text",
-									value: formData.upiId,
-									onChange: (e) => setFormData({
-										...formData,
-										upiId: e.target.value
-									}),
-									className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-purple-700"
-								})] })
-							]
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "flex justify-end",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "submit",
-							className: "flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-md transition",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सेटिंग्स सुरक्षित करें" })]
-						})
 					})
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-					className: "font-bold text-sm text-slate-900",
-					children: "प्रोडक्ट मास्टर एवं सेलिंग दरें (Default Selling Rates per Bag)"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-slate-500 text-xs",
-					children: "यहाँ से आप 5 KG, 10 KG, 25 KG व 50 KG बैग की मानक विक्रय दरें बदल सकते हैं:"
-				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "font-bold text-sm text-slate-900",
+						children: "4. आटा के प्रकार, अन्य आइटम्स व विक्रय दरें (Atta Types & Items Master)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-slate-500 text-xs",
+						children: "नया आटा/आइटम (सूजी, मैदा, बेसन, दलिया आदि) जोड़ें, नाम/रेट एडिट करें या हटाएँ:"
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-wrap items-center gap-2 shrink-0",
+						children: [onAddProduct && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => {
+								setEditingProductId(null);
+								setProdNameHindi("");
+								setProdNameEn("");
+								setProdBrand(settings.brandName ? `${settings.brandName.split(" ")[0]} Special` : "Tejstha Special");
+								setProdHsn("1101");
+								setProdDesc("");
+								setProdRates({
+									5: 180,
+									10: 350,
+									25: 850,
+									50: 1650
+								});
+								setProdCostRates({
+									5: 145,
+									10: 285,
+									25: 700,
+									50: 1360
+								});
+								setShowProductModal(true);
+							},
+							className: "flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "+ नया आटा / आइटम जोड़ें" })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: handleSaveAllProductRates,
+							className: "flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-xs rounded-xl shadow-xs transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "दरें सुरक्षित करें" })]
+						})]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "overflow-x-auto",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
 						className: "w-full text-left text-xs",
@@ -90656,7 +90933,7 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-2.5 px-3",
-									children: "प्रोडक्ट"
+									children: "आटा / आइटम का नाम"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-2.5 px-3 text-center",
@@ -90673,45 +90950,490 @@ var SettingsView = ({ settings, products, onSaveSettings, onUpdateProductRate, o
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 									className: "py-2.5 px-3 text-center",
 									children: "50 KG (₹)"
+								}),
+								(onUpdateProduct || onDeleteProduct) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+									className: "py-2.5 px-3 text-center",
+									children: "एडिट / हटाएँ"
 								})
 							] })
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", {
 							className: "divide-y divide-slate-100",
 							children: products.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
 								className: "hover:bg-slate-50",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
-									className: "py-3 px-3",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "font-bold text-slate-900 block",
-										children: p.nameHindi
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "text-[10px] text-slate-500",
-										children: p.brand
-									})]
-								}), [
-									5,
-									10,
-									25,
-									50
-								].map((size) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
-									className: "py-3 px-3 text-center",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "inline-flex items-center gap-1",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "text-slate-400 font-mono",
-											children: "₹"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-											type: "number",
-											value: p.rates[size],
-											onChange: (e) => onUpdateProductRate(p.id, size, Number(e.target.value) || 0),
-											className: "w-20 px-2 py-1 text-xs border border-slate-300 rounded-lg text-center font-mono font-bold"
-										})]
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+										className: "py-3 px-3 min-w-[170px]",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-bold text-slate-900 block",
+												children: p.nameHindi
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "text-[10px] text-slate-500 block",
+												children: [
+													p.brand,
+													" ",
+													p.hsnCode ? `• HSN: ${p.hsnCode}` : ""
+												]
+											}),
+											p.nameEn && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10px] text-slate-400 block",
+												children: p.nameEn
+											})
+										]
+									}),
+									[
+										5,
+										10,
+										25,
+										50
+									].map((size) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+										className: "py-3 px-3 text-center",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "inline-flex items-center gap-1",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-slate-400 font-mono",
+												children: "₹"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "number",
+												min: 0,
+												value: rateDrafts[p.id]?.[size] ?? p.rates[size],
+												onChange: (e) => {
+													const val = Number(e.target.value) || 0;
+													setRateDrafts((prev) => ({
+														...prev,
+														[p.id]: {
+															...prev[p.id] || p.rates,
+															[size]: val
+														}
+													}));
+												},
+												className: "w-20 px-2 py-1.5 text-xs border border-slate-300 rounded-lg text-center font-mono font-bold focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+											})]
+										})
+									}, size)),
+									(onUpdateProduct || onDeleteProduct) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+										className: "py-3 px-3 text-center",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "inline-flex items-center gap-1.5",
+											children: [onUpdateProduct && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => {
+													setEditingProductId(p.id);
+													setProdNameHindi(p.nameHindi);
+													setProdNameEn(p.nameEn);
+													setProdBrand(p.brand);
+													setProdHsn(p.hsnCode || "1101");
+													setProdDesc(p.description || "");
+													setProdRates({ ...p.rates });
+													setProdCostRates({ ...p.costRates });
+													setShowProductModal(true);
+												},
+												className: "p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg transition cursor-pointer",
+												title: "आइटम नाम, ब्रांड व रेट एडिट करें",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PenLine, { className: "w-3.5 h-3.5" })
+											}), onDeleteProduct && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												disabled: products.length <= 1,
+												onClick: () => {
+													if (products.length <= 1) {
+														showToast("कम से कम 1 आटा/प्रोडक्ट होना जरूरी है।");
+														return;
+													}
+													if (window.confirm(`क्या आप "${p.nameHindi}" को लिस्ट से हटाना चाहते हैं?`)) {
+														onDeleteProduct(p.id);
+														showToast(`"${p.nameHindi}" आइटम सफलतापूर्वक हटा दिया गया!`);
+													}
+												},
+												className: "p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+												title: products.length <= 1 ? "कम से कम 1 आइटम होना जरूरी है" : "आइटम हटाएँ",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "w-3.5 h-3.5" })
+											})]
+										})
 									})
-								}, size))]
+								]
 							}, p.id))
 						})]
 					})
 				})]
+			}),
+			onNavigate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+					className: "font-bold text-sm text-slate-900 flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Database, { className: "w-4 h-4 text-blue-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "5. फैक्ट्री का सारा डेटा अपडेट व प्रबंधन केंद्र (All Data Center)" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs text-slate-500 mt-0.5",
+					children: "स्टाफ, सेल्समैन कमीशन, स्टॉक, ग्राहक, डीलर और बैकअप सहित हर रिकॉर्ड को सीधे यहाँ से अपडेट करें:"
+				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("staff"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-amber-100 text-amber-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserCheck, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "स्टाफ व पासवर्ड अपडेट"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "स्टाफ मोबाइल, पासवर्ड, अधिकार व सैलरी"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("salesman_ledger"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-purple-100 text-purple-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Briefcase, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "सेल्समैन व कमीशन सेटिंग"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "सेल्समैन कमीशन %, प्रति बैग व मासिक लेखा"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("inventory"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-emerald-100 text-emerald-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Package, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "गेहूँ व बैग स्टॉक अपडेट"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "कच्चा गेहूँ, खाली बैग व तैयार स्टॉक"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("wholesale_dealers"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-blue-100 text-blue-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Store, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "होलसेल डीलर्स डेटा"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "डीलर खाता, लोकेशन, दुकान फोटो व बकाया"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("retail_customers"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-teal-100 text-teal-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Users, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "रिटेल कस्टमर्स डेटा"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "दुकानदार नाम, पता, मैप पिन व भुगतान"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => onNavigate("reports"),
+							className: "p-3.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left flex items-center justify-between gap-2 transition cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "p-2 rounded-lg bg-slate-200 text-slate-800",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileSpreadsheet, { className: "w-4 h-4" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-900 block",
+									children: "Excel रिपोर्ट्स व बैकअप"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-slate-500",
+									children: "मास्टर एक्सेल शीट व API एक्सपोर्ट"
+								})] })]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "w-4 h-4 text-slate-400 shrink-0" })]
+						})
+					]
+				})]
+			}),
+			(currentAppState || onRestoreState || onResetFactorySeeds) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "font-bold text-sm text-slate-900",
+						children: "6. पूरा डेटाबेस बैकअप, रीस्टोर व रीसेट (Full Data Backup & Restore)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-xs text-slate-500 mt-0.5",
+						children: "अपने पूरे फैक्ट्री डेटा का JSON बैकअप सुरक्षित रखें या किसी पुरानी बैकअप फ़ाइल से सारा डेटा अपडेट करें"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid grid-cols-1 md:grid-cols-2 gap-3 text-xs",
+						children: [currentAppState && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-bold text-slate-900 block",
+								children: "पूरा डेटा बैकअप डाउनलोड (.JSON)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] text-slate-500",
+								children: "सेटिंग्स, ग्राहक, ऑर्डर, स्टॉक व स्टाफ"
+							})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => exportDatabaseBackup(currentAppState),
+								className: "flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition shrink-0 cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HardDriveDownload, { className: "w-4 h-4 text-emerald-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "डाउनलोड" })]
+							})]
+						}), onRestoreState && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-bold text-slate-900 block",
+								children: "बैकअप फ़ाइल से डेटा रीस्टोर"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] text-slate-500",
+								children: ".json फ़ाइल चुनकर पूरा डेटा अपडेट करें"
+							})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								ref: backupFileInputRef,
+								type: "file",
+								accept: ".json",
+								onChange: handleBackupRestoreFile,
+								className: "hidden"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => backupFileInputRef.current?.click(),
+								className: "flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shrink-0 cursor-pointer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "फ़ाइल चुनें" })]
+							})] })]
+						})]
+					}),
+					onResetFactorySeeds && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-slate-500",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-rose-600 font-bold block",
+								children: "डेटा रीसेट विकल्प (Factory Reset):"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "सारा डेमो/मौजूदा डेटा हटाकर प्रारंभिक फैक्ट्री डिफ़ॉल्ट स्थिति पर वापस लाएँ" })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => {
+								if (window.confirm("क्या आप सचमुच डेटाबेस को प्रारंभिक फैक्ट्री स्थिति पर रीसेट करना चाहते हैं?")) {
+									onResetFactorySeeds();
+									showToast("फैक्ट्री डेटा सफलतापूर्वक रीसेट कर दिया गया!");
+								}
+							},
+							className: "flex items-center justify-center gap-1.5 px-3.5 py-2 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl font-bold transition shrink-0 cursor-pointer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCcw, { className: "w-3.5 h-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "डेटा रीसेट करें" })]
+						})]
+					})
+				]
+			}),
+			showProductModal && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "fixed inset-0 z-50 overflow-y-auto bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "bg-slate-900 text-white px-5 py-4 flex items-center justify-between",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Package, { className: "w-5 h-5 text-amber-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+								className: "font-bold text-sm sm:text-base",
+								children: editingProductId ? "आटा / आइटम विवरण एडिट करें" : "नया आटा या अन्य आइटम जोड़ें"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => setShowProductModal(false),
+							className: "p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "w-5 h-5" })
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: (e) => {
+							e.preventDefault();
+							const cleanHindi = prodNameHindi.trim();
+							if (!cleanHindi) return;
+							const cleanEn = prodNameEn.trim() || cleanHindi;
+							const productObj = {
+								id: editingProductId || `prod-${Date.now()}`,
+								nameHindi: cleanHindi,
+								nameEn: cleanEn,
+								brand: prodBrand.trim() || "Tejstha Special",
+								hsnCode: prodHsn.trim() || "1101",
+								description: prodDesc.trim(),
+								rates: {
+									5: Number(prodRates[5]) || 0,
+									10: Number(prodRates[10]) || 0,
+									25: Number(prodRates[25]) || 0,
+									50: Number(prodRates[50]) || 0
+								},
+								costRates: {
+									5: Number(prodCostRates[5]) || Math.round((Number(prodRates[5]) || 0) * .8),
+									10: Number(prodCostRates[10]) || Math.round((Number(prodRates[10]) || 0) * .8),
+									25: Number(prodCostRates[25]) || Math.round((Number(prodRates[25]) || 0) * .8),
+									50: Number(prodCostRates[50]) || Math.round((Number(prodRates[50]) || 0) * .8)
+								}
+							};
+							if (editingProductId && onUpdateProduct) {
+								onUpdateProduct(productObj);
+								showToast(`"${cleanHindi}" आइटम सफलतापूर्वक अपडेट हो गया!`);
+							} else if (onAddProduct) {
+								onAddProduct(productObj);
+								showToast(`नया आइटम "${cleanHindi}" सफलतापूर्वक जोड़ दिया गया!`);
+							}
+							setShowProductModal(false);
+						},
+						className: "p-5 space-y-4 text-xs text-slate-800 max-h-[80vh] overflow-y-auto",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "grid grid-cols-1 sm:grid-cols-2 gap-3.5",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "आटा / आइटम नाम (हिंदी में) *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										required: true,
+										value: prodNameHindi,
+										onChange: (e) => setProdNameHindi(e.target.value),
+										placeholder: "जैसे: शरबती आटा, सूजी, बेसन, मैदा",
+										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-sm focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "अंग्रेजी नाम (English Name)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										value: prodNameEn,
+										onChange: (e) => setProdNameEn(e.target.value),
+										placeholder: "e.g. Sharbati Atta / Suji / Besan",
+										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "ब्रांड / श्रेणी"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										value: prodBrand,
+										onChange: (e) => setProdBrand(e.target.value),
+										placeholder: "जैसे: Tejstha Gold",
+										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "block font-bold text-slate-700 mb-1",
+										children: "HSN कोड (GST हेतु)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "text",
+										value: prodHsn,
+										onChange: (e) => setProdHsn(e.target.value),
+										placeholder: "1101",
+										className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "sm:col-span-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "block font-bold text-slate-700 mb-1",
+											children: "विवरण (Description)"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: "text",
+											value: prodDesc,
+											onChange: (e) => setProdDesc(e.target.value),
+											placeholder: "क्वालिटी या पैकिंग विवरण (वैकल्पिक)",
+											className: "w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+										})]
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-amber-900 block",
+									children: "विक्रय दरें — प्रति बैग (Selling Rates ₹) *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "grid grid-cols-2 sm:grid-cols-4 gap-2.5",
+									children: [
+										5,
+										10,
+										25,
+										50
+									].map((size) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+										className: "block text-[11px] font-bold text-slate-700 mb-1",
+										children: [size, " KG (₹)"]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "number",
+										min: 0,
+										required: true,
+										value: prodRates[size],
+										onChange: (e) => setProdRates((prev) => ({
+											...prev,
+											[size]: Number(e.target.value) || 0
+										})),
+										className: "w-full px-2.5 py-2 bg-white border border-amber-300 rounded-lg font-mono font-bold text-center focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }, size))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold text-slate-700 block",
+									children: "लागत दरें — प्रति बैग (Cost Rates ₹ — मुनाफा गणना हेतु)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "grid grid-cols-2 sm:grid-cols-4 gap-2.5",
+									children: [
+										5,
+										10,
+										25,
+										50
+									].map((size) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+										className: "block text-[11px] font-bold text-slate-600 mb-1",
+										children: [size, " KG लागत (₹)"]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										type: "number",
+										min: 0,
+										value: prodCostRates[size],
+										onChange: (e) => setProdCostRates((prev) => ({
+											...prev,
+											[size]: Number(e.target.value) || 0
+										})),
+										className: "w-full px-2.5 py-2 bg-white border border-slate-300 rounded-lg font-mono text-center focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+									})] }, size))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex justify-end gap-2 pt-2 border-t border-slate-200",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: () => setShowProductModal(false),
+									className: "px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer",
+									children: "रद्द करें"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "submit",
+									className: "flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black shadow-md transition cursor-pointer",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "w-4 h-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: editingProductId ? "बदलाव सुरक्षित करें" : "आइटम जोड़ें" })]
+								})]
+							})
+						]
+					})]
+				})
 			})
 		]
 	});
@@ -91997,6 +92719,24 @@ function App() {
 			rate
 		});
 	};
+	const handleAddProduct = (product) => {
+		runMutation({
+			type: "product:create",
+			product
+		});
+	};
+	const handleUpdateProduct = (product) => {
+		runMutation({
+			type: "product:update",
+			product
+		});
+	};
+	const handleDeleteProduct = (productId) => {
+		runMutation({
+			type: "product:delete",
+			productId
+		});
+	};
 	const handleRestoreState = (restored) => {
 		runMutation({
 			type: "master:push_full_state",
@@ -92155,6 +92895,7 @@ function App() {
 				syncStatus: sync.status,
 				connectedDevicesCount: sync.connectedDevices.length,
 				syncDeviceRole: sync.config.deviceRole,
+				isSettingsActive: activeTab === "settings",
 				onOpenRoleSwitcher: () => setShowRoleSwitcherModal(true),
 				onOpenNewOrder: () => {
 					setNewOrderCustomerId(void 0);
@@ -92166,6 +92907,7 @@ function App() {
 					setShowReceivePaymentModal(true);
 				},
 				onNavigateToInventory: () => setActiveTab("inventory"),
+				onNavigateToSettings: () => setActiveTab("settings"),
 				onOpenInstallModal: () => handleOpenInstallModal("apk"),
 				onOpenLiveSync: () => setShowLiveSyncModal(true),
 				onLogout: handleLogout
@@ -92333,8 +93075,29 @@ function App() {
 						activeTab === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsView, {
 							settings,
 							products,
+							syncStatus: sync.status,
+							connectedDevicesCount: sync.connectedDevices.length,
+							currentAppState: {
+								version: "2.5.0",
+								timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+								settings,
+								products,
+								rawStock,
+								bagStock,
+								customers,
+								orders,
+								production,
+								expenses,
+								staff
+							},
 							onSaveSettings: handleSaveSettings,
 							onUpdateProductRate: handleUpdateProductRate,
+							onAddProduct: handleAddProduct,
+							onUpdateProduct: handleUpdateProduct,
+							onDeleteProduct: handleDeleteProduct,
+							onNavigate: setActiveTab,
+							onRestoreState: handleRestoreState,
+							onResetFactorySeeds: handleResetFactorySeeds,
 							onOpenInstallModal: () => handleOpenInstallModal("apk"),
 							onOpenLiveSync: () => setShowLiveSyncModal(true)
 						})

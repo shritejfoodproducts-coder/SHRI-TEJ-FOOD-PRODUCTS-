@@ -70,6 +70,9 @@ export type ErpMutationAction =
   | { type: 'stock:raw_update'; rawStock: RawMaterialStock }
   | { type: 'stock:bag_update'; productId: string; bagSize: BagSize; newCount: number }
   | { type: 'settings:update'; settings: CompanySettings }
+  | { type: 'product:create'; product: ProductMaster }
+  | { type: 'product:update'; product: ProductMaster }
+  | { type: 'product:delete'; productId: string }
   | { type: 'product:rate_update'; productId: string; bagSize: BagSize; rate: number }
   | { type: 'master:push_full_state'; fullState: SyncableErpState }
   | { type: 'master:reset_factory'; fullState: SyncableErpState };
